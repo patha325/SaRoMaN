@@ -30,10 +30,10 @@ class handle_third_party:
 		self.Check_make_dir(self.third_party_support)            
 		#Log4cpp
 		print 'Installing Log4cpp...'
-		command = ['cvs','-d',':pserver:anonymous;''@log4cpp.cvs.sourceforge.net:/cvsroot/log4cpp','login']
+		command = ['cvs','-d',':pserver:anonymous:''@log4cpp.cvs.sourceforge.net:/cvsroot/log4cpp','login']
 		#print 'Please press enter when the password request comes\n'
 		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
-		command = ['cvs','-d',':pserver:anonymous@log4cpp.cvs.sourceforge.net:/cvsroot/log4cpp','-z3','co','log4cpp']
+		command = ['cvs','-d',':pserver:anonymous:@log4cpp.cvs.sourceforge.net:/cvsroot/log4cpp','-z3','co','log4cpp']
 		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
 		command = self.third_party_support+'/log4cpp/autogen.sh'
 		subprocess.call('bash %s' %command, shell=True, cwd = self.third_party_support+'/log4cpp',stdout=self.FNULL)

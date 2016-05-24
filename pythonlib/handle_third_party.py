@@ -18,7 +18,7 @@ import subprocess
 class handle_third_party:
 
 	def __init__(self,exec_base,third_party_support):
-		self.FNULL = open(os.devnull, 'w') # So that output is not printed to console
+		self.FNULL = sys.stdout #open(os.devnull, 'w') # So that output is not printed to console
 		self.exec_base = exec_base
 		self.third_party_support = third_party_support
 

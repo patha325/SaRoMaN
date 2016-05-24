@@ -213,7 +213,7 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   int longesttraj;
   bool allfit=true;
 
-  cout<<"In MINDplotter.cpp _clu="<<_clu<<endl;
+  //cout<<"In MINDplotter.cpp _clu="<<_clu<<endl;
 
   ///true particle informations
   if ( _clu )
@@ -959,12 +959,12 @@ bool MINDplotter::extract_true_particle2(const bhep::event& evt) {
   ///loop over the true particles to extract info
   int count = 0, trackNo=0, had_count=0;
 
-  cout<<"Pospart.size()="<<(int)Pospart.size()<<endl;
+  //cout<<"Pospart.size()="<<(int)Pospart.size()<<endl;
 
   for (int iParts=(int)Pospart.size()-1;iParts >= 0;iParts--){
     count=0;
 
-    cout<<"in hadron="<<Pospart[iParts]->p()<<"  pdg="<<Pospart[iParts]->pdg()<<endl;
+    //cout<<"in hadron="<<Pospart[iParts]->p()<<"  pdg="<<Pospart[iParts]->pdg()<<endl;
     //cout<<"ID="<<Pospart[iParts]->fetch_sproperty("G4TrackID")<<" parentID="<<Pospart[iParts]->find_dproperty("G4ParentID")<<endl;
 	
    
@@ -972,7 +972,7 @@ bool MINDplotter::extract_true_particle2(const bhep::event& evt) {
 	 Pospart[iParts]->find_sproperty("PrimaryLepton") ){
       _m.message("For primary lepton, mom =",Pospart[iParts]->p(),"  pdg=",Pospart[iParts]->pdg(), bhep::VERBOSE);
      
-      cout<<"For primary lepton, mom ="<<Pospart[iParts]->p()<<"  pdg="<<Pospart[iParts]->pdg()<<endl;
+      //cout<<"For primary lepton, mom ="<<Pospart[iParts]->p()<<"  pdg="<<Pospart[iParts]->pdg()<<endl;
 
       _truPart = Pospart[iParts];
 	
@@ -992,8 +992,8 @@ bool MINDplotter::extract_true_particle2(const bhep::event& evt) {
 	  _m.message("For hadron=",Pospart[iParts]->p(),"  pdg=",Pospart[iParts]->pdg()," trackNo=",trackNo, bhep::VERBOSE);
 	}
 	add_to_hads( *Pospart[iParts] );///
-	cout<<"in hadron="<<Pospart[iParts]->p()<<"  pdg="<<Pospart[iParts]->pdg()<<endl;
-	cout<<"ID="<<Pospart[iParts]->fetch_sproperty("G4TrackID")<<" parentID="<<Pospart[iParts]->find_dproperty("G4ParentID")<<endl;
+	//cout<<"in hadron="<<Pospart[iParts]->p()<<"  pdg="<<Pospart[iParts]->pdg()<<endl;
+	//cout<<"ID="<<Pospart[iParts]->fetch_sproperty("G4TrackID")<<" parentID="<<Pospart[iParts]->find_dproperty("G4ParentID")<<endl;
 	
       }
 
@@ -1356,10 +1356,10 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
     vector<string> mother_particle = Fit.GetMeas(ih)->get_mother_particle();
 
     double mu = 0.0;
-    cout<<"Mother_particle"<<endl;
+    //cout<<"Mother_particle"<<endl;
     for(int i=0;i<mother_particle.size();i++)
       {
-	cout<<mother_particle[i]<<endl;
+	//cout<<mother_particle[i]<<endl;
 	_MotherMeas.push_back(mother_particle[i]);
 
 	if(mother_particle[i] == "mu+" || mother_particle[i] == "mu-") mu++; 

@@ -33,28 +33,28 @@ class handle_third_party:
 		print 'Installing Log4cpp...'
 		command = ['cvs','-d',':pserver:anonymous:''@log4cpp.cvs.sourceforge.net:/cvsroot/log4cpp','login']
 		#print 'Please press enter when the password request comes\n'
-		subprocess.call(command, cwd = self.third_party_support)
+		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
 		command = ['cvs','-d',':pserver:anonymous:@log4cpp.cvs.sourceforge.net:/cvsroot/log4cpp','-z3','co','log4cpp']
-		subprocess.call(command, cwd = self.third_party_support)
+		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
 		command = self.third_party_support+'/log4cpp/autogen.sh'
-		subprocess.call('bash %s' %command, shell=True, cwd = self.third_party_support+'/log4cpp')
+		subprocess.call('bash %s' %command, shell=True, cwd = self.third_party_support+'/log4cpp',stdout=self.FNULL)
 		command = self.third_party_support+'/log4cpp/configure --prefix='+self.third_party_support+'/log4cpp-install'
-		subprocess.call('bash %s'%command, shell=True, cwd = self.third_party_support+'/log4cpp')
-		subprocess.call('gmake', shell=True, cwd = self.third_party_support+'/log4cpp')
-		subprocess.call('gmake install', shell=True, cwd = self.third_party_support+'/log4cpp')
+		subprocess.call('bash %s'%command, shell=True, cwd = self.third_party_support+'/log4cpp',stdout=self.FNULL)
+		subprocess.call('gmake', shell=True, cwd = self.third_party_support+'/log4cpp',stdout=self.FNULL)
+		subprocess.call('gmake install', shell=True, cwd = self.third_party_support+'/log4cpp',stdout=self.FNULL)
 
 		print 'Log4cpp was installed successfully'
 
 		#LHAPDF
 		print 'Installing LHAPDF...'
 		command = ['wget','http://www.hepforge.org/archive/lhapdf/lhapdf-5.9.1.tar.gz']
-		subprocess.call(command, cwd = self.third_party_support)
+		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
 		command = ['tar','xzvf','lhapdf-5.9.1.tar.gz']
-		subprocess.call(command, cwd = self.third_party_support)
+		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
 		command = self.third_party_support+'/lhapdf-5.9.1/configure --prefix='+self.third_party_support+'/lhapdf-5.9.1-install'
-		subprocess.call('bash %s'%command, shell=True, cwd = self.third_party_support+'/lhapdf-5.9.1')
-		subprocess.call('gmake', shell=True, cwd = self.third_party_support+'/lhapdf-5.9.1')
-		subprocess.call('gmake install', shell=True, cwd = self.third_party_support+'/lhapdf-5.9.1')
+		subprocess.call('bash %s'%command, shell=True, cwd = self.third_party_support+'/lhapdf-5.9.1',stdout=self.FNULL)
+		subprocess.call('gmake', shell=True, cwd = self.third_party_support+'/lhapdf-5.9.1',stdout=self.FNULL)
+		subprocess.call('gmake install', shell=True, cwd = self.third_party_support+'/lhapdf-5.9.1',stdout=self.FNULL)
 
 		print 'LHAPDF was installed successfully'
 
@@ -63,7 +63,7 @@ class handle_third_party:
 		self.Check_make_dir(self.third_party_support + '/pythia')
 		# command = ['wget','http://home.fnal.gov/~rhatcher/build_pythia6.sh']
 		command = ['cp',self.exec_base+'/scripts/build_pythia6.sh',self.third_party_support]
-		subprocess.call(command,cwd = self.third_party_support)
+		subprocess.call(command,cwd = self.third_party_support,stdout=self.FNULL)
 		self.Shell_source_no_environ(self.third_party_support +'/build_pythia6.sh',self.third_party_support + '/pythia')
 		
 		print 'Pythia6 was installed successfully'

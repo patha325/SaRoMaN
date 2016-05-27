@@ -57,7 +57,7 @@ class MindCryInterface: public G4VPrimaryGenerator
  private:
   std::vector<CRYParticle*> *vect;
   G4ParticleTable* particle_table;
-  CRYGenerator::CRYGenerator* gen;
+  CRYGenerator* gen;
 
   G4ParticleDefinition* _particle_definition;
   G4double _mass; ///< Particle mass

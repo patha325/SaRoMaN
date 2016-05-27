@@ -618,7 +618,7 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
 	    if(ok)
 	      {
 		if((int)muontraj.size() > 9){ok = muon_extraction( hits, muontraj, hads);} 
-		//else if((int)muontraj.size() >= 4){ok = LowMomentumExtraction( hits, muontraj, hads);}
+		else if((int)muontraj.size() >= 4){ok = LowMomentumExtraction( hits, muontraj, hads);}
 		else ok = false; // Combine muon_extraction with lowmomentum to handle mult. occ.
 		//ok = muon_extraction( hits, muontraj, hads);
 	      }
@@ -636,7 +636,8 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
 	if((int)muontraj.size() > 9)
 	  ok = muon_extraction( hits, muontraj, hads);
 	else
-	  ok= false; 
+	  ok=LowMomentumMultipleExtraction( hits, muontraj, hads);
+	//ok= false; 
 	// Combine muon_extraction with lowmomentum to handle mult. occ.
 	
 	
@@ -2136,6 +2137,73 @@ bool event_classif::LowMomentumExtraction(vector<cluster*>& hits,
       
       ok = false;
     }
+
+  return ok;
+}
+
+//***********************************************************************
+bool event_classif::LowMomentumMultipleExtraction(vector<cluster*>& hits,
+				    Trajectory& muontraj, vector<cluster*>& hads) {
+  //***********************************************************************
+
+  
+  //Decide on appropriate pattern recognition and perform it.
+  //Are there ways to avoid doing full extraction algorithm.
+  
+  _m.message("++++ event_classif::muon_extraction +++++++++++++", bhep::VERBOSE);
+ 
+  bool ok;
+
+  ///if vertex is otherthan 0th hit position, then those hits will be candidate hadron 
+  if (_vertGuess != 0)
+    for (int i = 0;i < _vertGuess;i++){
+      const dict::Key candHit = "inhad";
+      const dict::Key hit_in = "True";
+      hits[i]->set_name(candHit, hit_in);
+      hads.push_back( hits[i] );
+    
+      _m.message(" 1:hits[hits.size()]->position()[2] ",hits[hits.size()-1]->position()[2],"  hits[hits.size()-1]->position()[2]=",hits[hits.size()-2]->position()[2], bhep::DETAILED);
+    }
+  
+  State patternSeed;
+
+  //muontraj.sort_nodes(RP::z, 1 );
+
+  muontraj.sort_nodes(RP::z, -1 );
+  
+  ok = get_patternRec_seed( patternSeed, muontraj);//, hits);
+
+  //cout<<"Seed before muon_extract: "<<patternSeed<<endl;
+
+  if(!ok)  _m.message(" get_patternRec_seed not ok",bhep::DETAILED); 
+  
+  if ( ok )
+    {
+      /*
+      cout<<"before perform_muon_extraction: "<<muontraj.size()<<endl;
+  for(int i=0;i<muontraj.size();i++)
+    {
+      cout<<"z: "<<muontraj.nodes()[i]->measurement().position()[2]<<endl;
+    }
+      */
+    ok = perform_muon_extraction2( patternSeed, hits, muontraj, hads);
+    /*cout<<"after perform_muon_extraction: "<<muontraj.size()<<endl;
+
+  for(int i=0;i<muontraj.size();i++)
+    {
+      cout<<"z: "<<muontraj.nodes()[i]->measurement().position()[2]<<endl;
+    }
+    */
+    }
+  if(!ok) _m.message("perform_muon_extraction not ok",bhep::DETAILED);
+  
+  //muontraj.sort_nodes(RP::z, 1 );
+
+  muontraj.sort_nodes(RP::z, -1 );
+
+
+  if((int)muontraj.size() > 9){ok = muon_extraction( hits, muontraj, hads);} 
+  else if((int)muontraj.size() >= 4){ok = LowMomentumExtraction( hits, muontraj, hads);}
 
   return ok;
 }

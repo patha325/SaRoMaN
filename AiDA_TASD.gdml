@@ -98,7 +98,7 @@
     <box x="158.40" y="158.40" z="100.00" lunit="cm" name="Calorimeter_solid"/>
     <box x="158.40" y="158.40" z="1.75" lunit="cm"
 	 name="Plane_solid"/>
-    <box x="158.40" y="158.40" z="3.5" lunit="cm"
+    <box x="100" y="100" z="1.5" lunit="cm"
 	 name="PlanePair_solid"/>
     <tube rmax="0.3" z="110.0" lunit="cm" deltaphi="360" aunit="degree" name="hole_solid"/>
     <tube rmax="0.12" z="110.0" lunit="cm" deltaphi="360" aunit="degree" name="Cladding_solid"/>
@@ -217,57 +217,62 @@
       <materialref ref="POLYSTYRENE"/>
       <solidref ref="activeX_bar_solid"/>
       <auxiliary auxtype="SD" auxvalue="Bar"/>
-      <auxiliary auxtype="Invisible" auxvalue="1"/> 
+      <auxiliary auxtype="Color" auxvalue="Blue"/>
+      <!-- <auxiliary auxtype="Invisible" auxvalue="1"/> -->
       <auxiliary auxtype="EMField" auxvalue="NULL"/>
     </volume>
     <volume name="BarY">
       <materialref ref="POLYSTYRENE"/>
       <solidref ref="activeY_bar_solid"/>
       <auxiliary auxtype="SD" auxvalue="Bar"/>
-      <auxiliary auxtype="Invisible" auxvalue="1"/> 
+      <auxiliary auxtype="Color" auxvalue="Blue"/>
+      <!-- <auxiliary auxtype="Invisible" auxvalue="1"/>  -->
       <auxiliary auxtype="EMField" auxvalue="NULL"/>
     </volume>
     <volume name="PlaneX">
       <materialref ref="AIR"/>
       <solidref ref="activeX_plane_solid"/>
-      <replicavol number="90">
+      <replicavol number="16">
 	<volumeref ref="BarX"/>
 	<replicate_along_axis>
 	  <direction x="1"/>
-	  <width value="1.7" unit="cm"/>
+	  <width value="1.0" unit="cm"/>
 	  <offset value="0.0" unit="mm"/>
 	</replicate_along_axis>
       </replicavol>
+      <auxiliary auxtype="Invisible" auxvalue="1"/>
     </volume>
     <volume name="PlaneY">
       <materialref ref="AIR"/>
       <solidref ref="activeY_plane_solid"/>
-      <replicavol number="90">
+      <replicavol number="16">
 	<volumeref ref="BarY"/>
 	<replicate_along_axis>
 	  <direction y="1"/>
-	  <width value="1.7" unit="cm"/>
+	  <width value="1.0" unit="cm"/>
 	  <offset value="0.0" unit="mm"/>
 	</replicate_along_axis>
       </replicavol>
+      <auxiliary auxtype="Invisible" auxvalue="1"/>
     </volume>
     <volume name="EMRPlanePair">
-      <materialref ref="AIR"/>
+      <materialref ref="POLYSTYRENE"/>
       <solidref ref="PlanePair_solid"/>
       <physvol>
 	<volumeref ref="PlaneX"/>
-	<position name="xplane_pos" x="0.0" y="0.0" z="0.875"
+	<position name="xplane_pos" x="0.0" y="0.0" z="0.375"
 		  unit="cm"/>
 	<rotation name="xplane_rot" x="0.0" y="0.0" z="0.0"
 		  unit="degree"/>
       </physvol>
       <physvol>
 	<volumeref ref="PlaneY"/>
-	<position name="yplane_pos" x="0.0" y="0.0" z="-0.875"
+	<position name="yplane_pos" x="0.0" y="0.0" z="-0.375"
 		  unit="cm"/>
 	<rotation name="yplane_rot" x="0.0" y="0.0" z="0.0"
 		  unit="degree"/>
       </physvol>
+      <auxiliary auxtype="Color" auxvalue="Blue"/>
     </volume>
 		  
 				   
@@ -275,15 +280,15 @@
     <volume name="EMRDetector">
       <materialref ref="AIR"/>
       <solidref ref="active_TASD_solid"/>
-      <replicavol number="50">
+      <replicavol number="25">
         <volumeref ref="EMRPlanePair"/>
         <replicate_along_axis>
           <direction z="1"/>
-          <width value="3.5" unit="cm"/>
+          <width value="2.0" unit="cm"/>
           <offset value="0" unit="mm"/>
         </replicate_along_axis>
       </replicavol>
-      <auxiliary auxtype="SensitiveDetector" auxvalue="EMR"/>
+      <!--<auxiliary auxtype="SensitiveDetector" auxvalue="EMR"/>-->
       <auxiliary auxtype="NbOfBars" auxvalue="2832"/>
       <auxiliary auxtype="unit" auxvalue="cm"/>
       <auxiliary auxtype="BarWidth" auxvalue="3.3"/>
@@ -293,6 +298,7 @@
       <auxiliary auxtype="HoleRad" auxvalue="0.3"/>
       <auxiliary auxtype="FiberCladdingExtRadius" auxvalue="0.12"/>
       <auxiliary auxtype="AddWLSFiber" auxvalue="1"/>
+      <auxiliary auxtype="Invisible" auxvalue="1"/>
     </volume>
     <volume name="EMR">
       <materialref ref="AIR"/>

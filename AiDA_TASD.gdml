@@ -94,7 +94,7 @@
   </materials>
   
   <solids>
-    <box x="158.40" y="158.40" z="100.00" lunit="cm" name="EMR_solid"/>
+    <box x="158.40" y="158.40" z="100.0" lunit="cm" name="EMR_solid"/>
     <box x="158.40" y="158.40" z="100.00" lunit="cm" name="Calorimeter_solid"/>
     <box x="158.40" y="158.40" z="1.75" lunit="cm"
 	 name="Plane_solid"/>
@@ -110,11 +110,11 @@
 
     <box x="1.0" y="90" z="0.75" lunit="cm" name="activeX_bar_solid"/>
     <box x="90" y="1.0" z="0.75" lunit="cm" name="activeY_bar_solid"/>
-    <box x="90" y="90" z="0.75" lunit="cm"
+    <box x="16.0" y="90" z="0.75" lunit="cm"
 	 name="activeX_plane_solid"/>
-    <box x="90" y="90" z="0.75" lunit="cm"
+    <box x="90" y="16.0" z="0.75" lunit="cm"
 	 name="activeY_plane_solid"/>
-    <box x="90" y="90" z="75.0" lunit="cm"
+    <box x="90" y="90" z="37.5" lunit="cm"
 	 name="active_TASD_solid"/> 
     
   </solids>
@@ -260,14 +260,14 @@
       <solidref ref="PlanePair_solid"/>
       <physvol>
 	<volumeref ref="PlaneX"/>
-	<position name="xplane_pos" x="0.0" y="0.0" z="0.375"
+	<position name="xplane_pos" x="0.0" y="0.0" z="-0.375"
 		  unit="cm"/>
 	<rotation name="xplane_rot" x="0.0" y="0.0" z="0.0"
 		  unit="degree"/>
       </physvol>
       <physvol>
 	<volumeref ref="PlaneY"/>
-	<position name="yplane_pos" x="0.0" y="0.0" z="-0.375"
+	<position name="yplane_pos" x="0.0" y="0.0" z="0.375"
 		  unit="cm"/>
 	<rotation name="yplane_rot" x="0.0" y="0.0" z="0.0"
 		  unit="degree"/>
@@ -280,11 +280,16 @@
     <volume name="EMRDetector">
       <materialref ref="AIR"/>
       <solidref ref="active_TASD_solid"/>
+      <!--
+      <physvol>
+	<volumeref ref="EMRPlanePair"/>
+	<position name="firstmod_pos" x="0.0" y="0.0" z="-18.75"/>
+      </physvol> -->
       <replicavol number="25">
         <volumeref ref="EMRPlanePair"/>
         <replicate_along_axis>
           <direction z="1"/>
-          <width value="2.0" unit="cm"/>
+          <width value="1.5" unit="cm"/>
           <offset value="0" unit="mm"/>
         </replicate_along_axis>
       </replicavol>
@@ -303,6 +308,10 @@
     <volume name="EMR">
       <materialref ref="AIR"/>
       <solidref ref="EMR_solid"/>
+      <physvol>
+	<volumeref ref="EMRPlanePair"/>
+	<position name="firstmod_pos" x="0.0" y="0.0" z="-19.5" unit="cm"/>
+      </physvol>
       <physvol name="EMRDetector_phys">
 	<volumeref ref="EMRDetector"/>
 	<position name="EMRDetector_pos" unit="mm"

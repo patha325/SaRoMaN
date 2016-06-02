@@ -110,7 +110,7 @@ bool root2dst::execute(){
    */
 
   m.message("+++ root2dst execute function ++++",bhep::VERBOSE);
-  cout << nevt<<endl;
+  cout <<"nevt="<< nevt<<endl;
   createEvent();
   
   bool ok = make_particles();
@@ -421,12 +421,12 @@ particle* root2dst::create_digital_representation(const vector<particle*>& tru_p
     vector<bhep::hit*> vox;
     vector<bhep::hit*>::iterator voxIt;
     
-    cout<<tru_parts.size()<<endl;
+    cout<<"Num of raw hits in digitization="<<tru_parts.size()<<endl;
 
     for (int iPart = 0;iPart < (int)tru_parts.size();iPart++){
       temp_hit = tru_parts[iPart]->hits(detect);
 
-       cout<<temp_hit.size()<<endl;
+      cout<<"Num of hits per particle="<<temp_hit.size()<<endl;
       
       if ( part_hits.size() == 0 && temp_hit.size() != 0 )
 	part_hits = temp_hit;

@@ -117,7 +117,7 @@ bool event_classif::Execute(const vector<cluster*>& hits,
   reset();
   ///copy hits
   std::vector<cluster*> hits2 = hits;
-  /*
+  
   cout<<"Num hits: "<<hits2.size()<<endl;
   cout<<"x\ty\tz\ttime"<<endl;
   for(int i=0;i<hits2.size();i++)
@@ -125,7 +125,7 @@ bool event_classif::Execute(const vector<cluster*>& hits,
       cout<<hits2[i]->position()[0]<<"\t"<<hits2[i]->position()[1]<<"\t"
 	  <<hits2[i]->position()[2]<<"\t"<<hits2[i]->get_time()<<endl;
     }
-  */
+  
   ///start looking for trajectories
   bool ok;
   //while (hits2.size() > 5 && (int)vtrajs.size() <= _maxNtraj) {  

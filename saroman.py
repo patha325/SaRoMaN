@@ -21,7 +21,8 @@ import random
 from pythonlib import print_config
 from pythonlib import field_map_generator
 from pythonlib import handle_third_party
-from pythonlib import xml_parser
+#from pythonlib import xml_parser
+from pythonlib import xml_AiDA_parser
 #import print_config
 #import field_map_generator
 #import handle_third_party
@@ -49,13 +50,16 @@ class saroman:
 
     def __init__(self):
         #Set up paths #
-        self.home = os.getcwd()
+        #self.home = os.getcwd()
+        self.home = '/data/neutrino05/phallsjo/SaRoMan'
         self.exec_base = self.home
         self.out_base  = os.path.join(self.home, 'out')
         #self.out_base  = os.path.join(self.home, 'batch')
         self.scripts_dir = os.path.join(self.exec_base, 'saroman')
         self.third_party_support = os.path.join(self.home, 'third_party') 
-        self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
+        #self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
+        self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
+        
         #self.xml_file_path = os.path.join(self.exec_base,'patMIND.gdml')
         self.parsed_file_path  = os.path.join(self.exec_base,'parsedGdml.log')
 
@@ -82,9 +86,9 @@ class saroman:
         #Mind geometry
         #Different types of geometry, 3 represents a rectangular detector.
         self.MIND_type = 3#0   # Cylinder
-        self.MIND_xdim = 2.9#0.96#7.0 # m
-        self.MIND_ydim = 2#0.96#6.0 # m
-        self.MIND_zdim = 8#3.261# 2.0#13.0 # m
+        self.MIND_xdim = 1#0.96#7.0 # m
+        self.MIND_ydim = 1#0.96#6.0 # m
+        self.MIND_zdim = 1#3.261# 2.0#13.0 # m
         #Not used for rectangular detector
         self.MIND_vertex_xdim = 0#2.0 # m
         self.MIND_vertex_ydim = 0#2.0 # m
@@ -97,7 +101,7 @@ class saroman:
         #de_dx found at pdg.lbl.gov/2015/AtomicNuclearProperties
         self.MIND_active_mat = 'G4_POLYSTYRENE'
         self.MIND_active_de_dx = 0.2052 #MeV/mm
-        self.MIND_thickness_active = 3.0#1.5 # cm
+        self.MIND_thickness_active = 1.5#1.5 # cm
         self.MIND_thickness_sigma = self.MIND_thickness_active / math.sqrt(12)
         self.MIND_width_activeX = 8.5 #cm
         self.MIND_width_sigmaX = self.MIND_width_activeX / math.sqrt(12)
@@ -143,7 +147,8 @@ class saroman:
         self.handle_third_party = handle_third_party(self.exec_base,self.third_party_support)
 
         #Setup for xml_parser.py
-        self.xml_parser = xml_parser(self.xml_file_path,self.parsed_file_path)
+        #self.xml_parser = xml_parser(self.xml_file_path,self.parsed_file_path)
+        self.xml_parser = xml_AiDA_parser(self.xml_file_path,self.parsed_file_path)
         self.useGDML = 0
         if self.parse_gdml:
             self.useGDML = 1
@@ -207,7 +212,7 @@ class saroman:
         self.config_rec_step_size = 5 #cm
         self.config_rec_pos_resX = 8.5 #cm
         self.config_rec_pos_resY = 1.5 #cm
-        self.config_rec_pos_resZ = 1.5 #cm
+        self.config_rec_pos_resZ = 1.0 #cm
         self.config_rec_meas_type = 'xyz'
         self.config_rec_WLSatten = 5000
         # relative density, Sc/Fe, AIR/Sc.
@@ -241,8 +246,8 @@ class saroman:
         Clean up our own software, use before building and before committing to git.
         '''
         #sciNDG4
-        command = [self.third_party_support+'/bin/scons','-c']
-        subprocess.call(command, cwd = self.exec_base+'/sciNDG4')
+        #command = [self.third_party_support+'/bin/scons','-c']
+        #subprocess.call(command, cwd = self.exec_base+'/sciNDG4')
 
         #digi_ND
         subprocess.call('make clean', shell=True, cwd = self.exec_base+'/digi_ND') 
@@ -283,9 +288,9 @@ class saroman:
         subprocess.call('make', shell=True, cwd = self.exec_base+'/mind_rec')    
         
         #sciNDG4
-        command = [self.third_party_support+'/bin/scons']
-        print subprocess.list2cmdline(command)
-        subprocess.call(command, cwd = self.exec_base+'/sciNDG4', env=os.environ)
+        #command = [self.third_party_support+'/bin/scons']
+        #print subprocess.list2cmdline(command)
+        #subprocess.call(command, cwd = self.exec_base+'/sciNDG4', env=os.environ)
     '''        
     def Create_folder_structure(self,name,ending):
         OutBase = os.path.join(self.out_base, name+'_out')

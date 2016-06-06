@@ -164,18 +164,18 @@ void MindDetectorConstruction::SetAuxInformation(G4String basename,
   do {
     try {
       if ((*vit).type.contains("SD")){
-	G4VSensitiveDetector* mydet = SDMgr->FindSensitiveDetector((*vit).value);
-	if ( mydet ){
-	  myvol->SetSensitiveDetector(mydet);
-	} else {
-	  G4cout << sensdetname << " detector not found. Defining detector." << G4endl;
-	  sensDetList.push_back( new MindBarSD((*vit).value) );
-	  SDMgr->AddNewDetector(sensDetList.back());
-	  G4VSensitiveDetector* mydet = SDMgr->FindSensitiveDetector(sensdetname);
-	  myvol->SetSensitiveDetector(mydet);
-	}
-      }
-      else if((*vit).type.contains("Color")){
+          G4VSensitiveDetector* mydet = SDMgr->FindSensitiveDetector((*vit).value);
+          if ( mydet ){
+              myvol->SetSensitiveDetector(mydet);
+          } else {
+              G4cout << sensdetname << " detector not found. Defining detector." << G4endl;
+              sensDetList.push_back( new MindBarSD((*vit).value) );
+              SDMgr->AddNewDetector(sensDetList.back());
+              G4VSensitiveDetector* mydet = SDMgr->FindSensitiveDetector(sensdetname);
+              myvol->SetSensitiveDetector(mydet);
+          }
+    }
+    else if((*vit).type.contains("Color")){
 	if((*vit).value.contains("Red"))
 	  myvol->SetVisAttributes(new G4VisAttributes(G4Color(1, 0, 0)));
 

@@ -92,6 +92,9 @@ protected:
   bool LowMomentumExtraction (vector<cluster*>& hits,
 		       Trajectory& muontraj, vector<cluster*>& hads);
 
+  bool LowMomentumMultipleExtraction (vector<cluster*>& hits,
+		       Trajectory& muontraj, vector<cluster*>& hads);
+
   // Calculate the charge of a track using scattering angles.
   //double CalculateCharge(Trajectory& track);
   //double CalculateCharge2(Trajectory& track);

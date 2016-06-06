@@ -57,25 +57,22 @@ class gdml_hit_constructor
   void reset();
 
   //clusteres the hits in xy to get the better resolution expected by the overlaying bars
-  void clustering(const std::vector<bhep::hit*>& sortedHits);
-  void clustering2(const std::vector<bhep::hit*>& sortedHits);
-  void clusteringXY(const std::vector<bhep::hit*> hits, int key);
+  void Clustering(const std::vector<bhep::hit*>& sortedHits);
+  void ClusteringXY(const std::vector<bhep::hit*> hits, int key);
 
   void ClusteringHits(const std::vector<bhep::hit*> hits, int key);
-  void ClusteringHits2(const std::vector<bhep::hit*> hits, int key);
   std::vector<bhep::hit*> FilteringBadHits(const std::vector<bhep::hit*> hits);
 
   std::vector<std::vector<bhep::hit*> > NextCluster(std::vector<bhep::hit*> hits,double tolerance, string data);
-  //void NextCluster(std::vector<bhep::hit*> hits,double tolerance, string data,std::vector<std::vector<bhep::hit*> > hitsVector);
 
   bool CorrectHit(const std::vector<bhep::hit*> hits);
 
-  int calculate_vox_no(std::vector<bhep::hit*> hits);
+  int Calculate_vox_no(std::vector<bhep::hit*> hits);
 
   //Make the rec hits.
-  void construct_hits(std::vector<bhep::hit*>& rec_hit);
+  void Construct_hits(std::vector<bhep::hit*>& rec_hit);
   //make an individual rec hit.
-  bhep::hit* get_vhit(int vox, double z, const std::multimap<int,bhep::hit*>& map1);
+  bhep::hit* Get_vhit(int vox, double z, const std::multimap<int,bhep::hit*>& map1);
   
   //Random Generator for the smear.
   TRandom3 _ranGen;

@@ -48,11 +48,11 @@ void MindCryInterface::Initialize()
   std::string datastring = MindConfigService::Instance().Generation().GetSParam("crydata");
   _surface = MindConfigService::Instance().Generation().PeekIParam("crysurface") ? 
     MindConfigService::Instance().Generation().GetIParam("crysurface"):1;
-  CRYSetup::CRYSetup *setup=new CRYSetup::CRYSetup(setupString, datastring);
+  CRYSetup *setup=new CRYSetup(setupString, datastring);
 			       
-  gen = new CRYGenerator::CRYGenerator(setup);
+  gen = new CRYGenerator(setup);
   
-  vect=new std::vector<CRYParticle::CRYParticle*>;
+  vect=new std::vector<CRYParticle*>;
 
   particle_table = G4ParticleTable::GetParticleTable();
 

@@ -54,7 +54,7 @@ AC_SUBST(CXXFLAGS)
 dnl Checks for typedefs, structures, and compiler characteristics.
 # ----------------------------------------------------------------------
 
-CXXFLAGS="-g -Wall $(clhep-config --include) $(bhep-config --include) -I$(root-config --incdir)" 
+CXXFLAGS="-g -Wall $(clhep-config --include) $(bhep-config --include) -I$(root-config --incdir) $(xml2-config --cflags)"
 
 AC_CHECK_HEADERS([zlib.h])
 AC_CHECK_HEADERS([particle.h])
@@ -87,7 +87,7 @@ for prog in $prog_list; do
   test $prog = "root-config" && LIBS="$LIBS $($prog --glibs)"
 done
 
-LIBS="$LIBS $(root-config --libs)"
+LIBS="$LIBS $(root-config --libs) $(xml2-config --libs)"
 
 
 AC_MSG_CHECKING([for bhep library])

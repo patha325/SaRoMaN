@@ -435,53 +435,54 @@ particle* root2dst::create_digital_representation(const vector<particle*>& tru_p
 
       temp_hit.clear();
     }
-    
-    _construct->execute( part_hits, vox ,histo_vec);
-    
-    for (voxIt = vox.begin();voxIt != vox.end();voxIt++)
-      hitMap->add_hit( detect , (*voxIt) );
-
-  } else {
-    for (Int_t iPart = 0;iPart < (Int_t)tru_parts.size();iPart++) {
-      
-      part_hits = tru_parts[iPart]->hits( detect );
-      
-      if (part_hits.size()!=0)
-	for (Int_t iHit = 0;iHit < (Int_t)part_hits.size();iHit++) {
-	  
-	  //truE = bhep::double_from_string( part_hits[iHit]->data("E_dep") );
-	  truE = part_hits[iHit]->ddata( edep );
-	  
-	  //E_sig = sigMaE * truE;
-	  //if ( truE > 0.0009 ){
-	  
-	  recE = truE;// + RandGauss::shoot(&ranGen, 0, E_sig);
-	  
-	  X = part_hits[iHit]->x().x()/cm;// + RandGauss::shoot(&ranGen, 0, sigMa);
-	  Y = part_hits[iHit]->x().y()/cm;// + RandGauss::shoot(&ranGen, 0, sigMa);
-	  Z = part_hits[iHit]->x().z()/cm;
-	  
-	  Point3D hitPos(X * cm,Y * cm,Z * cm);
-	  hit* digHit = new hit( detect );
-	  digHit->set_point(hitPos);
-	  //digHit->add_data("E_dep", bhep::to_string( recE ));
-	  digHit->add_property( edep , recE);
-	  digHit->add_property( "true_moth", tru_parts[iPart]->name() );
-	  if ( part_hits[iHit]->mother_particle()
-	       .fetch_sproperty("CreatorProcess")=="none" )
-	    moth_prim = 1;
-	  else
-	    moth_prim = 0;
-	  digHit->add_property( "moth_prim", moth_prim );
-	  //cout << tru_parts[iPart]->name() << endl;
-	  //digHit->set_mother_particle( *tru_parts[iPart] );
-	  hitMap->add_hit( detect , digHit);
-	  //}
-	}
-      part_hits.clear();
-      
+    if(part_hits.size()!=0)
+      {
+	_construct->execute( part_hits, vox ,histo_vec);
+	
+	for (voxIt = vox.begin();voxIt != vox.end();voxIt++)
+	  hitMap->add_hit( detect , (*voxIt) );
+	
+      } else {
+      for (Int_t iPart = 0;iPart < (Int_t)tru_parts.size();iPart++) {
+	
+	part_hits = tru_parts[iPart]->hits( detect );
+	
+	if (part_hits.size()!=0)
+	  for (Int_t iHit = 0;iHit < (Int_t)part_hits.size();iHit++) {
+	    
+	    //truE = bhep::double_from_string( part_hits[iHit]->data("E_dep") );
+	    truE = part_hits[iHit]->ddata( edep );
+	    
+	    //E_sig = sigMaE * truE;
+	    //if ( truE > 0.0009 ){
+	    
+	    recE = truE;// + RandGauss::shoot(&ranGen, 0, E_sig);
+	    
+	    X = part_hits[iHit]->x().x()/cm;// + RandGauss::shoot(&ranGen, 0, sigMa);
+	    Y = part_hits[iHit]->x().y()/cm;// + RandGauss::shoot(&ranGen, 0, sigMa);
+	    Z = part_hits[iHit]->x().z()/cm;
+	    
+	    Point3D hitPos(X * cm,Y * cm,Z * cm);
+	    hit* digHit = new hit( detect );
+	    digHit->set_point(hitPos);
+	    //digHit->add_data("E_dep", bhep::to_string( recE ));
+	    digHit->add_property( edep , recE);
+	    digHit->add_property( "true_moth", tru_parts[iPart]->name() );
+	    if ( part_hits[iHit]->mother_particle()
+		 .fetch_sproperty("CreatorProcess")=="none" )
+	      moth_prim = 1;
+	    else
+	      moth_prim = 0;
+	    digHit->add_property( "moth_prim", moth_prim );
+	    //cout << tru_parts[iPart]->name() << endl;
+	    //digHit->set_mother_particle( *tru_parts[iPart] );
+	    hitMap->add_hit( detect , digHit);
+	    //}
+	  }
+	part_hits.clear();
+	
+      }
     }
   }
-
   return hitMap;
 }

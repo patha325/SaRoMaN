@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='us-ascii'?>
+
+<!--  A SAMPLE set of slides  -->
+<define>
+<channelMap boardID="0" channelID="0" barNumber="0" barPosZ="-400"
+isYBar ="0" barPosT = "-400" />
+<channelMap boardID="0" channelID="1" barNumber="1" barPosZ="-400"
+isYBar ="1" barPosT = "-400" />
+
+</define>

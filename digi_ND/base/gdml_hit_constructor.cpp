@@ -60,6 +60,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   */
 
   //Set the histogram plotters
+  /*
   rawHitsTH1F = histo_vec[0];
   clusteredHitsTH1F = histo_vec[1];
   digitizedHitsTH1F = histo_vec[2];
@@ -69,6 +70,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   yeTH1F = histo_vec[6];
   yeAttTH1F = histo_vec[7];
   yeSmearTH1F = histo_vec[8];
+  */
 
   //First clear out map.
   reset();
@@ -110,7 +112,7 @@ void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSorted
     {
       //double currZ = (*hitIt)->ddata( "barPosZ" );
       double nextZ;
-      rawHitsTH1F->Fill((*hitIt)->x()[2]);
+      //rawHitsTH1F->Fill((*hitIt)->x()[2]);
       
       if(hitIt + 1 != zSortedHits.end()){ nextZ = (*(hitIt + 1))->ddata( "barPosZ" );}
       else {nextZ = firstZ + 2./2. * _activeLength;}
@@ -169,7 +171,7 @@ void gdml_hit_constructor::Clustering(const std::vector<bhep::hit*>& zSortedHits
     {
       double currZ = (*hitIt)->ddata( "barPosZ" );
       double nextZ;
-      rawHitsTH1F->Fill((*hitIt)->x()[2]);
+      //rawHitsTH1F->Fill((*hitIt)->x()[2]);
       
       if(hitIt + 1 != zSortedHits.end()){ nextZ = (*(hitIt + 1))->ddata( "barPosZ" );}
       else {nextZ = currZ + 3./4. * _activeLength;}
@@ -450,7 +452,7 @@ void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int 
     { 
       if ( vox_num >= 0){
 	_voxels[z].insert( pair<int,bhep::hit*>(vox_num,filteredHits[cnt]) );
-	clusteredHitsTH1F->Fill(filteredHits[cnt]->x()[2]);
+	//clusteredHitsTH1F->Fill(filteredHits[cnt]->x()[2]);
       }
     }
     
@@ -628,7 +630,7 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
       X.push_back( (*hIt).second->x()[0] );
       Y.push_back( (*hIt).second->x()[1] );
       Z.push_back( (*hIt).second->x()[2] );
-      digitizedHitsTH1F->Fill((*hIt).second->x()[2]);
+      //digitizedHitsTH1F->Fill((*hIt).second->x()[2]);
       T.push_back( (*hIt).second->ddata( "time" ) );
       E.push_back( (*hIt).second->ddata( "EnergyDep" ) );
       totEng += (*hIt).second->ddata( "EnergyDep" );
@@ -659,8 +661,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
 
   xE1 = xE2 = yE1 = yE2 = totEng/4;
 
-  xeTH1F->Fill(xE1+xE2);
-  yeTH1F->Fill(yE1+yE2);
+  //xeTH1F->Fill(xE1+xE2);
+  //yeTH1F->Fill(yE1+yE2);
 
   //cout<<"attLength: "<<_attLength<<endl;
   /*
@@ -675,8 +677,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
   yE2 = yE2 * exp(-(yedge + fabs(barY))/_attLength);
 
 
-  xeAttTH1F->Fill(xE1+xE2);
-  yeAttTH1F->Fill(yE1+yE2);
+  //xeAttTH1F->Fill(xE1+xE2);
+  //yeAttTH1F->Fill(yE1+yE2);
   /*
   dtx = (xedge + fabs(barX)) < (3*xedge - fabs(barX)) ?
     (xedge + fabs(barX))/vlight : (3*xedge - fabs(barX))/vlight;
@@ -700,8 +702,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
   double yE = yE1 + _ranGen.PoissonD(smearingFactor * yE1)
     + yE2 + _ranGen.PoissonD(smearingFactor * yE2);
 
-  xeSmearTH1F->Fill(xE);
-  yeSmearTH1F->Fill(yE);
+  //xeSmearTH1F->Fill(xE);
+  //yeSmearTH1F->Fill(yE);
 
   //if ( fabs(z) > (_detectorLength + _vertexDetdepth)/2. && 
   //     xE < _minEng && yE < _minEng )

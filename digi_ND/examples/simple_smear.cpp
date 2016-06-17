@@ -166,88 +166,122 @@ public:
 
 };
 
-vector<bhep::hit*> ConvertToHit(HitStructure inStructure)
+void ConvertToPosition(bhep::hit* inHit, unsigned int channelId, unsigned int boardId, Xml_parser* parse, xmlNode* root_element)
 {
-
-  vector<bhep::hit*> returnVector;
+  //<channelMap boardID="0"  channelID="9"  barNumber="128"  barPosZ="0"  isYBar="0"  moduleNum="1"  barPosT="0"/>
 
   /*
-  for(unsigned int cnt = 0;cnt<inStructure.gtrigVec.size();cnt++
-    {
-      // Filter depending on channel
-      if(inStructure.gtrigVec[cnt]->hitTimeMap.begin()->first == 0)
-	{
+    Using channelId and boardId, from the parsedXML file return the position data.
+  */
+  double barPosZ =0.0;
+  int isYBar=0;
+  int barNumber=0;
+  double barPosT=0.0;
+  int moduleNum=0;
 
-	}
+  xmlNode *cur_node = parse->GetNode(root_element,"boardID",boardId,"channelID",channelId);
+
+  if(cur_node != NULL)
+    {
+      xmlAttr* attribute = cur_node->properties;
       
-      // Filter depending on hittime
-      if(inStructure.gtrigVec[cnt]->hitTimeMap.begin()->second->hitTime == 0)
+      while(attribute)
 	{
-
+	  if(strncmp ((char*)attribute->name,"barPosZ",7) == 0)
+	    {
+	      barPosZ = atof((char*)xmlNodeGetContent(attribute->children));
+	    }
+	  else if(strncmp ((char*)attribute->name,"isYBar",6) == 0)
+	    {
+	      isYBar = atoi((char*)xmlNodeGetContent(attribute->children));
+	    }
+	  else if(strncmp ((char*)attribute->name,"barNumber",9) == 0)
+	    {
+	      barNumber = atoi((char*)xmlNodeGetContent(attribute->children));
+	    }
+	  else if(strncmp ((char*)attribute->name,"barPosT",7) == 0)
+	    {
+	      barPosT = atof((char*)xmlNodeGetContent(attribute->children));
+	    }
+	  else if(strncmp ((char*)attribute->name,"moduleNum",9) == 0)
+	    {
+	      moduleNum = atoi((char*)xmlNodeGetContent(attribute->children));
+	    }
+	  attribute = attribute->next;
 	}
-
-
-
     }
-  */
 
-
+  inHit->add_property("barPosZ",barPosZ);
+  inHit->add_property("IsYBar",isYBar);
+  inHit->add_property("barNumber",barNumber);
+  inHit->add_property("barPosT",barPosT);
+  inHit->add_property("moduleNum",moduleNum);
   /*
-
-// Read in 2 txt files that contains info needed to convert.
-// one for edep per channel per board
-// one for x/y z ybar, num 
-
-
-  for(unsigned int cnt=0;cnt<inStructure.hitTimeVec.size();cnt++)
-    {
-      for(unsigned int inCnt=0;inCnt<inStructure.hitTimeVec[cnt].hitAmplitudeVec.size();inCnt++)
-	{
-	  //ddata( "EnergyDep" )
-	  //inStructure.hitTimeVec[cnt].hitAmplitudeVec[inCnt].amplitudeMeasurement
-	  //inStructure.hitTimeVec[cnt].hitAmplitudeVec[inCnt].channelId
-	  //inStructure.spillHeader.boardId
-	  
-	  //ddata( "barPosZ" )
-	  //idata( "IsYBar" )
-	  //idata( "barNumber" )
-	  //ddata( "barPosT" )
-	  //inStructure.hitTimeVec[cnt].hitAmplitudeVec[inCnt].channelId
-	  //inStructure.spillHeader.boardId
-
-	  //ddata( "time" );
-	  //inStructure.hitTimeVec[cnt].hitTime
-	}
-
-    }
-
-
-  
-
-    //returnVector.back()->add_data("time",FieldTest.EvD.HitTime);
-    //returnVector.back()->add_property("time",(double)FieldTest.EvD.HitTime);
-
-    //cout<<"FieldTest.EvD.HitID: "<<FieldTest.EvD.HitID<<endl;
-
-    //returnVector.back().add_data(name,value);
-  
+  cout<<"Data start"<<endl;
+  cout<<"boardID="<<boardId<<endl;
+  cout<<"channelID"<<channelId<<endl;
+  cout<<"barPosZ="<<barPosZ<<endl;
+  cout<<"IsYBar="<<isYBar<<endl;
+  cout<<"barNumber="<<barNumber<<endl;
+  cout<<"barPosT="<<barPosT<<endl;
+  cout<<"moduleNum="<<moduleNum<<endl;
+  cout<<"Data end"<<endl;
   */
-  return returnVector;
+}
+
+
+double ConvertToEdep(vector<HitAmplitude*> inVec, unsigned int channelId, unsigned int boardId)
+{
+  double eDep=10;
+
+  return eDep;
+}
+
+vector<vector<bhep::hit*> >ConvertToHit(HitStructure inStructure)
+{
+  /*
+    Parses the xml file and uses the information to convert from the hitstructure to
+    a vector of vectors of bhep hit*. The vectors are split depending on the different gtrigs.
+  */
+  Xml_parser parse("test.xml");
+  xmlNode *root_element = parse.ParseXML();
+  vector<bhep::hit*>returnVector;
+  vector<vector<bhep::hit*> >returnVecVector;
+  cout<<"inStructure.gtrigVec.size()="<<inStructure.gtrigVec.size()<<endl;
+
+  for(unsigned int cnt = 0; cnt<inStructure.gtrigVec.size(); cnt++)
+    {
+      for(map<unsigned int,HitTime*>::iterator it = inStructure.gtrigVec[cnt]->hitTimeMap.begin();
+	  it != inStructure.gtrigVec[cnt]->hitTimeMap.end(); ++it)
+	{
+	  returnVector.push_back(new bhep::hit());
+
+	  returnVector.back()->add_property("EnergyDep",
+				       ConvertToEdep(it->second->hitAmplitudeVec,it->second->channelId,inStructure.header->boardId));
+	  //returnVector.back()->add_property("time",0);
+	  returnVector.back()->add_property("time",(double)it->second->hitTime);
+
+	  ConvertToPosition(returnVector.back(),it->second->channelId,inStructure.header->boardId,&parse,root_element);
+	}
+      returnVecVector.push_back(returnVector);
+      returnVector.clear();
+    }
+  return returnVecVector;
 }
 
 
 
 
-vector<bhep::hit*> HandleTestBeamDataNew()//(char *sInputFileName)
+vector<vector<bhep::hit*> >HandleTestBeamDataNew()//(char *sInputFileName)
 {
-  Xml_parser parse("testXML.xml");
-  xmlNode *root_element = parse.ParseXML();
+  //Xml_parser parse("testXML.xml");
+  //xmlNode *root_element = parse.ParseXML();
   //parse.print_element_names(root_element);
 
   //cout<<"Print done"<<endl;
   
-  xmlNode *cur_node = parse.GetNode(root_element,"boardID",0,"channelID",1);
-  
+  //xmlNode *cur_node = parse.GetNode(root_element,"boardID",0,"channelID",1);
+  /*
   if(cur_node != NULL)
     {
       xmlAttr* attribute = cur_node->properties;
@@ -263,8 +297,9 @@ vector<bhep::hit*> HandleTestBeamDataNew()//(char *sInputFileName)
     {
       cout<<"NULL"<<endl;
     }
+  */
   
-  vector<bhep::hit*> returnVector;
+  vector<vector<bhep::hit*> >returnVector;
   
   //unsigned char *data=new unsigned char [20];
 
@@ -429,6 +464,7 @@ vector<bhep::hit*> HandleTestBeamDataNew()//(char *sInputFileName)
 	temp.trailer = new SpillTrailer(tempV);
 	tempV.clear();
 	spills.push_back(temp);
+	temp.clear();
 	start = false;
 	cout<<"done"<<endl;
       }
@@ -449,6 +485,7 @@ vector<bhep::hit*> HandleTestBeamDataNew()//(char *sInputFileName)
     */
   }
   cout<<"Created HitStructures"<<endl;
+  /*
   cout<<"spills.size()="<<spills.size()<<endl;
   for(unsigned int cnt =0;cnt<spills.size();cnt++)
     {
@@ -468,39 +505,24 @@ vector<bhep::hit*> HandleTestBeamDataNew()//(char *sInputFileName)
       cout<<"spill done"<<endl;
     }
   cout<<"loop done"<<endl;
-
-
-
-  // Old data format
-  /*
-  std::string line;
-  while (std::getline(inFile, line))
-    {
-    //cout<<line<<endl;
-      //cout<<line.length()<<endl;
-
-      cout<<std::hex<<line<<endl;
-
-
-      //cout<<line.length()<<endl;
-      
-      std::vector<char> bytes(line.begin(), line.end());
-
-      std::vector<unsigned long int> longV;
-
-      for(int i = 0; i<bytes.size();i+=4)
-	{
-
-	  longV.push_back(bytes[i] << 24 | bytes[i+1] << 16 |  bytes[i+2] << 8 | bytes[i+3] << 0);
-
-	  //cout<<longV.back()<<endl;
-	  //cout<<std::bitset<32>(longV.back())<<endl;
-	}
-  
-      HitStructure test(longV);
-
-  }
   */
+
+  //converting
+  cout<<"spills.size()="<<spills.size()<<endl;
+  for(unsigned int cnt =0; cnt<spills.size();cnt++)
+    {
+      vector<vector<bhep::hit*> >tempVec;
+      
+      tempVec = ConvertToHit(spills[cnt]);
+      
+      returnVector.insert(returnVector.end(),tempVec.begin(),tempVec.end());
+    }
+
+  //returnVector = ConvertToHit(spills[0]);
+  //cout<<"returnVector size="<<returnVector.size()<<endl;
+  //cout<<returnVector[0]->idata( "IsYBar" )<<endl;
+  //cout<<returnVector[0]->idata( "moduleNum" )<<endl;
+
   return returnVector;
 }
 
@@ -590,57 +612,87 @@ int main(int argc, char* argv[]) {
   int evt_read = 0;
 
   vector<string> input_data = data_store.fetch_svstore("idst_files");
-  /*
-  //If file ending is .root do nothing extra
-  if (input_data[0].find(".root")!=npos)
+
+
+  int testBeam = run_store.fetch_istore("testBeam");
+  if(!testBeam)
     {
-      HandleTestBeamData();
-    }
-  */
-  //(void) HandleTestBeamData();
-  (void) HandleTestBeamDataNew();
+       vector<vector<bhep::hit*> >testBeamDataVecVec = HandleTestBeamDataNew();
 
-  //vector<bhep::hit*> testVec = HandleTestBeamData();
-  /*
-  for(int cnt=0;cnt<testVec.size();cnt++)
+      bhep::event e;
+
+      gdml_hit_constructor* _construct = new gdml_hit_constructor(*con_store);
+      ptype pT = DIGI;
+      string detect = "tracking";
+      particle *hitMap = new particle(pT, "unknown");
+      vector<bhep::hit*> vox;
+      vector<bhep::hit*>::iterator voxIt;
+      vector<TH1F*> histo_vec;
+      
+      cout<<"testBeamDataVecVec.size()="<<testBeamDataVecVec.size()<<endl;
+
+      for(unsigned int cnt =0;cnt<testBeamDataVecVec.size();cnt++)
+	{
+	  _construct->execute( testBeamDataVecVec[cnt], vox ,histo_vec);
+	  cout<<"vox.size()="<<vox.size()<<endl;
+
+	  for (voxIt = vox.begin();voxIt != vox.end();voxIt++)
+	    hitMap->add_hit( detect , (*voxIt) );
+	  
+	  //e.add_digi_particle( hitMap );
+	  
+	  //bhep::bhep_svc::instance()->get_writer_root().write( e, cnt );//iEvent );
+	  //e.clear();
+	  hitMap->clear();
+	  vox.clear();
+	  
+	  //bhep::event e;// = inDst.read_event( iEvent );//eman->read();
+	  //std::cout << "Event: " << evt_read <<", "<<e.event_number()<< std::endl;
+	  //Get Vector of all true particles from event.
+	  //vector<bhep::particle*> particles = e.true_particles();
+	  //
+	  
+	  //particle* digi_part = cvt->create_digital_representation( testBeamDataVec );
+	  
+	  //e.add_digi_particle( digi_part );
+	  
+	  //bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
+	  //e.clear();
+	}
+    }
+  else
     {
-      //cout<<testVec[cnt]->ddata("time")<<endl;
+      for (unsigned int ifile = 0;ifile < input_data.size();ifile++){
+	
+	inDst.open( input_data[ifile] );
+	iEvent = 0;
+	
+	//  for (int iEvent = 0;iEvent < nEvents;iEvent++) {
+	while( !inDst.eof( iEvent ) && evt_read < nEvents ){
+	  // std::cout << "Event: " << evt_read << std::endl;
+	  
+	  bhep::event& e = inDst.read_event( iEvent );//eman->read();
+	  std::cout << "Event: " << evt_read <<", "<<e.event_number()<< std::endl;
+	  //Get Vector of all true particles from event.
+	  vector<bhep::particle*> particles = e.true_particles();
+	  //
+	  
+	  particle* digi_part = cvt->create_digital_representation( particles );
+	  
+	  e.add_digi_particle( digi_part );
+	  
+	  bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
+	  e.clear();
+	  
+	  iEvent++;
+	  evt_read++;
+	}
+	
+	inDst.close();
+      }
+      cvt->print(); // Used to print the debug histograms to a root file.
     }
-  */
-  //cout<<"size:"<<testVec.size()<<endl;
-
-  //If file ending is something else, parse it into a root file.
-
-  for (unsigned int ifile = 0;ifile < input_data.size();ifile++){
-    
-    inDst.open( input_data[ifile] );
-    iEvent = 0;
-
-    //  for (int iEvent = 0;iEvent < nEvents;iEvent++) {
-    while( !inDst.eof( iEvent ) && evt_read < nEvents ){
-      // std::cout << "Event: " << evt_read << std::endl;
-      
-      bhep::event& e = inDst.read_event( iEvent );//eman->read();
-      std::cout << "Event: " << evt_read <<", "<<e.event_number()<< std::endl;
-      //Get Vector of all true particles from event.
-      vector<bhep::particle*> particles = e.true_particles();
-      //
-      
-      particle* digi_part = cvt->create_digital_representation( particles );
-      
-      e.add_digi_particle( digi_part );
-      
-      bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
-      e.clear();
-      
-      iEvent++;
-      evt_read++;
-    }
-
-    inDst.close();
-  }
-
-  cvt->print(); // Used to print the debug histograms to a root file.
+ 
 
   WriteUtil::CloseOutputDst();
   //inDst.close();

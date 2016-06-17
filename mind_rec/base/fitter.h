@@ -89,6 +89,24 @@ public:
 
   vector<double> _momentum_guess_vec;
 
+  std::vector<double> _xDir;
+  std::vector<double> _yDir;
+  std::vector<double> _x0;
+  std::vector<double> _y0;
+  std::vector<double> _xchi;
+  std::vector<double> _ychi;
+  std::vector<double> _hitsPerPlanes;
+  std::vector<double> _avrHitsPerUsedPlanes;
+  
+  std::vector<double> GetXDir() {return _xDir;}
+  std::vector<double> GetYDir() {return _yDir;}
+  std::vector<double> GetX0() {return _x0;}
+  std::vector<double> GetY0() {return _y0;}
+  std::vector<double> GetXChi() {return _xchi;}
+  std::vector<double> GetYChi() {return _ychi;}
+  std::vector<double> GetHPP() {return _hitsPerPlanes;}
+  std::vector<double> GetAHPP() {return _avrHitsPerUsedPlanes;}
+
 protected:
   
   //void resetVirtualPlanes(); 
@@ -201,6 +219,7 @@ protected:
 
   //Detector name for hit getter. made members 26/11, weird error day.
   string _detect;
+  int _testBeam;
   int _highPass;
   int _lowPass;
   double _lowFit1, _lowFit2;

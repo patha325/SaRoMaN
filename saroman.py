@@ -83,6 +83,8 @@ class saroman:
         self.inttype = 'CC'
         self.Bfield = 1.5 #Tesla
 
+        self.testBeam = 1
+
         #Mind geometry
         #Different types of geometry, 3 represents a rectangular detector.
         self.MIND_type = 3#0   # Cylinder

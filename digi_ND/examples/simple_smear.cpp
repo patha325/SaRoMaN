@@ -615,7 +615,7 @@ int main(int argc, char* argv[]) {
 
 
   int testBeam = run_store.fetch_istore("testBeam");
-  if(!testBeam)
+  if(testBeam)
     {
        vector<vector<bhep::hit*> >testBeamDataVecVec = HandleTestBeamDataNew();
 

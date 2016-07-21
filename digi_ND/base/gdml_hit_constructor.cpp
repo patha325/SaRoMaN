@@ -79,18 +79,28 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   std::vector<bhep::hit*> sortedHits = hits;
   sort( sortedHits.begin(), sortedHits.end(), forwardSortZ() );
 
-
+  /*
   cout<<sortedHits.size();
   for(int i=0;i<sortedHits.size();i++)
     {
-      cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
-      cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
+      cout<<"time\tenergy\tT\tZ\tY"<<endl;
+      cout<<sortedHits[i]->ddata("time")<<"\t"
+	  <<sortedHits[i]->ddata("EnergyDep")<<"\t"
+	  <<sortedHits[i]->ddata("barPosT")<<"\t"
+	  <<sortedHits[i]->ddata("barPosZ")<<"\t"
+	  <<sortedHits[i]->idata("IsYBar")<<endl;
+      //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
+      //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
     }
-
+  */
   ClusteringAida(sortedHits);
+
+  //cout<<"GDML_HIT_CONSTRUCTOR _voxels.size()="<<_voxels.size()<<endl;
 
   //Make rec_hits from vox.
   Construct_hits( rec_hit );
+
+  //cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
 }
 
 void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSortedHits)
@@ -117,7 +127,8 @@ void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSorted
       if(hitIt + 1 != zSortedHits.end()){ nextZ = (*(hitIt + 1))->ddata( "barPosZ" );}
       else {nextZ = firstZ + 2./2. * _activeLength;}
 
-      if(fabs(nextZ-firstZ) == 1./2. * _activeLength)
+      //if(fabs(nextZ-firstZ) == 1./2. * _activeLength)
+      if(fabs(nextZ-firstZ) <= 1./2. * _activeLength)
 	{
 	  moduleHits.push_back((*hitIt));
 	}
@@ -133,15 +144,15 @@ void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSorted
     }
 
   //moduleHitsVector per z
-
-  cout<<"Cluster"<<endl;
+  /*
+  //cout<<"Cluster"<<endl;
   for(int counter = 0; counter < moduleHitsVector.size(); counter++)
-    {
+  {
       cout<<"Cluster "<<counter<<endl;
       for(int cnt = 0;cnt<moduleHitsVector[counter].size();cnt++)
 	cout<<"barPosZ="<<moduleHitsVector[counter][cnt]->ddata("barPosZ")<<endl;
-    }
-
+  }
+  */
 
 
   // Do the actually clustering
@@ -190,7 +201,7 @@ void gdml_hit_constructor::Clustering(const std::vector<bhep::hit*>& zSortedHits
     }
 
   //moduleHitsVector per z
-
+  /*
   cout<<"Cluster"<<endl;
   for(int counter = 0; counter < moduleHitsVector.size(); counter++)
     {
@@ -198,7 +209,7 @@ void gdml_hit_constructor::Clustering(const std::vector<bhep::hit*>& zSortedHits
       for(int cnt = 0;cnt<moduleHitsVector[counter].size();cnt++)
 	cout<<"barPosZ="<<moduleHitsVector[counter][cnt]->ddata("barPosZ")<<endl;
     }
-
+  */
 
 
   // Do the actually clustering
@@ -250,7 +261,7 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
   sort( filteredHits.begin(), filteredHits.end(), timeSort());
 
   // Fill vectors with hits in the same time.
-  double tolerance = 1; // 1 ns
+  double tolerance = 1000; // 1 ns
 
   std::vector<bhep::hit*> timeHits;
   std::vector<std::vector<bhep::hit*> > timeHitsVector;
@@ -448,6 +459,8 @@ void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int 
 
   //for the whole vector.
 
+  //cout<<"filteredHits.size()="<<filteredHits.size()<<endl;
+
   for(int cnt = 0; cnt<filteredHits.size();cnt++)
     { 
       if ( vox_num >= 0){
@@ -626,22 +639,22 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
 	  sumBarPosX+=x;
 	  */
 	  }
-      mother_particle.push_back((*hIt).second->mother_particle().name());
-      X.push_back( (*hIt).second->x()[0] );
-      Y.push_back( (*hIt).second->x()[1] );
-      Z.push_back( (*hIt).second->x()[2] );
+      //testbeam mother_particle.push_back((*hIt).second->mother_particle().name());
+      //testbeam X.push_back( (*hIt).second->x()[0] );
+      //testbeam Y.push_back( (*hIt).second->x()[1] );
+      //testbeam Z.push_back( (*hIt).second->x()[2] );
       //digitizedHitsTH1F->Fill((*hIt).second->x()[2]);
       T.push_back( (*hIt).second->ddata( "time" ) );
       E.push_back( (*hIt).second->ddata( "EnergyDep" ) );
       totEng += (*hIt).second->ddata( "EnergyDep" );
       proptime = (*hIt).second->ddata( "time" )  < proptime ?  
 	(*hIt).second->ddata( "time" )  : proptime;
-      if ( (*hIt).second->mother_particle().name() == "mu+" ||
-	   (*hIt).second->mother_particle().name() == "mu-" ){
-	if ( (*hIt).second->mother_particle().fetch_sproperty("CreatorProcess")=="none" )
-	  muProp++;
-      } else if ( (*hIt).second->mother_particle().name() == "lepton_shower" )
-	muProp += 0.5;
+      //testbeam  if ( (*hIt).second->mother_particle().name() == "mu+" ||
+      //testbeam	   (*hIt).second->mother_particle().name() == "mu-" ){
+      //testbeamif ( (*hIt).second->mother_particle().fetch_sproperty("CreatorProcess")=="none" )
+      //testbeam muProp++;
+      //testbeam} else if ( (*hIt).second->mother_particle().name() == "lepton_shower" )
+      //testbeam	muProp += 0.5;
       
       //std::cout<<(*hIt).second->x()[0]<<"\t"<<(*hIt).second->x()[1]<<"\t"<<(*hIt).second->x()[2]<<"\t"
       //	       <<(*hIt).second->ddata( "EnergyDep" )<<std::endl;
@@ -722,7 +735,7 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
       vhit->add_property( "TotalEng", totEng );
       vhit->add_property( "XEng", xE );
       vhit->add_property( "YEng", yE );
-      vhit->add_property( "MuonProportion", muProp );
+      //testbeam vhit->add_property( "MuonProportion", muProp );
       vhit->add_property( "NoPoints", (int)X.size() );
       vhit->add_property( "Xpoint", X );
       vhit->add_property( "Ypoint", Y );

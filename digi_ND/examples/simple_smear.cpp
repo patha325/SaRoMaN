@@ -34,6 +34,7 @@
 
 #include "TFile.h"
 #include "TH1D.h"
+#include "TH2D.h"
 
 #include <exception>
 
@@ -120,6 +121,16 @@ void ConvertToPosition(bhep::hit* inHit, unsigned int boardId, unsigned int chan
       cout<<"Node is NULL!"<<endl;
     }
 
+
+  if(isYBar)
+    {
+      barNumber = (barNumber -118)*2;
+    }
+  else
+    {
+      barNumber = (barNumber - 34)*2 -1;
+    }
+
   inHit->add_property("barPosZ",barPosZ);
   inHit->add_property("IsYBar",isYBar);
   inHit->add_property("barNumber",barNumber);
@@ -152,14 +163,42 @@ vector<bhep::hit*>ConvertToHit(vector<TempHit*> hitsVector, string xmlName)
   xmlNode *root_element = parse.ParseXML();
   vector<bhep::hit*>returnVector;
 
+  int counterFEB18 = 0;
+  int counterFEB38 = 0;
+
+  int counterFEB10 = 0;
+  int counterFEB30 = 0;
+  int counterFEB115 = 0;
+  int counterFEB315 = 0;
+
+
   for(unsigned int cnt = 0; cnt<hitsVector.size(); cnt++)
   {
     returnVector.push_back(new bhep::hit());
     double tempEdep = ConvertToEdep(hitsVector[cnt]->boardId,hitsVector[cnt]->channelId,hitsVector[cnt]->amplitude);
     returnVector.back()->add_property("EnergyDep",tempEdep);
     returnVector.back()->add_property("time",(double)hitsVector[cnt]->timeing);
+
+    if(hitsVector[cnt]->boardId == 1 && hitsVector[cnt]->channelId == 8) counterFEB18++;
+    if(hitsVector[cnt]->boardId == 3 && hitsVector[cnt]->channelId == 8) counterFEB38++;
+
+    if(hitsVector[cnt]->boardId == 1 && hitsVector[cnt]->channelId == 0) counterFEB10++;
+    if(hitsVector[cnt]->boardId == 3 && hitsVector[cnt]->channelId == 0) counterFEB30++;
+
+    if(hitsVector[cnt]->boardId == 1 && hitsVector[cnt]->channelId == 15) counterFEB115++;
+    if(hitsVector[cnt]->boardId == 3 && hitsVector[cnt]->channelId == 15) counterFEB315++;
+
     ConvertToPosition(returnVector.back(),hitsVector[cnt]->boardId,hitsVector[cnt]->channelId,&parse,root_element);
   }
+
+  cout<<"counterFEB18="<<counterFEB18<<endl;
+  cout<<"counterFEB38="<<counterFEB38<<endl;
+
+  cout<<"counterFEB10="<<counterFEB10<<endl;
+  cout<<"counterFEB30="<<counterFEB30<<endl;
+
+  cout<<"counterFEB115="<<counterFEB115<<endl;
+  cout<<"counterFEB315="<<counterFEB315<<endl;
 
   return returnVector;
 }
@@ -187,36 +226,42 @@ void ForFile(string filename, string filepath, vector<TempHit*>* tempHits,vector
 	    spillCnt++;
 	    // For each spill and all files, fill vector of hits.	 
 	    
-	    MDpartEventBM event;
+	    MDpartEventBM* event;
 	    int nTr = spill.GetNumOfTriggers();
 	    for (int i=0; i<6000;++i){//nTr; ++i) {
 	      vector<TempHit*> tempVec;
 	      event = spill.GetTriggerEventPtr(i);
 	      //           event->Dump();
-	      for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) {
-		int nHits = event.GetNLeadingEdgeHits(ich);
-		//if (nHits)
-		//{
-		    //h1.Fill(ich, nHits);
-		    //int q = event.GetHitAmplitude(ich, 'h');
-		    //h2.Fill(q);
-		//}
-		
-		for(int ih=0; ih<nHits; ih++)
+	      for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) 
+		{
+		  //cout<<"Channel="<<ich<<endl;
+		  //if(event->LGAmplitudeHitExists(ich) && event->HGAmplitudeHitExists(ich))
+		  if(event->HGAmplitudeHitExists(ich))
 		  {
-		    if(event.GetHitTime(ih,ich, 'l') >0 && event.GetHitAmplitude(ich, 'h') > 1000)
-		      {
-			tempHits->push_back(new TempHit(event.GetHitAmplitude(ich, 'h'),
-							event.GetHitTime(ih,ich, 'l'),ich,spill.GetBoardId()));
-			//event.GetHitTime(ih,ich, 'l')+4000*i,ich,spill.GetBoardId()));
-			//cout<<"spill.GetBoardId="<<spill.GetBoardId()<<endl;
-
-			tempVec.push_back(new TempHit(event.GetHitAmplitude(ich, 'h'),
-							event.GetHitTime(ih,ich, 'l'),ich,spill.GetBoardId()));
+		      int nHits = event->GetNLeadingEdgeHits(ich);
+		      //cout<<"IN"<<endl;
+		      //if (nHits)
+		      //{
+		      //h1.Fill(ich, nHits);
+		      //int q = event.GetHitAmplitude(ich, 'h');
+		      //h2.Fill(q);
+		      //}
+		      
+		      for(int ih=0; ih<nHits; ih++)
+			{
+			  if(event->GetHitTime(ih,ich, 'l') >0 && event->GetHitAmplitude(ich, 'h') > 1000)
+			    {
+			      tempHits->push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
+							      event->GetHitTime(ih,ich, 'l'),ich,spill.GetBoardId()));
+			      //event.GetHitTime(ih,ich, 'l')+4000*i,ich,spill.GetBoardId()));
+			      //cout<<"spill.GetBoardId="<<spill.GetBoardId()<<endl;
+			      
+			      tempVec.push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
+							    event->GetHitTime(ih,ich, 'l'),ich,spill.GetBoardId()));
+			    }
+			}
 		      }
-		  }
-		
-	      }
+		}
 	      tempVectorHits->push_back(tempVec);
 	    }
 	  } catch (MDexception & lExc)  {
@@ -238,6 +283,351 @@ void ForFile(string filename, string filepath, vector<TempHit*>* tempHits,vector
       }
       
       dfile.close();
+}
+
+void ForFiles(string filename, string filepath,string filename2, string filepath2, vector<TempHit*>* tempHits,vector<vector<TempHit*> >* tempVectorHits)
+{
+    MDdateFile dfile(filename,filepath);
+    MDdateFile dfile2(filename2,filepath2);
+
+      char *eventBuffer;
+      char *eventBuffer2;
+      if ( dfile.open() &&  dfile2.open() ) { // There is a valid files to unpack
+	dfile.init();
+	dfile2.init();
+	
+	int xEv(0);
+
+	int spillCnt = 1;
+
+	do { // Loop over all spills
+	  eventBuffer =  dfile.GetNextEvent();
+	  eventBuffer2 =  dfile2.GetNextEvent();
+	  try {
+	    MDfragmentBM   spill;
+	    MDfragmentBM   spill2;
+	    spill.SetDataPtr(eventBuffer);
+	    spill2.SetDataPtr(eventBuffer2);
+	    
+	    if(spillCnt ==2) break;
+	    
+	    spillCnt++;
+	    // For each spill and all files, fill vector of hits.	 
+	    
+	    MDpartEventBM* event;
+	    MDpartEventBM* event2;
+	    int nTr = spill.GetNumOfTriggers();
+	    int nTr2 = spill2.GetNumOfTriggers();
+
+	    if(nTr!=nTr2)
+	      {
+		cout<<"Different num of triggers"<<endl;
+		continue;
+	      }
+	    
+
+	    for (int i=0; i<6000;++i){//nTr; ++i) {
+	      vector<TempHit*> tempVec;
+	      event = spill.GetTriggerEventPtr(i);
+	      event2 = spill2.GetTriggerEventPtr(i);
+
+	      if(event->getNumDataWords() < 3 || event2->getNumDataWords() < 3) continue;
+	      //           event->Dump();
+	      for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) 
+		{
+		  //cout<<"Channel="<<ich<<endl;
+		  //if(event->LGAmplitudeHitExists(ich) && event->HGAmplitudeHitExists(ich))
+		  if(event->HGAmplitudeHitExists(ich))
+		    {
+		      int nHits = event->GetNLeadingEdgeHits(ich);
+		      //cout<<"IN"<<endl;
+		      //if (nHits)
+		      //{
+		      //h1.Fill(ich, nHits);
+		      //int q = event.GetHitAmplitude(ich, 'h');
+		      //h2.Fill(q);
+		      //}
+		      
+		      for(int ih=0; ih<nHits; ih++)
+			{
+			  if(event->GetHitTime(ih,ich, 'l') >0 && event->GetHitAmplitude(ich, 'h') > 1000)
+			    {
+			      tempHits->push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
+							      event->GetHitTime(ih,ich, 'l'),ich,spill.GetBoardId()));
+			      //event.GetHitTime(ih,ich, 'l')+4000*i,ich,spill.GetBoardId()));
+			      //cout<<"spill.GetBoardId="<<spill.GetBoardId()<<endl;
+			      
+			      tempVec.push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
+							    event->GetHitTime(ih,ich, 'l'),ich,spill.GetBoardId()));
+			    }
+			}
+		    }
+		  if(event2->HGAmplitudeHitExists(ich))
+		    {
+		      int nHits = event2->GetNLeadingEdgeHits(ich);
+		      //cout<<"IN"<<endl;
+		      //if (nHits)
+		      //{
+		      //h1.Fill(ich, nHits);
+		      //int q = event.GetHitAmplitude(ich, 'h');
+		      //h2.Fill(q);
+		      //}
+		      
+		      for(int ih=0; ih<nHits; ih++)
+			{
+			  if(event2->GetHitTime(ih,ich, 'l') >0 && event2->GetHitAmplitude(ich, 'h') > 1000)
+			    {
+			      tempHits->push_back(new TempHit(event2->GetHitAmplitude(ich, 'h'),
+							      event2->GetHitTime(ih,ich, 'l'),ich,spill2.GetBoardId()));
+			      //event.GetHitTime(ih,ich, 'l')+4000*i,ich,spill.GetBoardId()));
+			      //cout<<"spill.GetBoardId="<<spill.GetBoardId()<<endl;
+			      
+			      tempVec.push_back(new TempHit(event2->GetHitAmplitude(ich, 'h'),
+							    event2->GetHitTime(ih,ich, 'l'),ich,spill2.GetBoardId()));
+			    }
+			}
+		    }
+		}
+	      tempVectorHits->push_back(tempVec);
+	    }
+	  } catch (MDexception & lExc)  {
+	    std::cerr <<  lExc.GetDescription() << endl
+		      << "Unpacking exception\n"
+		      << "Spill skipped!\n\n";
+	  } catch(std::exception & lExc) {
+	    std::cerr << lExc.what() << std::endl
+		      << "Standard exception\n"
+		      << "Spill skipped!\n\n";
+	  } catch(...) {
+	    std::cerr << "Unknown exception occurred...\n"
+		      << "Spill skipped!\n\n";
+	  }
+	  
+	  ++xEv;
+	  //       } while (xEv < 5);
+	} while ( eventBuffer );
+      }
+      
+      dfile.close();
+      dfile2.close();
+}
+
+bool NullCheck(vector<char*> vector)
+{
+  bool ret = false;
+  
+  for(unsigned int i=0;i<vector.size();i++)
+    {
+      if(vector[i] == NULL)
+	{
+	  ret = true;
+	  break;
+	}
+    }
+  return ret;
+}
+
+
+void ForFilesV(vector<string> filenames, string filepath, 
+	       vector<TempHit*>* tempHits,vector<vector<TempHit*> >* tempVectorHits,TH1I* h1,TH1I* h2, TH2D* beamHistoHG1)
+{
+  vector<MDdateFile*> dfiles;
+  vector<char*> eventBuffers;
+  vector<MDfragmentBM*> spills;
+  vector<MDpartEventBM*> events;
+
+  for(unsigned int i=0; i<filenames.size();i++)
+    {
+      dfiles.push_back(new MDdateFile(filenames[i],filepath));
+      eventBuffers.push_back(new char());
+      spills.push_back(new MDfragmentBM());
+      events.push_back(new MDpartEventBM());
+    }
+  bool validFiles = true;
+  for(unsigned int fileInt=0;fileInt<dfiles.size();fileInt++)
+    {
+      validFiles &= dfiles[fileInt]->open();
+    }
+  
+  if(validFiles)
+    {
+      for(unsigned int fileInt=0;fileInt<dfiles.size();fileInt++)
+	{
+	  dfiles[fileInt]->init();
+	}
+      
+	int spillCnt = 1;
+
+	do {
+	  for(unsigned int i=0;i<filenames.size();i++)
+	    {
+	      eventBuffers[i] = dfiles[i]->GetNextEvent();
+	    }
+	  
+	  try {
+	    cout<<"spillCnt="<<spillCnt<<endl;
+	    cerr<<"spillCnt="<<spillCnt<<endl;
+	    /*
+	    if(spillCnt<14)
+	    {
+		spillCnt++;
+		continue;
+	      }
+	    */
+	    if(spillCnt == 2) break;
+	    spillCnt++;
+	      
+	    bool diffTrigger = false;
+	    for(unsigned int i=0;i<filenames.size();i++)
+	      {
+		spills[i]->SetDataPtr(eventBuffers[i]);
+		if(spills[0]->GetNumOfTriggers() != spills[i]->GetNumOfTriggers())
+		  {
+		    diffTrigger = true;
+		    break;
+		  }
+	      }
+	    if(diffTrigger)
+	      {
+		cout<<"Different num of triggers"<<endl;
+		continue;
+	      }
+	    int counter =0;
+	    for(int triggNum=0; triggNum<spills[0]->GetNumOfTriggers(); ++triggNum) {
+	      vector<TempHit*> tempVec;
+	      //cout<<"triggNum="<<triggNum<<endl;
+	      
+	      for(unsigned int i=0;i<filenames.size();i++)
+		{
+		  events[i] = spills[i]->GetTriggerEventPtr(triggNum);
+		}
+	      
+	      bool badTrigger = false;
+	      for(unsigned int i=0;i<filenames.size();i++)
+		{
+		  if(events[i]->getNumDataWords() < 10)
+		    {
+		    badTrigger = true;
+		    break;
+		  };
+		}
+
+	      //if(events[0]->getNumDataWords() > 10) cout<<"file 0 at triggNum"<<endl;
+	      //if(events[0]->getNumDataWords() > 10) cout<<"file 1 at triggNum"<<endl;
+	      
+	      //if(events[0]->getNumDataWords() > 10 && events[1]->getNumDataWords() > 10) cout<<"1,2 match "<<triggNum<<endl;
+
+	    //if(events[2]->getNumDataWords() > 10 && events[3]->getNumDataWords() > 10) cout<<"3,4 match "<<triggNum<<endl;
+	    if(badTrigger)
+	      {
+		continue;
+	      }
+	    else
+	      {
+		cout<<"Good trigger="<<triggNum<<endl;
+	      }
+	    //else
+	    //{
+		//Atleast one good trigger
+		//spillCnt++;
+	    //}
+	    /*
+	    for (int channel1=0; channel1<80; ++channel1)
+	      {
+		if(events[0]->HGAmplitudeHitExists(channel1) && events[0]->HGAmplitudeHitExists(channel1+16))
+		  {
+		    if(events[0]->GetNLeadingEdgeHits(channel1))
+		      {
+			for (int channel2=0; channel2<80; channel2++)
+			  {
+			    if(events[1]->GetNLeadingEdgeHits(channel2))
+			      {
+				if(events[1]->HGAmplitudeHitExists(channel2) && events[1]->HGAmplitudeHitExists(channel2+16))
+				  {
+				    if(events[0]->GetHitTime(0,channel1, 'l') && events[1]->GetHitTime(0,channel2, 'l'))
+				      {
+				    beamHistoHG1->Fill(channel1, channel2, 2);
+				    //tempVec.push_back(new TempHit(events[0]->GetHitAmplitude(channel1, 'h'),
+				    //events[0]->GetHitTime(0,channel1, 'l'),channel1,1));
+				//tempVec.push_back(new TempHit(events[1]->GetHitAmplitude(channel2, 'h'),
+				//events[1]->GetHitTime(0,channel2, 'l'),channel2,3));
+				    tempHits->push_back(new TempHit(events[0]->GetHitAmplitude(channel1+16, 'h'),
+								  events[0]->GetHitTime(0,channel1+16, 'l'),channel1+16,1));
+				    tempHits->push_back(new TempHit(events[1]->GetHitAmplitude(channel2+16, 'h'),
+								  events[1]->GetHitTime(0,channel2+16, 'l'),channel2+16,3));
+				    
+				      }
+				  }
+			      }
+			  }
+		      }
+		  }
+	      }
+*/
+	    for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) 
+	      {
+		/*
+		if(events[0]->GetNLeadingEdgeHits(ich))
+		  {
+		    h1->Fill(ich, events[0]->GetNLeadingEdgeHits(ich));
+		  }
+		if (events[1]->GetNLeadingEdgeHits(ich))
+		  {
+		    h2->Fill(ich, events[1]->GetNLeadingEdgeHits(ich));
+		  }
+		*/
+
+	
+		for(unsigned int i=0;i<filenames.size();i++)
+		  {
+		    if(events[i]->HGAmplitudeHitExists(ich))
+		      {
+			int nHits = events[i]->GetNLeadingEdgeHits(ich);
+			if(nHits>0) nHits=1;
+			for(int ih=0; ih<nHits; ih++)
+			  {
+			    if(events[i]->GetHitTime(ih,ich, 'l')>0)
+			      {
+				counter++;
+				if(i==0)  h1->Fill(ich);
+				else if(i==1)  h2->Fill(ich);
+				//tempHits->push_back(new TempHit(events[i]->GetHitAmplitude(ich, 'h'),
+				//				events[i]->GetHitTime(ih,ich, 'l'),ich,spills[i]->GetBoardId()));
+				//event.GetHitTime(ih,ich, 'l')+4000*i,ich,spill.GetBoardId()));
+				//cout<<"spill.GetBoardId="<<spill.GetBoardId()<<endl;
+				
+				tempVec.push_back(new TempHit(events[i]->GetHitAmplitude(ich, 'h'),
+						      events[i]->GetHitTime(ih,ich, 'l'),ich,spills[i]->GetBoardId()));
+			      }
+			  }
+		      }
+		  }
+	      }
+	    //if(tempHits->size()>40) spillCnt++;
+	    tempVectorHits->push_back(tempVec);
+	    tempVec.clear();
+	    }
+	    cout<<"counter="<<counter<<endl;
+	    
+	  } catch (MDexception & lExc)  {
+	    std::cerr <<  lExc.GetDescription() << endl
+		      << "Unpacking exception\n"
+		      << "Spill skipped!\n\n";
+	  } catch(std::exception & lExc) {
+	    std::cerr << lExc.what() << std::endl
+		      << "Standard exception\n"
+		      << "Spill skipped!\n\n";
+	  } catch(...) {
+	    std::cerr << "Unknown exception occurred...\n"
+		      << "Spill skipped!\n\n";
+	  }
+	} while (!NullCheck(eventBuffers));
+    }
+  
+  for(unsigned int fileInt=0;fileInt<dfiles.size();fileInt++)
+    {
+      dfiles[fileInt]->close();
+    }
 }
 
 
@@ -348,45 +738,187 @@ int main(int argc, char* argv[]) {
       // Or should it be per trigger? Since simulation per particle.
 
       // How do the event builder?
-      char *dataBuff;
-      uint32_t* dataPtr;
+      //char *dataBuff;
+      //uint32_t* dataPtr;
 
       string filepath;
       string filename;
+      string filename2;
+      string filename3;
+      string filename4;
       filepath="/data/neutrino05/phallsjo/SaRoMan";
-      filename="feb1_std_10gevmuons_extscint16_nogarbage_refdata4.daq";
+      //filename="feb1_std_10gevmuons_extscint16_nogarbage_refdata4.daq";
+      filename="FEB1_safe_mode_3_HG40_LG55_test1.daq";
       //filename="A2-all-10KHz-EXTPULSE_10-000us-ANALOG-1.daq";
       //filename="test.daq";
       
-      //TFile rfile("histos.root", "recreate");
-      //TH1I  h1("h1_hit_ch", "hit channels", 100, 0, 100);
+      TFile rfile("histos.root", "recreate");
+      TH1I  h1("h1_hit_ch", "hit channels", 100, 0, 100);
+      TH1I  h2("h2_hit_ch", "hit channels", 100, 0, 100);
+
+      TH1I  h3("h3_hit_ch", "hit channels", 100, 0, 100);
+      TH1I  h4("h4_hit_ch", "hit channels", 100, 0, 100);
+
+      TH1I  h5("h5_hit_ch", "hit channels", 16, -120, 120);
+      TH1I  h6("h6_hit_ch", "hit channels", 16, -120, 120);
+
+      TH1I  h7("h7_hit_ch", "hit channels", 100, 0, 100);
+      TH1I  h8("h8_hit_ch", "hit channels", 100, 0, 100);
+
+      TH2D  beamHistoHG1("beamHistoHG1", "beamHistoHG1", 16, 0, 16,16,0,16);
+      TH2D  beamHistoHG2("beamHistoHG2", "beamHistoHG2", 160, 0, 160,160,0,160);
+
+
       //TH1I  h2("h2_ampl", "hit ampl.", 200, 0, 5000);
       
-      ForFile(filename,filepath,&tempHits,&tempVectorHits);
-      cout<<"tempHits="<<tempHits.size()<<endl;
 
-      filename="feb3_std_10gevmuons_extscint16_nogarbage_refdata4.daq";
-      ForFile(filename,filepath,&tempHits,&tempVectorHits);
+      // Do files in parallell instead of in series. Check hits in all FEBs at the same time && both channels at same time.
+      //ForFile(filename,filepath,&tempHits,&tempVectorHits);
+      //cout<<"tempHits="<<tempHits.size()<<endl;
+
+      //filename2="feb3_std_10gevmuons_extscint16_nogarbage_refdata4.daq";
+      filename2="FEB3_safe_mode_3_HG40_LG55_test1.daq";
+      //ForFile(filename,filepath,&tempHits,&tempVectorHits);
+
+      //void ForFilesV(vector<string> filenames, string filepath, vector<TempHit*>* tempHits,vector<vector<TempHit*> >* tempVectorHits)
+
+
+      filename3="FEB4_safe_mode_3_HG40_LG55_test1.daq";
+      filename4="FEB5_safe_mode_3_HG40_LG55_test1.daq";
+
+      //filename3="feb5_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
+      //filename4="feb4_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
+
+      vector<string> tester;
+      tester.push_back(filename);
+      tester.push_back(filename2);
+      tester.push_back(filename3);
+      tester.push_back(filename4);
+      ForFilesV(tester,filepath,&tempHits,&tempVectorHits,&h1,&h2,&beamHistoHG1);
+
+
+      cerr<<"ForFilesV done"<<endl;
+
+
+      //ForFiles(filename,filepath,filename2,filepath,&tempHits,&tempVectorHits);
+
+      cout<<"tempHits="<<tempHits.size()<<endl;
+      //cout<<tempVectorHits.size()<<endl;
+
+      //filename="feb5_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
+      //filename2="feb4_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
+      //ForFiles(filename,filepath,filename2,filepath,&tempHits,&tempVectorHits);
+
+      
       
       //h1.Write();
       //h2.Write();
+      //h3.Write();
+      //h4.Write();
       //rfile.Close();
       //dfile.close();
       //delete dataBuff;
 
       cout<<"tempHits="<<tempHits.size()<<endl;
-      cout<<tempVectorHits.size()<<endl;
+      //cout<<tempVectorHits.size()<<endl;
       for(unsigned int i=0;i<tempVectorHits.size();i++)
 	{
 	  if(tempVectorHits[i].size()>0)
 	    {
-	      cout<<tempVectorHits[i].size()<<endl;
+	      //cout<<tempVectorHits[i].size()<<endl;
+
+	      if(tempVectorHits[i].size()>11)
+		{
+		  //cout<<"VecVecStart"<<endl;
+		  for(unsigned int j=0;j<tempVectorHits[i].size();j++)
+		    {
+		      //cout<<"FEB="<<tempVectorHits[i][j]->boardId
+		      //  <<" channel="<<tempVectorHits[i][j]->channelId<<endl;
+
+
+		      if(tempVectorHits[i][j]->boardId==1) h3.Fill(tempVectorHits[i][j]->channelId);
+		      else if(tempVectorHits[i][j]->boardId==3) h4.Fill(tempVectorHits[i][j]->channelId);
+		    }
+		  //cout<<"VecVecEnd"<<endl;
+		}
 	    }
 	}
 
+      
+      h1.Write();
+      h2.Write();
+      h3.Write();
+      h4.Write();
+      h5.Write();
+      h6.Write();
+      h7.Write();
+      h8.Write();
+      beamHistoHG1.Write();
+      rfile.Close();
+      
+      inDst.open( input_data[0] );
+      iEvent = 0;
+      
+      for(unsigned int event=0;event<tempVectorHits.size();event+=2)
+	{
+	  if(tempVectorHits[event].size()<12) continue;
+	  
+	  cout<<"eventNum="<<event<<endl;
+	  
+	  vector<bhep::hit*> hits = ConvertToHit(tempVectorHits[event],filepath+"/test2.xml");
+	  vector<bhep::hit*> hits2 = ConvertToHit(tempVectorHits[event+1],filepath+"/test2.xml");
+	  
+	     ptype pT = DIGI;
+	     string detect = "tracking";
+	     vector<particle*> hitsParticle;
+	     hitsParticle.push_back(new particle(pT,detect));
+	     for(unsigned int i = 0; i<hits.size();i++)
+	       {
+		 hitsParticle.back()->add_hit(detect,hits[i]);
+	       }
+	     for(unsigned int i = 0; i<hits2.size();i++)
+	       {
+		 hitsParticle.back()->add_hit(detect,hits2[i]);
+	       }
+
+
+
+	     
+	     // How is this event created in simulation?
+	     // Search for bhep::bhel_svc::instance()
+	     // and bevt.
+	     
+	     //bhep::event& e = inDst.read_event( iEvent );
+	     
+	     bhep::event e(evt_read);
+	     e.add_property( "IntType", "CCQE" );
+	     
+	     particle* digi_part = cvt->create_digital_representation( hitsParticle );
+	     e.add_digi_particle( digi_part );
+
+	     bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
+	     evt_read++;
+	     
+	     // Bhep hits into vector of particles. 
+	     //particle(ptype type, string name);
+	     //particle()
+	     //void add_hit(string detector, hit* ht){
+	     //ptype pT = DIGI;
+	     //string detect = "tracking";
+	     
+	     //cout<<e<<endl;
+
+	     hitsParticle.clear();
+	}
+
+      /*
+      //    inDst.open( input_data[0] );
+      //iEvent = 0;
+      
+	  
+
 //vector<bhep::hit*>ConvertToHit(vector<TempHit> hitsVector, string xmlName)
       vector<bhep::hit*> hits = ConvertToHit(tempHits,filepath+"/test2.xml");
-
 
       ptype pT = DIGI;
       string detect = "tracking";
@@ -395,17 +927,58 @@ int main(int argc, char* argv[]) {
       for(unsigned int i = 0; i<hits.size();i++)
 	{
 	  hitsParticle.back()->add_hit(detect,hits[i]);
+
+	  if(hits[i]->idata("IsYBar")) h5.Fill(hits[i]->ddata("barPosT"));
+	  else h6.Fill(hits[i]->ddata("barPosT"));
+
+	  if(hits[i]->idata("IsYBar")) h7.Fill(hits[i]->idata("barNumber")+32*(hits[i]->idata("moduleNum")-1));
+	  else h8.Fill(hits[i]->idata("barNumber")+32*(hits[i]->idata("moduleNum")-1));
 	}
+
+      for(unsigned int i =0;i<hits.size();i+=2)
+	{
+	  beamHistoHG2.Fill(hits[i]->idata("barNumber"),hits[i+1]->idata("barNumber"),1);
+	}
+
+
+
+      h1.Write();
+      h2.Write();
+      h3.Write();
+      h4.Write();
+      h5.Write();
+      h6.Write();
+      h7.Write();
+      h8.Write();
+      beamHistoHG1.Write();
+      beamHistoHG2.Write();
+      rfile.Close();
 
       inDst.open( input_data[0] );
       iEvent = 0;
 
-      bhep::event& e = inDst.read_event( iEvent );
+      // How is this event created in simulation?
+      // Search for bhep::bhel_svc::instance()
+      // and bevt.
 
+      //bhep::event& e = inDst.read_event( iEvent );
 
-      //bhep::event e;
+      bhep::event e(evt_read);
+      e.add_property( "IntType", "CCQE" );
+
       particle* digi_part = cvt->create_digital_representation( hitsParticle );
       e.add_digi_particle( digi_part );
+      
+      //time_t time1; time(&time1);
+      //bhep::bhep_svc::instance()->get_dst_info().set_time(time1);
+      //bhep::bhep_svc::instance()->get_dst_info().set_type(bhep::DATA);
+      //bhep::bhep_svc::instance()->get_dst_info().set_label("outputDST");
+      
+      // set run info
+      //bhep::bhep_svc::instance()->get_run_info().set_time(time1);
+      //bhep::bhep_svc::instance()->get_run_info().set_type(bhep::DATA);
+      //bhep::bhep_svc::instance()->get_run_info().set_label("run");
+      
       bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
 
       // Bhep hits into vector of particles. 
@@ -416,7 +989,8 @@ int main(int argc, char* argv[]) {
       //string detect = "tracking";
 
       cout<<e<<endl;
-
+      */
+ 
 	
     }
   else

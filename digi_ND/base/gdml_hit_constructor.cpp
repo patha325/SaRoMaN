@@ -79,8 +79,9 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   std::vector<bhep::hit*> sortedHits = hits;
   sort( sortedHits.begin(), sortedHits.end(), forwardSortZ() );
 
-  /*
-  cout<<sortedHits.size();
+  
+  cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
+  
   for(int i=0;i<sortedHits.size();i++)
     {
       cout<<"time\tenergy\tT\tZ\tY"<<endl;
@@ -92,15 +93,19 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
       //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
       //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
     }
-  */
+  
+  cout<<"starting ClusteringAida"<<endl;
+  
   ClusteringAida(sortedHits);
 
-  //cout<<"GDML_HIT_CONSTRUCTOR _voxels.size()="<<_voxels.size()<<endl;
+  cout<<"ending ClusteringAida"<<endl;
+
+  cout<<"GDML_HIT_CONSTRUCTOR _voxels.size()="<<_voxels.size()<<endl;
 
   //Make rec_hits from vox.
   Construct_hits( rec_hit );
 
-  //cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
+  cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
 }
 
 void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSortedHits)
@@ -154,7 +159,7 @@ void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSorted
   }
   */
 
-
+  cout<<"to ClusteringHits"<<endl;
   // Do the actually clustering
   for(int counter = 0; counter < moduleHitsVector.size(); counter++)
     {
@@ -254,14 +259,14 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
 
   std::vector<bhep::hit*> filteredHits;
 
-  filteredHits = FilteringBadHits(hits);
-  //filteredHits = hits;
+  //  filteredHits = FilteringBadHits(hits);
+  filteredHits = hits;
 
   //sort by time.
   sort( filteredHits.begin(), filteredHits.end(), timeSort());
 
   // Fill vectors with hits in the same time.
-  double tolerance = 1000; // 1 ns
+  double tolerance = 3; // 1 ns
 
   std::vector<bhep::hit*> timeHits;
   std::vector<std::vector<bhep::hit*> > timeHitsVector;
@@ -325,9 +330,10 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
 	      totHits.clear();
 	    }
 	}
-
+      cout<<"To ClusteringXY="<<totHitsVector.size()<<endl;
       for(int counter=0; counter<totHitsVector.size();counter++)
 	{
+	  cout<<"Correct="<<CorrectHit(totHitsVector[counter])<<endl;
 	  if(totHitsVector[counter].size() != 0 && CorrectHit(totHitsVector[counter]))
 	    {ClusteringXY(totHitsVector[counter], counter);}
 	} 
@@ -410,6 +416,7 @@ bool  gdml_hit_constructor::CorrectHit(const std::vector<bhep::hit*> hits)
 
 void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int key)
 {
+  cout<<"In ClusteringXY="<<endl;
   /*
     Cluster the real hits (bar positions from hits) to produce hit positions.
     Also utilize the bar overlap to be able to give an even better position.
@@ -452,17 +459,17 @@ void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int 
   cout<<"vox_y "<<vox_y<<endl;
   */
   int vox_num = vox_x + vox_y*_nVoxX;
-  /*
+  
   cout<<"vox_num "<<vox_num<<endl;
   cout<<"z "<<z<<endl;
-  */
+  
 
   //for the whole vector.
 
   //cout<<"filteredHits.size()="<<filteredHits.size()<<endl;
 
   for(int cnt = 0; cnt<filteredHits.size();cnt++)
-    { 
+    { //cout<<"vox_num="<<vox_num<<endl;
       if ( vox_num >= 0){
 	_voxels[z].insert( pair<int,bhep::hit*>(vox_num,filteredHits[cnt]) );
 	//clusteredHitsTH1F->Fill(filteredHits[cnt]->x()[2]);

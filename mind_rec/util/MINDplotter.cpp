@@ -226,7 +226,7 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
 
   ///true particle informations
   if ( _clu )
-    ok1 = extract_true_particle2(evt);
+    //ok1 = extract_true_particle2(evt);
   // else
   //  ok1 = extract_true_particle1(evt, i);
   

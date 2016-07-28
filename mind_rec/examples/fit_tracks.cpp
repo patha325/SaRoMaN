@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
   bhep::reader_root inDst;
   
   // fitter* fit = new fitter(ana_store,bhep::MUTE);
-  fitter fit(ana_store,bhep::MUTE);
+  fitter fit(ana_store,bhep::VERBOSE);
   
   //  MINDplotter* plot = new MINDplotter();
   MINDplotter plot = MINDplotter();
@@ -91,11 +91,13 @@ int main(int argc, char* argv[]){
     i = 0;
     
     //for(int i=0; i < nevents; i++) {
-    while ( !inDst.eof(i) && evt_read < nevents ) {
+    //while ( !inDst.eof(i) && evt_read < nevents ) {
+    while ( !inDst.eof(i)) {
       
       // if (i%100==0) cout<< "Number of events read "<<evt_read<<endl;
       cout << "Event: " << i << endl;
       bhep::event& e = inDst.read_event( i );
+      //if ( true ){      
       if ( e.find_sproperty("IntType") ){//Protects against corrupt events 
 	//caused by G4_out being spread over more than one file.
 	// loop over particles
@@ -104,13 +106,13 @@ int main(int argc, char* argv[]){
 	//Relevant only when building likelihood tree.
 	fit.set_int_type( e.fetch_sproperty("IntType") );
 	//
-	// cout <<"There are " << parts.size() << " digis in event "
-	// 	     << e.event_number() <<endl;
+	 cout <<"There are " << parts.size() << " digis in event "
+		     << e.event_number() <<endl;
 	
 	if (parts.size() != 0) {
 	  for (size_t part=0; part<parts.size();part++){
 	    
-	    if (parts[part]->name()=="void") continue;
+	    //if (parts[part]->name()=="void") continue;
 	    
 	    fitOk = fit.Execute(*parts[part],e.event_number());
 	    

@@ -49,6 +49,7 @@ class TempHit
 {
 public:
   TempHit() {};
+  ~TempHit() {};
   TempHit(unsigned int amplitudeIn, unsigned long int timeingIn,
   unsigned int channelIdIn,unsigned int boardIdIn){
     amplitude=amplitudeIn;
@@ -115,6 +116,7 @@ void ConvertToPosition(bhep::hit* inHit, unsigned int boardId, unsigned int chan
 	    }
 	  attribute = attribute->next;
 	}
+      attribute =0;
     }
   else
     {
@@ -140,6 +142,7 @@ void ConvertToPosition(bhep::hit* inHit, unsigned int boardId, unsigned int chan
   if(isYBar) inHit->set_point(*(new bhep::Point3D(0,barPosT,barPosZ)));
   else inHit->set_point(*(new bhep::Point3D(barPosT,0,barPosZ)));
 
+  cur_node= 0;
 
   //void set_point(const bhep::Point3D&  x)
 
@@ -190,7 +193,7 @@ vector<bhep::hit*>ConvertToHit(vector<TempHit*> hitsVector, string xmlName)
 
     ConvertToPosition(returnVector.back(),hitsVector[cnt]->boardId,hitsVector[cnt]->channelId,&parse,root_element);
   }
-
+  /*
   cout<<"counterFEB18="<<counterFEB18<<endl;
   cout<<"counterFEB38="<<counterFEB38<<endl;
 
@@ -199,6 +202,9 @@ vector<bhep::hit*>ConvertToHit(vector<TempHit*> hitsVector, string xmlName)
 
   cout<<"counterFEB115="<<counterFEB115<<endl;
   cout<<"counterFEB315="<<counterFEB315<<endl;
+  */
+
+  root_element = 0;
 
   return returnVector;
 }
@@ -257,7 +263,7 @@ void ForFilesV(vector<string> filenames, string filepath,
 	    }
 	  
 	  try {
-	    cout<<"spillCnt="<<spillCnt<<endl;
+	    //cout<<"spillCnt="<<spillCnt<<endl;
 	    cerr<<"spillCnt="<<spillCnt<<endl;
 	    /*
 	    if(spillCnt<14)
@@ -287,7 +293,7 @@ void ForFilesV(vector<string> filenames, string filepath,
 	      }
 	    if(diffTrigger)
 	      {
-		cout<<"Different num of triggers"<<endl;
+		//cout<<"Different num of triggers"<<endl;
 		continue;
 	      }
 	    int counter =0;
@@ -431,16 +437,338 @@ void ForFilesV(vector<string> filenames, string filepath,
       dfiles[fileInt]->close();
     }
 }
-/*
-void HandleData(vector<string> filenames, string filepath)
+void PerSpill(vector<char*> eventBuffers,
+	      vector<MDfragmentBM*> spills,
+	      vector<MDpartEventBM*> events,
+	      vector<vector<TempHit*> >* tempVectorHits)
 {
+  
+  try {
+    //cout<<"spillCnt="<<spillCnt<<endl;
+    //cerr<<"spillCnt="<<spillCnt<<endl;
+    
+    //if(spillCnt == 2) break;
+    //spillCnt++;
+    
+    bool diffTrigger = false;
 
-  vector<vector<TempHit*> > tempVectorHits;
+    cerr<<eventBuffers.size()<<endl;
+    cerr<<spills.size()<<endl;
+
+    cerr<<"starting for loop"<<endl;
+    for(unsigned int i=0;i<eventBuffers.size();i++)
+      {
+	cerr<<i<<endl;
+	cerr<<"before setDataPtr"<<endl;
+	//cerr<<(eventBuffers[i]==NULL)<<endl;
+	spills[i]->SetDataPtr(eventBuffers[i]);
+	cerr<<"after setDataPtr"<<endl;
+	if(spills[0]->GetNumOfTriggers() != spills[i]->GetNumOfTriggers())
+	  {
+	    diffTrigger = true;
+	    break;
+	  }
+      }
+    
+    if(diffTrigger)
+      {
+	cerr<<"Different num of triggers"<<endl;
+	//continue;
+      }
+    else
+      {
+	int counter =0;
+
+	for(int triggNum=0; triggNum<spills[0]->GetNumOfTriggers(); ++triggNum) {
+	  vector<TempHit*> tempVec;
+	  
+	  for(unsigned int i=0;i<spills.size();i++)
+	    {
+	      events[i] = spills[i]->GetTriggerEventPtr(triggNum);
+	    }
+	  
+	  bool badTrigger = false;
+	  for(unsigned int i=0;i<events.size();i++)
+	    {
+	      if(events[i]->getNumDataWords() < 10)
+		{
+		  badTrigger = true;
+		  break;
+		};
+	    }
+	  
+	  if(badTrigger)
+	    {
+	      continue;
+	    }
+	  else
+	    {
+	      //cout<<"Good trigger="<<triggNum<<endl;
+	    }
+	  
+	  int asic1=0;
+	  int asic2=0;
+	  int asic3=0;
+
+	  for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) 
+	    {
+	      //cerr<<ich<<endl;
+	      
+	      for(unsigned int i=0;i<events.size();i++)
+		{
+		  if(events[i]->HGAmplitudeHitExists(ich))
+		    {
+		      int nHits = events[i]->GetNLeadingEdgeHits(ich);
+		      //if(nHits>0) nHits=1;
+		      for(int ih=0; ih<nHits; ih++)
+			{
+			  if(events[i]->GetHitTime(ih,ich, 'l')>0)
+			    {
+			      if(ich<32) asic1++;
+			      
+			      if(31<ich && ich<64) asic2++;
+			      
+			      if(63<ich && ich<96) asic3++;
+			      counter++;
+			      //if(i==0)  h1->Fill(ich);
+			      //else if(i==1)  h2->Fill(ich);
+			      
+			      tempVec.push_back(new TempHit(events[i]->GetHitAmplitude(ich, 'h'),
+							    events[i]->GetHitTime(ih,ich, 'l'),ich,spills[i]->GetBoardId()));
+			    }
+			}
+		    }
+		}
+	    }
+	  if(asic1 > 1 && asic2 > 1 && asic3 > 1) tempVectorHits->push_back(tempVec);
+	  tempVec.clear();
+	}
+	cerr<<"tempVectorHits->size()="<<tempVectorHits->size()<<endl;
+	
+	//cout<<"counter="<<counter<<endl;
+      }
+    
+    
+  } catch (MDexception & lExc)  {
+    std::cerr <<  lExc.GetDescription() << endl
+	      << "Unpacking exception\n"
+	      << "Spill skipped!\n\n";
+  } catch(std::exception & lExc) {
+    std::cerr << lExc.what() << std::endl
+	      << "Standard exception\n"
+	      << "Spill skipped!\n\n";
+  } catch(...) {
+    std::cerr << "Unknown exception occurred...\n"
+	      << "Spill skipped!\n\n";
+  }
+  
+}
+
+void PerSpill2(vector<char*> eventBuffers,
+	      vector<MDfragmentBM*> spills,
+	      vector<MDpartEventBM*> events,
+	       vector<vector<TempHit*> >* tempVectorHits,TH1I* h1)
+{
+  //vector<vector<pair<double,TempHit*> > >tempHitsPerSpill[4]; //4 = file size now.
+
+  vector<pair<double,vector<TempHit*> > > tempHitsPerSpill[4]; //4 = file size now.
+  try {
+    bool diffTrigger = false;
+    cerr<<eventBuffers.size()<<endl;
+    cerr<<spills.size()<<endl;
+    //vector<vector<pair<double,TempHit*> > >tempHitsPerSpill[4]; //4 = file size now.
+    cerr<<"starting for loop"<<endl;
+    for(unsigned int i=0;i<eventBuffers.size();i++)
+      //for(unsigned int i=eventBuffers.size()-1;i<=0;i--)
+      {
+	vector<TempHit*> tempVec;
+	cerr<<i<<endl;
+	cerr<<"before setDataPtr"<<endl;
+	//cerr<<(eventBuffers[i]==NULL)<<endl;
+	MDfragmentBM spill;
+	spill.SetDataPtr(eventBuffers[i]);
+	cerr<<"after setDataPtr"<<endl;
+	double counter =0;
+	cerr<<"spill->GetNumOfTriggers()="<<spill.GetNumOfTriggers()<<endl;
+	for(int triggNum=0; triggNum<spill.GetNumOfTriggers(); ++triggNum) 
+	  {
+	    //cerr<<"triggNum="<<triggNum<<endl;
+	    //vector<TempHit*> tempVec;
+	    MDpartEventBM* event= spill.GetTriggerEventPtr(triggNum);
+	    //events[i] = spills[i]->GetTriggerEventPtr(triggNum);
+	    bool badTrigger = false;
+	    //if(events[i]->getNumDataWords() < 10)
+	      //if(events[i]->getNumDataWords() < (2+4*6))
+	      //{
+	    //badTrigger = true;
+	    //continue;
+	    //};
+	    int asic1=0;
+	    int asic2=0;
+	    int asic3=0;
+	    //long int triggerHits =0;
+	    for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) 
+	      {
+		if(event->HGAmplitudeHitExists(ich))
+		  if(true)
+		  {
+		    int nHits = event->GetNLeadingEdgeHits(ich);
+		    //if(nHits>0) nHits=1;
+		    //triggerHits+=nHits;
+		    if(nHits)
+		      {
+			if(event->GetHitTime(0,ich, 'l')>0)
+			  {
+			    h1->Fill(triggNum);
+			  }
+		      }
+		    for(int ih=0; ih<nHits; ih++)
+		      {
+			if(event->GetHitTime(ih,ich, 'l')>0)
+			  {
+			    //h1->Fill(triggNum);
+			    if(ich<32) asic1++;
+			    
+			    if(31<ich && ich<64) asic2++;
+			    
+			    if(63<ich && ich<96) asic3++;
+			    
+			    //counter++;
+			    tempVec.push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
+							  event->GetHitTime(ih,ich, 'l'),
+							  ich,spill.GetBoardId()));
+			    //tempPairVec.push_back(make_pair(events[i]->GetTriggerTime(),
+			    //			  (new TempHit(events[i]->GetHitAmplitude(ich, 'h'),
+			    //				       events[i]->GetHitTime(ih,ich, 'l'),
+			    //				       ich,spills[i]->GetBoardId()))));
+			  }
+		      }
+		  }	      
+	      }
+	    //cerr<<"triggerHits="<<triggerHits<<endl;
+	    //cerr<<"counter="<<counter<<endl;
+	    //counter=0;
+	    //triggerHits=0;
+	    //tempVectorHits->push_back(tempVec);
+	    
+	    if(asic1 > 1 && asic2 > 1 && asic3 > 1) 
+	      //tempHitsPerSpill[i].push_back(make_pair(triggNum,tempVec));
+	      tempHitsPerSpill[i].push_back(make_pair(event->GetTriggerTime(),tempVec));
+	    tempVec.clear();
+	    //tempVec.clear();
+	  }
+	cerr<<"counter="<<counter<<endl;
+	delete spills[i];
+      }  
+  } catch (MDexception & lExc)  {
+    std::cerr <<  lExc.GetDescription() << endl
+	      << "Unpacking exception\n"
+	      << "Spill skipped!\n\n";
+  } catch(std::exception & lExc) {
+    std::cerr << lExc.what() << std::endl
+	      << "Standard exception\n"
+	      << "Spill skipped!\n\n";
+  } catch(...) {
+    std::cerr << "Unknown exception occurred...\n"
+	      << "Spill skipped!\n\n";
+  }
+
+  // Start comparing the different FEBS.
+  /*
+  cerr<<"tempHitsPerSpill[0].size()="<<tempHitsPerSpill[0].size()<<endl;
+  cerr<<"tempHitsPerSpill[1].size()="<<tempHitsPerSpill[1].size()<<endl;
+  cerr<<"tempHitsPerSpill[2].size()="<<tempHitsPerSpill[2].size()<<endl;
+  cerr<<"tempHitsPerSpill[3].size()="<<tempHitsPerSpill[3].size()<<endl;
+
+  vector<pair<double,vector<TempHit*> > >temp1; 
+  vector<pair<double,vector<TempHit*> > >temp2; 
+
+  for(unsigned int i = 0; i< tempHitsPerSpill[0].size(); i++)
+    {
+      for(unsigned int j =0; j<tempHitsPerSpill[1].size(); j++)
+	{
+	  if(tempHitsPerSpill[0][i].first == tempHitsPerSpill[1][j].first)
+	    {
+	      vector<TempHit*> tempVector;
+	      tempVector.insert(tempVector.end(),tempHitsPerSpill[0][i].second.begin(),tempHitsPerSpill[0][i].second.end());
+	      tempVector.insert(tempVector.end(),tempHitsPerSpill[1][j].second.begin(),tempHitsPerSpill[1][j].second.end());
+	      temp1.push_back(make_pair(tempHitsPerSpill[0][i].first,tempVector));
+	      //cerr<<"match="<<tempHitsPerSpill[0][i].first<<endl;
+	    }
+	}
+    }
+
+  for(unsigned int i = 0; i< tempHitsPerSpill[2].size(); i++)
+    {
+      for(unsigned int j =0; j<tempHitsPerSpill[3].size(); j++)
+	{
+	  if(tempHitsPerSpill[2][i].first == tempHitsPerSpill[3][j].first)
+	    {
+	      vector<TempHit*> tempVector;
+	      tempVector.insert(tempVector.end(),tempHitsPerSpill[2][i].second.begin(),tempHitsPerSpill[2][i].second.end());
+	      tempVector.insert(tempVector.end(),tempHitsPerSpill[3][j].second.begin(),tempHitsPerSpill[3][j].second.end());
+	      temp2.push_back(make_pair(tempHitsPerSpill[2][i].first,tempVector));
+	      //cerr<<"match="<<tempHitsPerSpill[2][i].first<<endl;
+	    }
+	}
+    }
+  cerr<<"temp1.size()="<<temp1.size()<<endl;
+  cerr<<"temp2.size()="<<temp2.size()<<endl;
+
+  for(unsigned int i = 0; i< temp1.size(); i++)
+    {
+      for(unsigned int j =0; j<temp2.size(); j++)
+	{
+	  if(temp1[i].first == temp2[j].first)
+	    {
+	      vector<TempHit*> tempVector;
+	      tempVector.insert(tempVector.end(),temp1[i].second.begin(),temp1[i].second.end());
+	      tempVector.insert(tempVector.end(),temp2[i].second.begin(),temp2[i].second.end());
+	      tempVectorHits->push_back(tempVector);
+	      //cerr<<"match="<<tempHitsPerSpill[2][i].first<<endl;
+	    }
+	}
+    }
+
+  cerr<<tempVectorHits->size()<<endl;
+  */
+
+  /*
+  for(unsigned int i = 0; i< tempHitsPerSpill[0].size(); i++)
+    {
+      for(unsigned int j =0; j<tempHitsPerSpill[1].size(); j++)
+	{
+	  for(unsigned int k =0; k<tempHitsPerSpill[2].size(); k++)
+	    {
+	      for(unsigned int l =0; l<tempHitsPerSpill[3].size(); l++)
+		{
+		  if(tempHitsPerSpill[3][l].first == tempHitsPerSpill[2][k].first && tempHitsPerSpill[1][j].first == tempHitsPerSpill[0][i].first)
+		    {
+		      if(tempHitsPerSpill[2][k].first == tempHitsPerSpill[1][j].first)
+			cerr<<"match="<<tempHitsPerSpill[0][i].first<<endl;
+		      
+		    }
+		}
+	    }
+	}
+    }
+  */
+
+}
+
+
+
+
+void HandleData(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h1)
+{
+  //vector<vector<TempHit*> > tempVectorHits;
 
  vector<MDdateFile*> dfiles;
   vector<char*> eventBuffers;
   vector<MDfragmentBM*> spills;
   vector<MDpartEventBM*> events;
+
+  int evt_read = 0;
 
   for(unsigned int i=0; i<filenames.size();i++)
     {
@@ -463,111 +791,220 @@ void HandleData(vector<string> filenames, string filepath)
 	}
       
 	int spillCnt = 1;
+	//vector<vector<TempHit*> > tempVectorHits;
 	
 	do {
+	  cerr<<"loop"<<endl;
+	  //for(unsigned int i=0; i<filenames.size();i++)
+	    //{
+	      //eventBuffers.push_back(new char());
+	      //spills.push_back(new MDfragmentBM());
+	      //events.push_back(new MDpartEventBM());
+	      //}
+
+	  cerr<<"for loop done"<<endl;
+	  cerr<<eventBuffers.size()<<endl;
+
 	  vector<vector<TempHit*> > tempVectorHits;
 	  for(unsigned int i=0;i<filenames.size();i++)
 	    {
 	      eventBuffers[i] = dfiles[i]->GetNextEvent();
 	    }
 
-	  PerSpill(eventBuffers,spills,events,&tempVectorHits)
+	  cerr<<"for loop2 done"<<endl;
+	  
+	  //for(unsigned int i=0;i<filenames.size();i++)
+	  //{
+	  //  eventBuffers[i] = dfiles[i]->GetNextEvent();
+	  //}
+	  
+	  //cout<<"spillCnt="<<spillCnt<<endl;
+	  cerr<<"spillCnt="<<spillCnt<<endl;
+
+	  if(spillCnt==2) break;
+
+	  //PerSpill(eventBuffers,spills,events,&tempVectorHits);
+	  
+	  PerSpill2(eventBuffers,spills,events,&tempVectorHits, h1);
+
+	  cerr<<"PerSpill done"<<endl;
+	  for(unsigned int fileInt=0;fileInt<dfiles.size();fileInt++)
+	  {
+	    //spills[fileInt]->Clean();
+	    //delete spills[fileInt];
+	    //delete events[fileInt];
+	    //delete eventBuffers[fileInt];
+	  }
+	  //eventBuffers.clear();
+	  //spills.clear();
+	  //events.clear();
+
+	  cerr<<"Cleaning done"<<endl;
+
+	  spillCnt++;
+	  
+	  //reader_root inDst;
+	  int iEvent;
+	  //int evt_read = 0;
+	  
+	  //inDst.open( input_data[0] );
+	  iEvent = 0;
+	  
+	  for(unsigned int event=0;event<tempVectorHits.size();event++)
+	    {
+	  if(tempVectorHits[event].size()<12) continue;
+	  
+	  cout<<"eventNum="<<event<<endl;
+	  
+	  vector<bhep::hit*> hits = ConvertToHit(tempVectorHits[event],filepath+"/test2.xml");
+	  
+	  ptype pT = DIGI;
+	  string detect = "tracking";
+	  vector<particle*> hitsParticle;
+	  hitsParticle.push_back(new particle(pT,detect));
+	  for(unsigned int i = 0; i<hits.size();i++)
+	    {
+	      hitsParticle.back()->add_hit(detect,hits[i]);
+	    }
+	  
+	  cout<<"particles size="<<hitsParticle.back()->hits(detect).size()<<endl;
+	  
+	  bhep::event e(evt_read);
+	  e.add_property( "IntType", "CCQE" );
+	  e.add_property("G4EventID",evt_read); 
+	  
+	  particle* digi_part = cvt->create_digital_representation( hitsParticle );
+	  e.add_digi_particle( digi_part );
+	  
+	  bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
+	  evt_read++;
+	  
+	  cout<<e<<endl;
+	  e.clear();
+	  
+	  hitsParticle.clear();
+	  
+	    }
+	  
+
 	} while (!NullCheck(eventBuffers));
+	/*
+	cerr<<"tempVectorHits.size()="<<tempVectorHits.size()<<endl;
+
+	  for(unsigned int event=0;event<tempVectorHits.size();event++)
+	    {
+	  if(tempVectorHits[event].size()<12) continue;
+	  
+	  cout<<"eventNum="<<event<<endl;
+	  
+	  vector<bhep::hit*> hits = ConvertToHit(tempVectorHits[event],filepath+"/test2.xml");
+	  
+	  ptype pT = DIGI;
+	  string detect = "tracking";
+	  vector<particle*> hitsParticle;
+	  hitsParticle.push_back(new particle(pT,detect));
+	  for(unsigned int i = 0; i<hits.size();i++)
+	    {
+	      hitsParticle.back()->add_hit(detect,hits[i]);
+	    }
+	  
+	  cout<<"particles size="<<hitsParticle.back()->hits(detect).size()<<endl;
+	  
+	  bhep::event e(evt_read);
+	  e.add_property( "IntType", "CCQE" );
+	  e.add_property("G4EventID",evt_read); 
+	  
+	  particle* digi_part = cvt->create_digital_representation( hitsParticle );
+	  e.add_digi_particle( digi_part );
+	  
+	  bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
+	  evt_read++;
+	  
+	  cout<<e<<endl;
+	  e.clear();
+	  
+	  hitsParticle.clear();
+	  
+	    }
+	*/
+
     }
   
+  //WriteUtil::CloseOutputDst();
+
   for(unsigned int fileInt=0;fileInt<dfiles.size();fileInt++)
     {
       dfiles[fileInt]->close();
     }
+ 
 }
-void PerSpill(vector<char*> eventBuffers,
-	      vector<MDfragmentBM*> spills,
-	      vector<MDpartEventBM*> events;
-	      vector<vector<TempHit*> >* tempVectorHits,
-	      TH1I* h1,TH1I* h2, TH2D* beamHistoHG1)
+
+void func(vector<char*> eventBuffers,
+	  vector<vector<TempHit*> >* tempVectorHits,
+	  TH1I* h1)
 {
-
+  vector<pair<double,vector<TempHit*> > > tempHitsPerSpill[4]; 
   try {
-    cout<<"spillCnt="<<spillCnt<<endl;
-    cerr<<"spillCnt="<<spillCnt<<endl;
-    
-    if(spillCnt == 2) break;
-    spillCnt++;
-    
-    bool diffTrigger = false;
-    for(unsigned int i=0;i<eventBuffers.size();i++)
+    for(unsigned int eventNum=0;eventNum<eventBuffers.size();eventNum++)
       {
-	spills[i]->SetDataPtr(eventBuffers[i]);
-	if(spills[0]->GetNumOfTriggers() != spills[i]->GetNumOfTriggers())
-	  {
-	    diffTrigger = true;
-	    break;
-	  }
-      }
-    if(diffTrigger)
-      {
-	cout<<"Different num of triggers"<<endl;
-	continue;
-      }
-    int counter =0;
-    for(int triggNum=0; triggNum<spills[0]->GetNumOfTriggers(); ++triggNum) {
-      vector<TempHit*> tempVec;
-      
-      for(unsigned int i=0;i<spills.size();i++)
-	{
-	  events[i] = spills[i]->GetTriggerEventPtr(triggNum);
-	}
-      
-      bool badTrigger = false;
-      for(unsigned int i=0;i<events.size();i++)
-	{
-	  if(events[i]->getNumDataWords() < 10)
-	    {
-	      badTrigger = true;
-	      break;
-	    };
-	}
-      
-      if(badTrigger)
-	{
-	  continue;
-	}
-      else
-	{
-	  cout<<"Good trigger="<<triggNum<<endl;
-	}
-      
-      for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) 
-	{
+	vector<TempHit*> tempVec;
+	
+	MDfragmentBM   spill;
+	spill.SetDataPtr(eventBuffers[eventNum]);
+	
+	//MDpartEventBM *event;
+	int nTr = spill.GetNumOfTriggers();
+	
+	int asic1=0;
+	int asic2=0;
+	int asic3=0;
+	
+	for (unsigned int triggNum=0; triggNum<nTr; ++triggNum) {
+	  MDpartEventBM * event = spill.GetTriggerEventPtr(triggNum);
 	  
-	  for(unsigned int i=0;i<events.size();i++)
-	    {
-	      if(events[i]->HGAmplitudeHitExists(ich))
-		{
-		  int nHits = events[i]->GetNLeadingEdgeHits(ich);
-		  if(nHits>0) nHits=1;
-		  for(int ih=0; ih<nHits; ih++)
-		    {
-		      if(events[i]->GetHitTime(ih,ich, 'l')>0)
-			{
-			  counter++;
-			  if(i==0)  h1->Fill(ich);
-			  else if(i==1)  h2->Fill(ich);
+	  //if(event->getNumDataWords() < 2+4*6) continue;
+	  if(event->getNumDataWords() < 12) continue;
 
-			  tempVec.push_back(new TempHit(events[i]->GetHitAmplitude(ich, 'h'),
-							events[i]->GetHitTime(ih,ich, 'l'),ich,spills[i]->GetBoardId()));
-			}
-		    }
-		}
-	    }
-	}
-      //if(tempHits->size()>40) spillCnt++;
-      tempVectorHits->push_back(tempVec);
-      tempVec.clear();
-    }
-    
-    cout<<"counter="<<counter<<endl;
-    
+	  
+	  for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) {
+	    int nHits = event->GetNLeadingEdgeHits(ich);
+	    if (nHits)
+	      {
+		if(event->GetHitTime(0,ich, 'l')>0)
+		  {
+		    h1->Fill(triggNum);
+		  }
+	      }
+	    for(int ih=0; ih<nHits; ih++)
+	      {
+		if(event->GetHitTime(ih,ich, 'l')>0)
+		  {
+		    //h1->Fill(triggNum);
+		    if(ich<32) asic1++;
+		    
+		    if(31<ich && ich<64) asic2++;
+		    
+		    if(63<ich && ich<96) asic3++;
+		    
+		    //counter++;
+		    tempVec.push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
+						  event->GetHitTime(ih,ich, 'l'),
+						  ich,spill.GetBoardId()));
+		    //tempPairVec.push_back(make_pair(events[i]->GetTriggerTime(),
+		    //			  (new TempHit(events[i]->GetHitAmplitude(ich, 'h'),
+		    //				       events[i]->GetHitTime(ih,ich, 'l'),
+		    //				       ich,spills[i]->GetBoardId()))));
+		  }
+	      }
+	  }//END for channels
+	  
+	  
+	  if(asic1 > 1 && asic2 > 1 && asic3 > 1) 
+	    //tempHitsPerSpill[i].push_back(make_pair(triggNum,tempVec));
+	    tempHitsPerSpill[eventNum].push_back(make_pair(event->GetTriggerTime(),tempVec));
+	  tempVec.clear();
+	}//END of trigger
+      } //END of eventNum;
   } catch (MDexception & lExc)  {
     std::cerr <<  lExc.GetDescription() << endl
 	      << "Unpacking exception\n"
@@ -580,8 +1017,178 @@ void PerSpill(vector<char*> eventBuffers,
     std::cerr << "Unknown exception occurred...\n"
 	      << "Spill skipped!\n\n";
   }
+  
+  cerr<<"tempHitsPerSpill[0].size()="<<tempHitsPerSpill[0].size()<<endl;
+  cerr<<"tempHitsPerSpill[1].size()="<<tempHitsPerSpill[1].size()<<endl;
+  cerr<<"tempHitsPerSpill[2].size()="<<tempHitsPerSpill[2].size()<<endl;
+  cerr<<"tempHitsPerSpill[3].size()="<<tempHitsPerSpill[3].size()<<endl;
+  
+  vector<pair<double,vector<TempHit*> > >temp1; 
+  vector<pair<double,vector<TempHit*> > >temp2; 
+
+  for(unsigned int i = 0; i< tempHitsPerSpill[0].size(); i++)
+    {
+      for(unsigned int j =0; j<tempHitsPerSpill[1].size(); j++)
+	{
+	  if(tempHitsPerSpill[0][i].first == tempHitsPerSpill[1][j].first)
+	    {
+	      vector<TempHit*> tempVector;
+	      tempVector.insert(tempVector.end(),tempHitsPerSpill[0][i].second.begin(),tempHitsPerSpill[0][i].second.end());
+	      tempVector.insert(tempVector.end(),tempHitsPerSpill[1][j].second.begin(),tempHitsPerSpill[1][j].second.end());
+	      temp1.push_back(make_pair(tempHitsPerSpill[0][i].first,tempVector));
+	      //cerr<<"match="<<tempHitsPerSpill[0][i].first<<endl;
+	    }
+	}
+    }
+
+  for(unsigned int i = 0; i< tempHitsPerSpill[2].size(); i++)
+    {
+      for(unsigned int j =0; j<tempHitsPerSpill[3].size(); j++)
+	{
+	  if(tempHitsPerSpill[2][i].first == tempHitsPerSpill[3][j].first)
+	    {
+	      vector<TempHit*> tempVector;
+	      tempVector.insert(tempVector.end(),tempHitsPerSpill[2][i].second.begin(),tempHitsPerSpill[2][i].second.end());
+	      tempVector.insert(tempVector.end(),tempHitsPerSpill[3][j].second.begin(),tempHitsPerSpill[3][j].second.end());
+	      temp2.push_back(make_pair(tempHitsPerSpill[2][i].first,tempVector));
+	      //cerr<<"match="<<tempHitsPerSpill[2][i].first<<endl;
+	    }
+	}
+    }
+  cerr<<"temp1.size()="<<temp1.size()<<endl;
+  cerr<<"temp2.size()="<<temp2.size()<<endl;
+  
+  for(unsigned int i = 0; i< temp1.size(); i++)
+    {
+      for(unsigned int j =0; j<temp2.size(); j++)
+	{
+	  
+	  if(temp1[i].first == temp2[j].first)
+	    {
+	      vector<TempHit*> tempVector;
+	      tempVector.insert(tempVector.end(),temp1[i].second.begin(),temp1[i].second.end());
+	      tempVector.insert(tempVector.end(),temp2[j].second.begin(),temp2[j].second.end());
+	      tempVectorHits->push_back(tempVector);
+	      //cerr<<"match="<<tempHitsPerSpill[2][i].first<<endl;
+	    }
+	  
+	}
+    }
+  
+  cerr<<tempVectorHits->size()<<endl;
 }
-*/
+
+
+void HandleData2(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h1)
+{
+  vector<MDdateFile*> dfiles;
+  vector<char*> eventBuffers;
+  int evt_read = 0;
+
+  for(unsigned int fileInt=0; fileInt<filenames.size();fileInt++)
+    {
+      dfiles.push_back(new MDdateFile(filenames[fileInt],filepath));
+      eventBuffers.push_back(new char());
+    }
+  //dfiles.push_back(new MDdateFile(filenames[0],filepath));
+
+  // Open the file and loop over event->.
+  //char *eventBuffer;
+
+
+  bool validFiles = true;
+  for(unsigned int fileInt=0;fileInt<dfiles.size();fileInt++)
+    {
+      validFiles &= dfiles[fileInt]->open();
+    }
+  if(validFiles){
+  //if ( dfiles[0]->open() ) { // There is a valid files to unpack
+    //dfiles[0]->init();
+    for(unsigned int fileInt=0;fileInt<dfiles.size();fileInt++)
+      {
+	dfiles[fileInt]->init();
+      }
+    int counter =0;
+    int xEv(0);
+    do { // Loop over all spills
+      vector<vector<TempHit*> > tempVectorHits;
+      for(unsigned int i=0;i<filenames.size();i++)
+	{
+	  eventBuffers[i] = dfiles[i]->GetNextEvent();
+	}
+
+
+      //eventBuffer =  dfiles[0]->GetNextEvent();
+      if(counter == 1) break;
+      counter++;
+      cout<<"dfile.NSpills()="<<dfiles[0]->NSpills()<<endl;
+      //if(eventBuffer== NULL) break;
+    
+      func(eventBuffers,&tempVectorHits,h1);
+    
+    ++xEv;
+    //       } while (xEv < 5);
+    //} while ( eventBuffers[0] );
+
+    //reader_root inDst;
+    int iEvent;
+    //int evt_read = 0;
+    
+    //inDst.open( input_data[0] );
+    iEvent = 0;
+    
+    for(unsigned int event=0;event<tempVectorHits.size();event++)
+      {
+	if(tempVectorHits[event].size()<12) continue;
+	
+	cout<<"eventNum="<<event<<endl;
+	string filepath2="/data/neutrino05/phallsjo/SaRoMan";
+	vector<bhep::hit*> hits = ConvertToHit(tempVectorHits[event],filepath2+"/test2.xml");
+	
+	ptype pT = DIGI;
+	string detect = "tracking";
+	vector<particle*> hitsParticle;
+	hitsParticle.push_back(new particle(pT,detect));
+	for(unsigned int i = 0; i<hits.size();i++)
+	  {
+	    hitsParticle.back()->add_hit(detect,hits[i]);
+	  }
+	
+	cout<<"particles size="<<hitsParticle.back()->hits(detect).size()<<endl;
+	
+	bhep::event e(evt_read);
+	e.add_property( "IntType", "CCQE" );
+	e.add_property("G4EventID",evt_read); 
+	
+	particle* digi_part = cvt->create_digital_representation( hitsParticle );
+	e.add_digi_particle( digi_part );
+	
+	bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
+	evt_read++;
+	
+	cout<<e<<endl;
+	e.clear();
+	
+	hitsParticle.clear();
+	
+      }
+    
+
+
+    }while(!NullCheck(eventBuffers));
+  }
+  //dfiles[0]->close();
+  for(unsigned int fileInt=0;fileInt<dfiles.size();fileInt++)
+    {
+      dfiles[fileInt]->close();
+    }
+
+		   
+
+  //MDdateFile dfile(filenames[0], filepath);
+
+
+}
 
 int main(int argc, char* argv[]) {
   
@@ -675,9 +1282,9 @@ int main(int argc, char* argv[]) {
 
   int testBeam = run_store.fetch_istore("testBeam");
 
-  vector<TempHit*> tempHits; // Vector for spill
+  //vector<TempHit*> tempHits; // Vector for spill
 
-  vector<vector<TempHit*> > tempVectorHits; // Vector for spills per trigger.
+  //vector<vector<TempHit*> > tempVectorHits; // Vector for spills per trigger.
 
   //vector<vector<vector<TempHit*> > > tempVectorVectorHits;
 
@@ -699,15 +1306,10 @@ int main(int argc, char* argv[]) {
       string filename2;
       string filename3;
       string filename4;
-      filepath="/data/neutrino05/phallsjo/SaRoMan";
-      //filename="feb1_std_10gevmuons_extscint16_nogarbage_refdata4.daq";
-      filename="FEB1_safe_mode_3_HG40_LG55_test1.daq";
-      //filename="A2-all-10KHz-EXTPULSE_10-000us-ANALOG-1.daq";
-      //filename="test.daq";
       
       TFile rfile("histos.root", "recreate");
-      TH1I  h1("h1_hit_ch", "hit channels", 100, 0, 100);
-      TH1I  h2("h2_hit_ch", "hit channels", 100, 0, 100);
+      TH1I  h1("h1_hit_ch", "hit channels", 100000, 0, 100000);
+      TH1I  h2("h2_hit_ch", "hit channels", 100000, 0, 100000);
 
       TH1I  h3("h3_hit_ch", "hit channels", 100, 0, 100);
       TH1I  h4("h4_hit_ch", "hit channels", 100, 0, 100);
@@ -725,53 +1327,132 @@ int main(int argc, char* argv[]) {
       //TH1I  h2("h2_ampl", "hit ampl.", 200, 0, 5000);
       
 
+      //filepath="/data/neutrino05/phallsjo/SaRoMan";
+      //filename="feb1_std_10gevmuons_extscint16_nogarbage_refdata4.daq";
+      //filename="FEB1_safe_mode_3_HG40_LG55_test1.daq";
+      //filename="A2-all-10KHz-EXTPULSE_10-000us-ANALOG-1.daq";
+      //filename="test.daq";
+
       // Do files in parallell instead of in series. Check hits in all FEBs at the same time && both channels at same time.
       //ForFile(filename,filepath,&tempHits,&tempVectorHits);
       //cout<<"tempHits="<<tempHits.size()<<endl;
 
       //filename2="feb3_std_10gevmuons_extscint16_nogarbage_refdata4.daq";
-      filename2="FEB3_safe_mode_3_HG40_LG55_test1.daq";
+      //filename2="FEB3_safe_mode_3_HG40_LG55_test1.daq";
       //ForFile(filename,filepath,&tempHits,&tempVectorHits);
 
       //void ForFilesV(vector<string> filenames, string filepath, vector<TempHit*>* tempHits,vector<vector<TempHit*> >* tempVectorHits)
-
-
+      filepath="/data/neutrino05/phallsjo/SaRoMan";
+      filename="FEB1_safe_mode_3_HG40_LG55_test1.daq";
+      filename2="FEB3_safe_mode_3_HG40_LG55_test1.daq";
       filename3="FEB4_safe_mode_3_HG40_LG55_test1.daq";
       filename4="FEB5_safe_mode_3_HG40_LG55_test1.daq";
 
+
+
+      //filepath="/data/neutrino05/phallsjo/SaRoMan";
+      //filename="FEB1_AllCh_minusCh95_safe_mode_10_muons.daq";
+      //filename2="FEB3_AllCh_minusCh95_safe_mode_10_muons.daq";
+      //filename3="FEB5_AllCh_minusCh29317895_safe_mode_10_muons.daq";
+      //filename4="FEB4_AllCh_safe_mode_10_muons.daq";
+
+
       //filename3="feb5_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
       //filename4="feb4_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
+
+      //filepath="/data/neutrino05/phallsjo/SaRoMan/Safe_mode_10";
+
+      //filename="FEB1_AllCh_minusCh95_safe_mode_10_muons.daq";
+      //filename2="FEB3_AllCh_minusCh95_safe_mode_10_muons.daq";
+      //filename3="FEB4_AllCh_safe_mode_10_muons.daq";
+      //filename4="FEB5_AllCh_minusCh29317895_safe_mode_10_muons.daq";
+
 
       vector<string> tester;
       tester.push_back(filename);
       tester.push_back(filename2);
       tester.push_back(filename3);
       tester.push_back(filename4);
+
+      //char *dataBuff;
+      //uint32_t* dataPtr;
+
+ MDdateFile dfile(tester[0], filepath);
+ // Open the file and loop over event->.
+ char *eventBuffer;
+ if ( dfile.open() ) { // There is a valid files to unpack
+   dfile.init();
+   int counter =0;
+   int xEv(0);
+   do { // Loop over all spills
+     eventBuffer =  dfile.GetNextEvent();
+      if(counter == 1) break;
+      counter++;
+      cout<<"dfile.NSpills()="<<dfile.NSpills()<<endl;
+      if(eventBuffer== NULL) break;
+      try {
+        MDfragmentBM   spill;
+        spill.SetDataPtr(eventBuffer);
+
+        MDpartEventBM *event;
+        int nTr = spill.GetNumOfTriggers();
+
+        for (int i=0; i<nTr; ++i) {
+          event = spill.GetTriggerEventPtr(i);
+          for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) {
+            int nHits = event->GetNLeadingEdgeHits(ich);
+            if (nHits)
+            {
+              if(event->GetHitTime(0,ich, 'l')>0)
+              {
+              h2.Fill(i);
+              }
+            }
+
+          }//END for channels
+        }
+      } catch (MDexception & lExc)  {
+        std::cerr <<  lExc.GetDescription() << endl
+                  << "Unpacking exception\n"
+                  << "Spill skipped!\n\n";
+      } catch(std::exception & lExc) {
+        std::cerr << lExc.what() << std::endl
+                  << "Standard exception\n"
+                  << "Spill skipped!\n\n";
+      } catch(...) {
+        std::cerr << "Unknown exception occurred...\n"
+                  << "Spill skipped!\n\n";
+      }
+
+      ++xEv;
+//       } while (xEv < 5);
+    } while ( eventBuffer );
+  }
+ dfile.close();
+
+
+
+      cerr<<"start of handledata"<<endl;
+      HandleData2(tester,filepath,cvt,&h1);
+      cerr<<"End of handledata"<<endl;
+
+  
+      h1.Write();
+      h2.Write();
+      rfile.Close();
+      
+      /*
+
       ForFilesV(tester,filepath,&tempHits,&tempVectorHits,&h1,&h2,&beamHistoHG1);
 
-
       cerr<<"ForFilesV done"<<endl;
-
-
-      //ForFiles(filename,filepath,filename2,filepath,&tempHits,&tempVectorHits);
 
       cout<<"tempHits="<<tempHits.size()<<endl;
       cout<<"tempVectorHits.size()"<<tempVectorHits.size()<<endl;
 
       //filename="feb5_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
       //filename2="feb4_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
-      //ForFiles(filename,filepath,filename2,filepath,&tempHits,&tempVectorHits);
-
-      
-      
-      //h1.Write();
-      //h2.Write();
-      //h3.Write();
-      //h4.Write();
-      //rfile.Close();
-      //dfile.close();
-      //delete dataBuff;
-
+ 
       cout<<"tempHits="<<tempHits.size()<<endl;
       //cout<<tempVectorHits.size()<<endl;
       for(unsigned int i=0;i<tempVectorHits.size();i++)
@@ -809,7 +1490,7 @@ int main(int argc, char* argv[]) {
       beamHistoHG1.Write();
       rfile.Close();
       
-      inDst.open( input_data[0] );
+      //inDst.open( input_data[0] );
       iEvent = 0;
       
       for(unsigned int event=0;event<tempVectorHits.size();event++)
@@ -870,6 +1551,7 @@ int main(int argc, char* argv[]) {
 
 	     hitsParticle.clear();
 	}
+      */
     }
   else
     {

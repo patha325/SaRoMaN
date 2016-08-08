@@ -1004,6 +1004,7 @@ void func(vector<char*> eventBuffers,
 	    tempHitsPerSpill[eventNum].push_back(make_pair(event->GetTriggerTime(),tempVec));
 	  tempVec.clear();
 	}//END of trigger
+spill.Clean();
       } //END of eventNum;
   } catch (MDexception & lExc)  {
     std::cerr <<  lExc.GetDescription() << endl
@@ -1119,7 +1120,7 @@ void HandleData2(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h
 
 
       //eventBuffer =  dfiles[0]->GetNextEvent();
-      if(counter == 1) break;
+      if(counter == 3) break;
       counter++;
       cout<<"dfile.NSpills()="<<dfiles[0]->NSpills()<<endl;
       //if(eventBuffer== NULL) break;
@@ -1348,6 +1349,11 @@ int main(int argc, char* argv[]) {
       filename3="FEB4_safe_mode_3_HG40_LG55_test1.daq";
       filename4="FEB5_safe_mode_3_HG40_LG55_test1.daq";
 
+      filepath="/data/neutrino05/phallsjo/SaRoMan/1GeV/Hadrons/1GeV_hadrons_OR96t";
+      filename="FEB1_OR96t_fpga_allch_adcen_only_holdHG65_holdLG65_hadrons_1GeV_t2.daq";
+      filename2="FEB3_OR96t_fpga_allch_adcen_only_holdHG65_holdLG65_hadrons_1GeV_t2.daq";
+      filename3="FEB4_OR96t_fpga_allch_adcen_only_holdHG65_holdLG65_hadrons_1GeV_t2.daq";
+      filename4="FEB5_OR96t_fpga_allch_adcen_only_holdHG65_holdLG65_hadrons_1GeV_t2.daq";
 
 
       //filepath="/data/neutrino05/phallsjo/SaRoMan";

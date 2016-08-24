@@ -304,9 +304,9 @@ class saroman:
         subprocess.call('make', shell=True, cwd = self.exec_base+'/mind_rec')    
         
         #sciNDG4
-        #command = [self.third_party_support+'/bin/scons']
-        #print subprocess.list2cmdline(command)
-        #subprocess.call(command, cwd = self.exec_base+'/sciNDG4', env=os.environ)
+        command = [self.third_party_support+'/bin/scons']
+        print subprocess.list2cmdline(command)
+        subprocess.call(command, cwd = self.exec_base+'/sciNDG4', env=os.environ)
     '''        
     def Create_folder_structure(self,name,ending):
         OutBase = os.path.join(self.out_base, name+'_out')

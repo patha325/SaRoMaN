@@ -199,6 +199,9 @@ RUN StepSize D %(config_rec_step_size)s
 # name of detector for hit getter.
 RUN detect S %(config_rec_detect)s
 
+#Are we running test beam data.
+RUN testBeam I %(testBeam)d
+
 ########
 # For hit clustering.(edge in cm)
 RUN do_clust I %(config_rec_do_clust)s
@@ -329,6 +332,9 @@ DATA idst_files SV 1
 			filedata+= '''
 # number of events to be processed.
 RUN nEvents I %(Nevts)d
+
+#Are we running test beam data.
+RUN testBeam I %(testBeam)d
 
 # gausian sigma for smear (cm)
 RUN Gaus_Sigma D %(config_digi_gaus_sigma)s

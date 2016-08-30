@@ -19,7 +19,7 @@ void cluster::add_hit(bhep::hit* dep)
 
   _eng += dep->ddata( "TotalEng" );
 
-  _muProp += dep->ddata( "MuonProportion" );
+   //testbeam _muProp += dep->ddata( "MuonProportion" );
   
   _nVox = _voxes.size();
 
@@ -31,6 +31,6 @@ void cluster::add_hit(bhep::hit* dep)
 
 
   set_hv("energy", HyperVector(_eng,0));
-  set_hv("MuonProp", HyperVector(_muProp/_nhit,0));
+  //testbeam set_hv("MuonProp", HyperVector(_muProp/_nhit,0));
   set_hv("hittime", HyperVector(_time,0));
 }

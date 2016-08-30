@@ -54,6 +54,8 @@ public:
   int get_planes(){ return _nplanes; }
   int get_free_planes(){ return _freeplanes; }
   double get_xtent(){ return _Xtent; }
+
+  std::vector<plane_info*> get_plane_info(){return _planes;}///
  
 //Getters.    
   // Trajectory& get_best_traj(){ return best_traj; }

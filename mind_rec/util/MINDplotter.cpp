@@ -178,6 +178,15 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   _EMeas.clear();
   _MuProp.clear();
 
+  _xDir.clear();
+  _yDir.clear();
+  _x0.clear();
+  _y0.clear();
+  _xchi.clear();
+  _ychi.clear();
+  _hitsPerPlanes.clear();
+  _avrHitsPerUsedPlanes.clear();
+
   _XHadPos.clear();
   _YHadPos.clear();
   _ZHadPos.clear();
@@ -217,7 +226,7 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
 
   ///true particle informations
   if ( _clu )
-    ok1 = extract_true_particle2(evt);
+    //ok1 = extract_true_particle2(evt);
   // else
   //  ok1 = extract_true_particle1(evt, i);
   
@@ -576,7 +585,16 @@ void MINDplotter::define_tree_branches() {
   statTree->Branch("raw_Ymeas", &_YMeas, 32000,0);
   statTree->Branch("raw_Zmeas", &_ZMeas,32000,0);
   statTree->Branch("raw_EngMeas", &_EMeas,32000,0);
-  statTree->Branch("raw_MotherProp", &_MuProp, 32000, 0);
+  statTree->Branch("raw_MotherPrSop", &_MuProp, 32000, 0);
+
+  statTree->Branch("test_beam_xDir", &_xDir,32000,0);  
+  statTree->Branch("test_beam_yDir", &_yDir,32000,0);  
+  statTree->Branch("test_beam_x0", &_x0,32000,0);  
+  statTree->Branch("test_beam_y0", &_y0,32000,0);  
+  statTree->Branch("test_beam_xchi", &_xchi,32000,0);  
+  statTree->Branch("test_beam_ychi", &_ychi,32000,0);  
+  statTree->Branch("test_beam_hitsPerPlanes", &_hitsPerPlanes,32000,0);  
+  statTree->Branch("test_beam_avrHitsPerUsedPlanes", &_avrHitsPerUsedPlanes,32000,0);  
 
   statTree->Branch("raw_MotherMeas", &_MotherMeas,32000,0);
   statTree->Branch("raw_MotherProp", &_MotherProp,32000,0);
@@ -1332,6 +1350,15 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
   const dict::Key hadHit = "inhad";
 
 
+  _xDir = Fit.GetXDir();
+  _yDir = Fit.GetYDir();
+  _x0 = Fit.GetX0();
+  _y0 = Fit.GetY0();
+  _xchi = Fit.GetXChi();
+  _ychi = Fit.GetYChi();
+  _hitsPerPlanes = Fit.GetHPP();
+  _avrHitsPerUsedPlanes = Fit.GetAHPP();
+
   /// measurement vector
   std::vector<cluster*>& meas = Fit.GetMeasVec();
   _m.message(" nmeas=   ",Fit.GetNMeas(),bhep::VERBOSE);
@@ -1368,6 +1395,7 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
 
     _MotherProp.push_back(mu/mother_particle.size());
     
+
 
 
     _XMeas.push_back(Fit.GetMeas(ih)->position()[0]);

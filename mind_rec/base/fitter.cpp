@@ -45,6 +45,7 @@ void fitter::Initialize() {
   _hadUnit.push_back(EVector(3,0)); _hadUnit.push_back(EVector(3,0));
   _hadUnit[0][2] = 1.; _hadUnit[1][2] = 1.;
   _detect = _store.fetch_sstore("detect");
+  _testBeam = _store.fetch_istore("testBeam");
 
   // read parameters
   ReadParam();
@@ -70,6 +71,13 @@ void fitter::Initialize() {
 
   _m.message("+++ End of init function ++++",bhep::VERBOSE);
 }
+
+
+
+
+
+
+
 
 //*************************************************************
 bool fitter::Execute(bhep::particle& part,int evNo){
@@ -113,30 +121,197 @@ bool fitter::Execute(bhep::particle& part,int evNo){
   
   //Sort in increasing z here when classifier up and running.!!!
   sort( _meas.begin(), _meas.end(), forwardSorter() );
-  
-  ///if pattern recognition and recTrajectory is ok
-  if (_patternRec){
-    
-    /// execute event classification
-    get_classifier().Execute( _meas, _trajs, _hadmeas);
-    /*
-    for(int i=0;i<_trajs.size();i++)
-      {
-	cout<<"after class trajs[i]->size() "<<_trajs[i]->size()<<endl;
-	cout<<"lowpt "<<_trajs[i]->quality("lowPt")<<endl;
+
+  if(_testBeam)
+    {
+      const vector<bhep::hit*> hits = part.hits( _detect );
+
+      //bool event_classif::Execute(const vector<cluster*>& hits,
+      //		    vector<Trajectory*> &vtrajs, vector<cluster*>& hads) {
+      
+      //get_classifier().Execute( _meas, _trajs, _hadmeas);
+
+      // fit the _meas clusters or 
+      // const vector<bhep::hit*> hits = p.hits( _detect ); p= bhep::particle& part
+      // What ever is the best. do line fit. add these hits to a track and return it.
+      
+      int fitcatcher;
+      
+      Trajectory* traj = new Trajectory();
+      
+     
+      int nMeas = hits.size();
+      double x[(const int)nMeas], y[(const int)nMeas], 
+	z[(const int)nMeas], u[(const int)nMeas];
+      int minindex = nMeas;
+      
+      for (int iMeas = 0;iMeas < nMeas;iMeas++){
+	x[iMeas] = hits[iMeas]->x()[0];
+	y[iMeas] = hits[iMeas]->x()[1];
+	z[iMeas] = hits[iMeas]->x()[2];
       }
-    */
-    ///sort the hadrons
-    sort( _hadmeas.begin(), _hadmeas.end(), reverseSorter() );
-    
-    ///PR seeds for all the trajectories from classifier
-    _vPR_seed = get_classifier().get_patRec_seed_vector();
+	
+      TGraph *grY = new TGraph((const int)minindex, z, y);
+      
+      TF1 *funY = new TF1("liney","[0]+[1]*x",-400,400);
+      funY->SetParameters(0.,0.001);
+      
+      fitcatcher = grY->Fit("liney", "QN");
+      //cout<<"ConstantY="<<funY->GetParameter(0)<<endl;
+      //cout<<"kY="<<funY->GetParameter(1)<<endl;
+      //cout<<"x2Y="<<funY->GetChisquare()<<endl;
 
-    //cout<<"Printing _vPR_seed"<<endl;
-    //cout<<_vPR_seed[0]<<endl;
+      TGraph *grX = new TGraph((const int)minindex, z, x);
+      
+      TF1 *funX = new TF1("linex","[0]+[1]*x",-400,400);
+      funX->SetParameters(0.,0.001);
+      
+      fitcatcher = grX->Fit("linex", "QN");
+      //cout<<"ConstantX="<<funX->GetParameter(0)<<endl;
+      //cout<<"kX="<<funX->GetParameter(1)<<endl;
+      //cout<<"x2X="<<funX->GetChisquare()<<endl;
 
-    
-  }
+      _xDir.push_back(funX->GetParameter(1));
+      _yDir.push_back(funY->GetParameter(1));
+      _x0.push_back(funX->GetParameter(0));
+      _y0.push_back(funY->GetParameter(0));
+      _xchi.push_back(funX->GetChisquare());
+      _ychi.push_back(funY->GetChisquare());
+
+
+      //Gets plane occupancies and total plane energies.
+      //Needs hits in increasing z order.
+      
+      //   std::cout<<"+++++I am in get_plane_occupancy"<<std::endl;
+      _m.message("++++ Calculating plane energies and occupancies ++++",bhep::VERBOSE);
+      bool ok = true;
+      
+      std::vector<plane_info*> _planes;
+      double _meanOcc;
+      
+      /// size of vector<cluster> hits
+      size_t nHits = _meas.size();
+      //cout<<"get_plane_occ ()  :: nHits="<<nHits<<endl;
+      int single_count = 0;
+      double testZ, testX, testY, curZ;
+      size_t hits_used = 0, imeas = 0;
+      int planeIndex=0 ;
+      
+      double _tolerance = _store.fetch_dstore("pos_resZ") * cm;
+      
+      /// loop over hits to calculate plane occupancy  
+      do {
+	
+	testX = _meas[imeas]->position()[0];
+	testY = _meas[imeas]->position()[1];
+	testZ = _meas[imeas]->position()[2];
+	hits_used++;
+	// Avoid a hit with an undefined z position
+	//if ( fabs(testZ) >  _detLength ) 
+	//continue;
+	// If nan.
+	if(testX != testX) continue;
+	if(testY != testY) continue;
+	if(testZ != testZ) continue;
+	
+	///create plane info
+	plane_info* plane = new plane_info(planeIndex, testZ, _store);
+	plane->AddHit(_meas[imeas]);
+	//cout<<"testZ: "<<testZ<<endl;
+	
+	///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
+	for (size_t i = hits_used;i <nHits;i++) {
+	  curZ = _meas[i]->position()[2];
+	  //cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" _tolerance: "<<_tolerance<<endl;
+	  if (curZ <= testZ + _tolerance) {
+	    
+	    // add the hit to the same plane
+	    plane->AddHit(_meas[i]);
+	    //cout<<"Added hit"<<endl;
+	    testZ = _meas[i]->position()[2];
+	    hits_used++;
+	  } else break;
+	  
+	}
+	_m.message(" get plane info =",plane->GetZ()," Occ=",plane->GetNHits()," PlaneNo=",plane->GetPlaneNo(), bhep::VERBOSE);
+	//cout<<"get plane info = "<<plane->GetZ()<<" Occ= "<<plane->GetNHits()<<" PlaneNo= "<<plane->GetPlaneNo()<<endl;
+	///fill the plane_info vector
+	_planes.push_back(plane);
+	///increase the plane index
+	planeIndex++;
+	
+	_meanOcc += (double) plane->GetNHits();
+	
+	
+      } while (hits_used != nHits);
+      
+      ///total no of planes
+      double _nplanes = (int)_planes.size();
+      
+      _meanOcc /= (double)_nplanes;
+
+      // hits.size(); / _planes.size();
+
+      //cout<<"_nplanes="<<_nplanes<<endl;
+
+      //cout<<"_meanOcc="<<_meanOcc<<endl;
+
+      _hitsPerPlanes.push_back(hits.size() / _planes.size());
+
+      _avrHitsPerUsedPlanes.push_back(_meanOcc);
+
+      /*
+      std::vector<cluster*> meas;
+
+      _clusters->execute( hits, meas ); 
+
+      for(unsigned int cnt=0;cnt<meas.size();cnt++)
+	{
+	  RecObject* ro = dynamic_cast<RecObject*>(meas[cnt]);
+	  traj->add_node(Node(*ro));
+	}
+      */
+
+      //get_classifier().Execute( _meas, _trajs, _hadmeas);
+
+      cout<<"planes="<<get_classifier().get_plane_info().size()<<endl;
+
+      cout<<"free planes="<<get_classifier().get_free_planes()<<endl;
+
+      //Root > Double_t chi2 = fit->GetChisquare();
+      //Root > Double_t p1 = fit->GetParameter(1);
+      //Root > Double_t e1 = fit->GetParError(1);
+      
+      //double qtilde = 0.3*pow(1+pow(fun->GetParameter(1),2),3./2.)/
+      //(2*fun->GetParameter(2));	
+      //_trajs.push_back(traj);
+    }
+  else
+    {
+  
+      ///if pattern recognition and recTrajectory is ok
+      if (_patternRec){
+	
+	/// execute event classification
+	get_classifier().Execute( _meas, _trajs, _hadmeas);
+	/*
+	  for(int i=0;i<_trajs.size();i++)
+	  {
+	  cout<<"after class trajs[i]->size() "<<_trajs[i]->size()<<endl;
+	  cout<<"lowpt "<<_trajs[i]->quality("lowPt")<<endl;
+	  }
+	*/
+	///sort the hadrons
+	sort( _hadmeas.begin(), _hadmeas.end(), reverseSorter() );
+	
+	///PR seeds for all the trajectories from classifier
+	_vPR_seed = get_classifier().get_patRec_seed_vector();
+	
+	//cout<<"Printing _vPR_seed"<<endl;
+	//cout<<_vPR_seed[0]<<endl;
+	
+      }
+    }
 
   //return true;
 
@@ -263,10 +438,10 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	cout<<"End of fitter.cpp reseedFitcheck: "<<_reseedFitCheck<<endl;
 	cout<<"End of fitter.cpp initialqP: "<<_initialqP<<endl;
 
-    for(int i=0;i<_trajs.size();i++)
+    for(unsigned int cnt=0;cnt<_trajs.size();cnt++)
       {
-	cout<<"end trajs[i]->size() "<<_trajs[i]->size()<<endl;
-	cout<<"lowpt "<<_trajs[i]->quality("lowPt")<<endl;
+	cout<<"end trajs[i]->size() "<<_trajs[cnt]->size()<<endl;
+	cout<<"lowpt "<<_trajs[cnt]->quality("lowPt")<<endl;
       }
 
 	//cout<<"End of fitter.cpp momentum: "<<_traj.state().hv().vector()[5]<<endl;

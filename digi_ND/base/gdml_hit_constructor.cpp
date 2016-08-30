@@ -60,6 +60,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   */
 
   //Set the histogram plotters
+  /*
   rawHitsTH1F = histo_vec[0];
   clusteredHitsTH1F = histo_vec[1];
   digitizedHitsTH1F = histo_vec[2];
@@ -69,6 +70,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   yeTH1F = histo_vec[6];
   yeAttTH1F = histo_vec[7];
   yeSmearTH1F = histo_vec[8];
+  */
 
   //First clear out map.
   reset();
@@ -77,11 +79,96 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   std::vector<bhep::hit*> sortedHits = hits;
   sort( sortedHits.begin(), sortedHits.end(), forwardSortZ() );
 
-  Clustering(sortedHits);
+  
+  cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
+  
+  for(int i=0;i<sortedHits.size();i++)
+    {
+      cout<<"time\tenergy\tT\tZ\tY"<<endl;
+      cout<<sortedHits[i]->ddata("time")<<"\t"
+	  <<sortedHits[i]->ddata("EnergyDep")<<"\t"
+	  <<sortedHits[i]->ddata("barPosT")<<"\t"
+	  <<sortedHits[i]->ddata("barPosZ")<<"\t"
+	  <<sortedHits[i]->idata("IsYBar")<<endl;
+      //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
+      //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
+    }
+  
+  cout<<"starting ClusteringAida"<<endl;
+  
+  ClusteringAida(sortedHits);
+
+  cout<<"ending ClusteringAida"<<endl;
+
+  cout<<"GDML_HIT_CONSTRUCTOR _voxels.size()="<<_voxels.size()<<endl;
 
   //Make rec_hits from vox.
   Construct_hits( rec_hit );
+
+  cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
 }
+
+void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSortedHits)
+{
+  /*
+    Cluster the real hits (bar positions from hits) to produce hit positions.
+    Also utilize the bar overlap to be able to give an even better position.
+    Main jobs is done by calling clusteringXY.
+  */  
+  std::vector<bhep::hit*>::const_iterator hitIt;
+  std::vector<bhep::hit*> moduleHits;
+  std::vector<std::vector<bhep::hit*> > moduleHitsVector;
+  //std::vector<std::vector<double> > clustered_hits;
+
+  double firstZ = (*zSortedHits.begin())->ddata( "barPosZ" );
+
+  // Fill vectors with hits in the same module (xyxy),sorted by barPosZ.
+  for (hitIt = zSortedHits.begin();hitIt != zSortedHits.end();hitIt++)
+    {
+      //double currZ = (*hitIt)->ddata( "barPosZ" );
+      double nextZ;
+      //rawHitsTH1F->Fill((*hitIt)->x()[2]);
+      
+      if(hitIt + 1 != zSortedHits.end()){ nextZ = (*(hitIt + 1))->ddata( "barPosZ" );}
+      else {nextZ = firstZ + 2./2. * _activeLength;}
+
+      //if(fabs(nextZ-firstZ) == 1./2. * _activeLength)
+      if(fabs(nextZ-firstZ) <= 1./2. * _activeLength)
+	{
+	  moduleHits.push_back((*hitIt));
+	}
+      else//Next is to far away
+	{
+	  moduleHits.push_back((*hitIt));
+
+	  moduleHitsVector.push_back(moduleHits);
+	  moduleHits.clear();
+	  if(hitIt + 1 != zSortedHits.end())
+	    firstZ=(*(hitIt+1))->ddata( "barPosZ" );
+	}    
+    }
+
+  //moduleHitsVector per z
+  /*
+  //cout<<"Cluster"<<endl;
+  for(int counter = 0; counter < moduleHitsVector.size(); counter++)
+  {
+      cout<<"Cluster "<<counter<<endl;
+      for(int cnt = 0;cnt<moduleHitsVector[counter].size();cnt++)
+	cout<<"barPosZ="<<moduleHitsVector[counter][cnt]->ddata("barPosZ")<<endl;
+  }
+  */
+
+  cout<<"to ClusteringHits"<<endl;
+  // Do the actually clustering
+  for(int counter = 0; counter < moduleHitsVector.size(); counter++)
+    {
+      ClusteringHits(moduleHitsVector[counter], counter);
+    }
+}
+
+
+
 
 void gdml_hit_constructor::Clustering(const std::vector<bhep::hit*>& zSortedHits)
 {
@@ -100,7 +187,7 @@ void gdml_hit_constructor::Clustering(const std::vector<bhep::hit*>& zSortedHits
     {
       double currZ = (*hitIt)->ddata( "barPosZ" );
       double nextZ;
-      rawHitsTH1F->Fill((*hitIt)->x()[2]);
+      //rawHitsTH1F->Fill((*hitIt)->x()[2]);
       
       if(hitIt + 1 != zSortedHits.end()){ nextZ = (*(hitIt + 1))->ddata( "barPosZ" );}
       else {nextZ = currZ + 3./4. * _activeLength;}
@@ -119,6 +206,16 @@ void gdml_hit_constructor::Clustering(const std::vector<bhep::hit*>& zSortedHits
     }
 
   //moduleHitsVector per z
+  /*
+  cout<<"Cluster"<<endl;
+  for(int counter = 0; counter < moduleHitsVector.size(); counter++)
+    {
+      cout<<"Cluster "<<counter<<endl;
+      for(int cnt = 0;cnt<moduleHitsVector[counter].size();cnt++)
+	cout<<"barPosZ="<<moduleHitsVector[counter][cnt]->ddata("barPosZ")<<endl;
+    }
+  */
+
 
   // Do the actually clustering
   for(int counter = 0; counter < moduleHitsVector.size(); counter++)
@@ -162,14 +259,14 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
 
   std::vector<bhep::hit*> filteredHits;
 
-  filteredHits = FilteringBadHits(hits);
-  //filteredHits = hits;
+  //  filteredHits = FilteringBadHits(hits);
+  filteredHits = hits;
 
   //sort by time.
   sort( filteredHits.begin(), filteredHits.end(), timeSort());
 
   // Fill vectors with hits in the same time.
-  double tolerance = 1; // 1 ns
+  double tolerance = 3; // 1 ns
 
   std::vector<bhep::hit*> timeHits;
   std::vector<std::vector<bhep::hit*> > timeHitsVector;
@@ -233,9 +330,10 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
 	      totHits.clear();
 	    }
 	}
-
+      cout<<"To ClusteringXY="<<totHitsVector.size()<<endl;
       for(int counter=0; counter<totHitsVector.size();counter++)
 	{
+	  cout<<"Correct="<<CorrectHit(totHitsVector[counter])<<endl;
 	  if(totHitsVector[counter].size() != 0 && CorrectHit(totHitsVector[counter]))
 	    {ClusteringXY(totHitsVector[counter], counter);}
 	} 
@@ -318,6 +416,7 @@ bool  gdml_hit_constructor::CorrectHit(const std::vector<bhep::hit*> hits)
 
 void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int key)
 {
+  cout<<"In ClusteringXY="<<endl;
   /*
     Cluster the real hits (bar positions from hits) to produce hit positions.
     Also utilize the bar overlap to be able to give an even better position.
@@ -360,18 +459,20 @@ void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int 
   cout<<"vox_y "<<vox_y<<endl;
   */
   int vox_num = vox_x + vox_y*_nVoxX;
-  /*
+  
   cout<<"vox_num "<<vox_num<<endl;
   cout<<"z "<<z<<endl;
-  */
+  
 
   //for the whole vector.
 
+  //cout<<"filteredHits.size()="<<filteredHits.size()<<endl;
+
   for(int cnt = 0; cnt<filteredHits.size();cnt++)
-    { 
+    { //cout<<"vox_num="<<vox_num<<endl;
       if ( vox_num >= 0){
 	_voxels[z].insert( pair<int,bhep::hit*>(vox_num,filteredHits[cnt]) );
-	clusteredHitsTH1F->Fill(filteredHits[cnt]->x()[2]);
+	//clusteredHitsTH1F->Fill(filteredHits[cnt]->x()[2]);
       }
     }
     
@@ -545,22 +646,22 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
 	  sumBarPosX+=x;
 	  */
 	  }
-      mother_particle.push_back((*hIt).second->mother_particle().name());
-      X.push_back( (*hIt).second->x()[0] );
-      Y.push_back( (*hIt).second->x()[1] );
-      Z.push_back( (*hIt).second->x()[2] );
-      digitizedHitsTH1F->Fill((*hIt).second->x()[2]);
+      //testbeam mother_particle.push_back((*hIt).second->mother_particle().name());
+      //testbeam X.push_back( (*hIt).second->x()[0] );
+      //testbeam Y.push_back( (*hIt).second->x()[1] );
+      //testbeam Z.push_back( (*hIt).second->x()[2] );
+      //digitizedHitsTH1F->Fill((*hIt).second->x()[2]);
       T.push_back( (*hIt).second->ddata( "time" ) );
       E.push_back( (*hIt).second->ddata( "EnergyDep" ) );
       totEng += (*hIt).second->ddata( "EnergyDep" );
       proptime = (*hIt).second->ddata( "time" )  < proptime ?  
 	(*hIt).second->ddata( "time" )  : proptime;
-      if ( (*hIt).second->mother_particle().name() == "mu+" ||
-	   (*hIt).second->mother_particle().name() == "mu-" ){
-	if ( (*hIt).second->mother_particle().fetch_sproperty("CreatorProcess")=="none" )
-	  muProp++;
-      } else if ( (*hIt).second->mother_particle().name() == "lepton_shower" )
-	muProp += 0.5;
+      //testbeam  if ( (*hIt).second->mother_particle().name() == "mu+" ||
+      //testbeam	   (*hIt).second->mother_particle().name() == "mu-" ){
+      //testbeamif ( (*hIt).second->mother_particle().fetch_sproperty("CreatorProcess")=="none" )
+      //testbeam muProp++;
+      //testbeam} else if ( (*hIt).second->mother_particle().name() == "lepton_shower" )
+      //testbeam	muProp += 0.5;
       
       //std::cout<<(*hIt).second->x()[0]<<"\t"<<(*hIt).second->x()[1]<<"\t"<<(*hIt).second->x()[2]<<"\t"
       //	       <<(*hIt).second->ddata( "EnergyDep" )<<std::endl;
@@ -580,8 +681,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
 
   xE1 = xE2 = yE1 = yE2 = totEng/4;
 
-  xeTH1F->Fill(xE1+xE2);
-  yeTH1F->Fill(yE1+yE2);
+  //xeTH1F->Fill(xE1+xE2);
+  //yeTH1F->Fill(yE1+yE2);
 
   //cout<<"attLength: "<<_attLength<<endl;
   /*
@@ -596,8 +697,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
   yE2 = yE2 * exp(-(yedge + fabs(barY))/_attLength);
 
 
-  xeAttTH1F->Fill(xE1+xE2);
-  yeAttTH1F->Fill(yE1+yE2);
+  //xeAttTH1F->Fill(xE1+xE2);
+  //yeAttTH1F->Fill(yE1+yE2);
   /*
   dtx = (xedge + fabs(barX)) < (3*xedge - fabs(barX)) ?
     (xedge + fabs(barX))/vlight : (3*xedge - fabs(barX))/vlight;
@@ -621,8 +722,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
   double yE = yE1 + _ranGen.PoissonD(smearingFactor * yE1)
     + yE2 + _ranGen.PoissonD(smearingFactor * yE2);
 
-  xeSmearTH1F->Fill(xE);
-  yeSmearTH1F->Fill(yE);
+  //xeSmearTH1F->Fill(xE);
+  //yeSmearTH1F->Fill(yE);
 
   //if ( fabs(z) > (_detectorLength + _vertexDetdepth)/2. && 
   //     xE < _minEng && yE < _minEng )
@@ -641,7 +742,7 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
       vhit->add_property( "TotalEng", totEng );
       vhit->add_property( "XEng", xE );
       vhit->add_property( "YEng", yE );
-      vhit->add_property( "MuonProportion", muProp );
+      //testbeam vhit->add_property( "MuonProportion", muProp );
       vhit->add_property( "NoPoints", (int)X.size() );
       vhit->add_property( "Xpoint", X );
       vhit->add_property( "Ypoint", Y );

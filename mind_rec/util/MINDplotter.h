@@ -159,6 +159,21 @@ private:
   std::vector<double> _EMeas;
   std::vector<double> _MuProp;
 
+  // For testbeam.
+  std::vector<double> _xDir;
+  std::vector<double> _yDir;
+  std::vector<double> _x0;
+  std::vector<double> _y0;
+  std::vector<double> _xchi;
+  std::vector<double> _ychi;
+  std::vector<double> _hitsPerPlanes;
+  std::vector<double> _avrHitsPerUsedPlanes;
+  
+
+
+  
+
+
   std::vector<string> _MotherMeas;
   std::vector<double> _MotherProp;
 

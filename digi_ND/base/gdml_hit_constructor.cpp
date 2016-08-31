@@ -30,6 +30,7 @@ gdml_hit_constructor::gdml_hit_constructor(const bhep::gstore& store)
   //_nVoxX = (int)( _detectorX / _voxXdim );
   //_nVox = _nVoxX * (int)( _detectorY / _voxYdim );
   _nVoxX =store.fetch_istore("nVoxX");
+  _testBeam = store.fetch_istore("test_Beam");
 
   long seed = (long)store.fetch_dstore("Gen_seed");
   _ranGen = TRandom3( seed );
@@ -96,7 +97,18 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   
   cout<<"starting ClusteringAida"<<endl;
   
-  ClusteringAida(sortedHits);
+
+  if(_testBeam)
+    {
+      ClusteringAida(sortedHits);
+    }
+  else
+    {
+      //Clustering(sortedHits);
+      Clustering2(sortedHits);
+    }
+
+  //ClusteringAida(sortedHits);
 
   cout<<"ending ClusteringAida"<<endl;
 
@@ -107,6 +119,68 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
 
   cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
 }
+
+
+void gdml_hit_constructor::Clustering2(const std::vector<bhep::hit*>& zSortedHits)
+{
+  /*
+    Cluster the real hits (bar positions from hits) to produce hit positions.
+    Also utilize the bar overlap to be able to give an even better position.
+    Main jobs is done by calling clusteringXY.
+  */  
+  std::vector<bhep::hit*>::const_iterator hitIt;
+  std::vector<bhep::hit*> moduleHits;
+  std::vector<std::vector<bhep::hit*> > moduleHitsVector;
+  //std::vector<std::vector<double> > clustered_hits;
+
+  double firstZ = (*zSortedHits.begin())->ddata( "barPosZ" );
+
+  // Fill vectors with hits in the same module (xyxy),sorted by barPosZ.
+  for (hitIt = zSortedHits.begin();hitIt != zSortedHits.end();hitIt++)
+    {
+      //double currZ = (*hitIt)->ddata( "barPosZ" );
+      double nextZ;
+      //rawHitsTH1F->Fill((*hitIt)->x()[2]);
+      
+      if(hitIt + 1 != zSortedHits.end()){ nextZ = (*(hitIt + 1))->ddata( "barPosZ" );}
+      else {nextZ = firstZ + 3./4. * _activeLength;}
+
+      //if(fabs(nextZ-firstZ) == 1./2. * _activeLength)
+      if(fabs(nextZ-firstZ) <= 3./4. * _activeLength)
+	{
+	  moduleHits.push_back((*hitIt));
+	}
+      else//Next is to far away
+	{
+	  moduleHits.push_back((*hitIt));
+
+	  moduleHitsVector.push_back(moduleHits);
+	  moduleHits.clear();
+	  if(hitIt + 1 != zSortedHits.end())
+	    firstZ=(*(hitIt+1))->ddata( "barPosZ" );
+	}    
+    }
+
+  //moduleHitsVector per z
+  /*
+  //cout<<"Cluster"<<endl;
+  for(int counter = 0; counter < moduleHitsVector.size(); counter++)
+  {
+      cout<<"Cluster "<<counter<<endl;
+      for(int cnt = 0;cnt<moduleHitsVector[counter].size();cnt++)
+	cout<<"barPosZ="<<moduleHitsVector[counter][cnt]->ddata("barPosZ")<<endl;
+  }
+  */
+
+  cout<<"to ClusteringHits"<<endl;
+  // Do the actually clustering
+  for(int counter = 0; counter < moduleHitsVector.size(); counter++)
+    {
+      ClusteringHits(moduleHitsVector[counter], counter);
+    }
+}
+
+
 
 void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSortedHits)
 {

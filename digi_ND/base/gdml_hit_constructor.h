@@ -59,6 +59,7 @@ class gdml_hit_constructor
   //clusteres the hits in xy to get the better resolution expected by the overlaying bars
   void ClusteringAida(const std::vector<bhep::hit*>& sortedHits);
   void Clustering(const std::vector<bhep::hit*>& sortedHits);
+  void Clustering2(const std::vector<bhep::hit*>& sortedHits);
   void ClusteringXY(const std::vector<bhep::hit*> hits, int key);
 
   void ClusteringHits(const std::vector<bhep::hit*> hits, int key);
@@ -103,6 +104,7 @@ class gdml_hit_constructor
   //double _voxYdim;
   int _nVoxX;
   //int _nVox;
+  int _testBeam;
 
   //Container wchich will define voxels.
   std::map<double, std::multimap<int, bhep::hit*> > _voxels;

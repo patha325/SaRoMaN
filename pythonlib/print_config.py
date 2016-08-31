@@ -370,6 +370,7 @@ DATA odst_file S %(out_base)s/digi_out/nd_%(part)s%(inttype)s/nd_%(part)s%(intty
 %(preParam)s MIND_x D %(MIND_xdim)s
 %(preParam)s MIND_y D %(MIND_ydim)s
 %(preParam)s MIND_z D %(MIND_zdim)s
+%(preParam)s test_Beam I %(testBeam)d
 %(preParam)s vertex_x D %(MIND_vertex_xdim)s
 %(preParam)s vertex_y D %(MIND_vertex_ydim)s
 %(preParam)s vertex_z D %(MIND_vertex_zdim)s //vertexDepth

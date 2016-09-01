@@ -80,6 +80,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   std::vector<bhep::hit*> sortedHits = hits;
   sort( sortedHits.begin(), sortedHits.end(), forwardSortZ() );
 
+  cout<<"_testBeam"<<_testBeam<<endl;
   
   cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
   
@@ -310,7 +311,7 @@ std::vector<bhep::hit*> gdml_hit_constructor::FilteringBadHits(const std::vector
   for(int counter = 0; counter < hits.size(); counter++)
     {
       //if(hits[counter]->ddata( "time" ) > 13.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
-      if(hits[counter]->ddata( "EnergyDep" )< 0.1)
+	if(hits[counter]->ddata( "EnergyDep" )< 0.1)
       {
         //cout<<"Removing hit from: "<<hits[inCounter]->mother_particle().name()<<endl;
         continue;
@@ -332,15 +333,26 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
   */
 
   std::vector<bhep::hit*> filteredHits;
+  double tolerance = 1; // 1 ns
 
-  //  filteredHits = FilteringBadHits(hits);
-  filteredHits = hits;
+  if(_testBeam)
+    {
+      tolerance = 3; // 1 ns
+      filteredHits = hits; //For the testbeam.
+    }
+  else
+    {
+      tolerance = 1; // 1 ns
+      filteredHits = FilteringBadHits(hits);
+      //filteredHits = hits; //For the testbeam.
+    }
 
   //sort by time.
   sort( filteredHits.begin(), filteredHits.end(), timeSort());
 
   // Fill vectors with hits in the same time.
-  double tolerance = 3; // 1 ns
+  //double tolerance = 3; // 1 ns
+  //double tolerance = 1; // 1 ns
 
   std::vector<bhep::hit*> timeHits;
   std::vector<std::vector<bhep::hit*> > timeHitsVector;

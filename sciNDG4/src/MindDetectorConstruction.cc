@@ -121,85 +121,29 @@ G4VPhysicalVolume* MindDetectorConstruction::Construct()
     SetVolumeInformation(world_physi->GetLogicalVolume(), detectorName);
   }
 
-  G4int nDaughters;
-
-  if(world_physi->GetLogicalVolume()->GetNoDaughters() > 1)
-    nDaughters = world_physi->GetLogicalVolume()->GetDaughter(1)->GetLogicalVolume()->GetNoDaughters();
-  else
-    nDaughters = world_physi->GetLogicalVolume()->GetDaughter(0)->GetLogicalVolume()->GetNoDaughters();
-    
- 
-  // G4int nDaughters =world_physi->GetLogicalVolume()->GetDaughter(0)->GetLogicalVolume()->GetNoDaughters();
-  /*
-  cerr<<world_physi->GetLogicalVolume()->GetName()<<endl;
-  cerr<<world_physi->GetLogicalVolume()->GetDaughter(0)->GetLogicalVolume()->GetName()<<endl;
-  cerr<<world_physi->GetLogicalVolume()->GetDaughter(1)->GetLogicalVolume()->GetName()<<endl;
-
-  cerr<<world_physi->GetLogicalVolume()->GetDaughter(0)->GetLogicalVolume()->GetNoDaughters()<<endl;
-  cerr<<world_physi->GetLogicalVolume()->GetDaughter(1)->GetLogicalVolume()->GetNoDaughters()<<endl;
-  */
-  //ofstream myfile;
-
   //myfile.open ("/data/neutrino05/phallsjo/copy/SaRoMan/example.txt");
-
- for ( int i = 0; i < nDaughters; i++ ) {
-
-   G4VPhysicalVolume* daughter;
-
-   //G4VPhysicalVolume* daughter = world_physi->GetLogicalVolume()->GetDaughter(1)->GetLogicalVolume()->GetDaughter(i);
-
-   if(world_physi->GetLogicalVolume()->GetNoDaughters() > 1)
-       daughter = world_physi->GetLogicalVolume()->GetDaughter(1)->GetLogicalVolume()->GetDaughter(i);
-   else
-     daughter = world_physi->GetLogicalVolume()->GetDaughter(0)->GetLogicalVolume()->GetDaughter(i);
-
-   G4LogicalVolume* myvol = daughter->GetLogicalVolume();
-   G4Box* solidBox = (G4Box*) myvol->GetSolid();
-   /*
-   cerr<<"NEW:"<<myvol->GetName()<<endl;
-   cerr<<"NEW:"
-       <<daughter->GetFrameTranslation()[0]<<" "
-       <<daughter->GetFrameTranslation()[1]<<" "
-       <<daughter->GetFrameTranslation()[2]<<endl;
-
-   G4Box* solidBox = (G4Box*) myvol->GetSolid();
-
-   cerr<<"NEW:"
-       <<solidBox->GetXHalfLength()*2.0<<" "
-       <<solidBox->GetYHalfLength()*2.0<<" "
-       <<solidBox->GetZHalfLength()*2.0<<endl;
-   */
-
-   _myfile<<myvol->GetName()<<" "
-     //<<myvol->GetMass()/solidBox->GetCubicVolume()<<" "
-	  <<daughter->GetFrameTranslation()[0]<<" "
-	  <<daughter->GetFrameTranslation()[1]<<" "
-	  <<daughter->GetFrameTranslation()[2]<<" "
-	  <<solidBox->GetXHalfLength()*2.0<<" "
-	  <<solidBox->GetYHalfLength()*2.0<<" "
-	  <<solidBox->GetZHalfLength()*2.0<<endl;
-   
-   //_myfile.close();
-   
-   /*
-     cerr<<"NEW:"
-     <<myvol->GetSolid()->GetXHalfLength()<<" "
-     <<myvol->GetSolid()->GetYHalfLength()<<" "
-     <<myvol->GetSolid()->GetZHalfLength()<<endl;
-   */
-   
-   //cerr<<"NEW:"<<myvol->GetSolid()->GetCubicVolume()/myvol->GetSolid()->GetSurfaceArea()<<endl;
-   
-   //cerr<<"NEW:"<<myvol->GetSolid()->GetEntityType()<<endl;
-   
-   
-   //_gdml.GetPosition("MIND/"+world_physi->GetLogicalVolume()->GetName()+"/"+myvol->GetName());
-   
-   //cerr<<"NEW:"<<myvol->GetNoDaughters()<<endl;
- }
- //cerr<<"NEW:"<<world_physi->GetLogicalVolume()->GetNoDaughters()<<endl;
- 
- return world_physi;
+  for ( int outerI = 0; outerI < world_physi->GetLogicalVolume()->GetNoDaughters(); outerI++ ) {
+    
+    G4int nDaughters = world_physi->GetLogicalVolume()->GetDaughter(outerI)->GetLogicalVolume()->GetNoDaughters();
+    
+    for ( int i = 0; i < nDaughters; i++ ) {
+      G4VPhysicalVolume* daughter = world_physi->GetLogicalVolume()->GetDaughter(outerI)->GetLogicalVolume()->GetDaughter(i);
+      
+      G4LogicalVolume* myvol = daughter->GetLogicalVolume();
+      G4Box* solidBox = (G4Box*) myvol->GetSolid();
+      
+      _myfile<<myvol->GetName()<<" "
+	//<<myvol->GetMass()/solidBox->GetCubicVolume()<<" "
+	     <<daughter->GetFrameTranslation()[0]<<" "
+	     <<daughter->GetFrameTranslation()[1]<<" "
+	     <<daughter->GetFrameTranslation()[2]<<" "
+	     <<solidBox->GetXHalfLength()*2.0<<" "
+	     <<solidBox->GetYHalfLength()*2.0<<" "
+	     <<solidBox->GetZHalfLength()*2.0<<endl;
+    }
+  }
+  
+  return world_physi;
 }
 
 void MindDetectorConstruction::SetVolumeInformation(G4LogicalVolume* base, 

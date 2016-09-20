@@ -105,8 +105,14 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
     }
   else
     {
-      //Clustering(sortedHits);
-      Clustering2(sortedHits);
+
+	Clustering2(sortedHits);
+	/*
+      if(_testBeam)
+	Clustering2(sortedHits);
+      else
+	Clustering(sortedHits);
+	*/
     }
 
   //ClusteringAida(sortedHits);
@@ -147,7 +153,7 @@ void gdml_hit_constructor::Clustering2(const std::vector<bhep::hit*>& zSortedHit
       else {nextZ = firstZ + 3./4. * _activeLength;}
 
       //if(fabs(nextZ-firstZ) == 1./2. * _activeLength)
-      if(fabs(nextZ-firstZ) <= 3./4. * _activeLength)
+      if(fabs(nextZ-firstZ) < 3./4. * _activeLength)
 	{
 	  moduleHits.push_back((*hitIt));
 	}

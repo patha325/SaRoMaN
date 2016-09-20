@@ -58,6 +58,8 @@ private:
   bool _write_gdml;
   bool _use_gdml;
   std::vector<MindBarSD*> sensDetList;
+
+  std::ofstream _myfile;
   
 };
 

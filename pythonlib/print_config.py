@@ -92,6 +92,7 @@ GEOMETRY gap2 D 0
 GEOMETRY useGDML I  %(useGDML)s
 GEOMETRY writeGDML I 0
 GEOMETRY GDMLFileName S %(xml_file_path)s
+GEOMETRY xml_parsed S %(parsed_file_path)s
 
 
 ### MAgnetic field. Still uniform vector.(T)

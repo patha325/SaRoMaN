@@ -22,7 +22,7 @@ from pythonlib import print_config
 from pythonlib import field_map_generator
 from pythonlib import handle_third_party
 #from pythonlib import xml_parser
-from pythonlib import xml_AiDA_parser
+#from pythonlib import xml_AiDA_parser
 #import print_config
 #import field_map_generator
 #import handle_third_party
@@ -62,6 +62,7 @@ class saroman:
         
         #self.xml_file_path = os.path.join(self.exec_base,'patMIND.gdml')
         self.parsed_file_path  = os.path.join(self.exec_base,'parsedGdml.log')
+        #self.parsed_file_test_path  = os.path.join(self.exec_base,'parsedGdml.test')
 
         #General flags
         self.need_third_party_install = False
@@ -83,7 +84,7 @@ class saroman:
         self.inttype = 'CC'
         self.Bfield = 1.5 #Tesla
 
-        self.testBeam = 0 #Should perhaps be renamed using AIDA in testbeam. Model is AIDA and parsing daq files.
+        self.testBeam = 1 #Should perhaps be renamed using AIDA in testbeam. Model is AIDA and parsing daq files.
 
         if(self.testBeam):
             self.MIND_xdim = 1#0.96#7.0 # m
@@ -97,6 +98,9 @@ class saroman:
             self.MIND_zdim = 8#1#3.261# 2.0#13.0 # m
             self.config_rec_pos_resZ = 1.5#1.0 #cm
             self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'ND_v1.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'MIND_v4.gdml')
         
 
         #Mind geometry
@@ -154,7 +158,7 @@ class saroman:
         #self.CreateFieldMap = True
         #self.field_map_generator = field_map_generator(self.Bfield,self.MIND_ydim+self.MIND_ear_ydim,
         #    self.MIND_xdim+self.MIND_ear_xdim, self.MIND_npanels)
-        # self.field_map_name = 'field_map_test.res'
+        #self.field_map_name = 'field_map_test.res'
         self.field_map_name = 'CenterPlate.table'
         self.field_map_folder = self.out_base
         self.field_map_full_name =os.path.join(self.field_map_folder,self.field_map_name)
@@ -164,7 +168,7 @@ class saroman:
 
         #Setup for xml_parser.py
         #self.xml_parser = xml_parser(self.xml_file_path,self.parsed_file_path)
-        self.xml_parser = xml_AiDA_parser(self.xml_file_path,self.parsed_file_path)
+        #self.xml_parser = xml_AiDA_parser(self.xml_file_path,self.parsed_file_path)
         self.useGDML = 0
         if self.parse_gdml:
             self.useGDML = 1
@@ -433,8 +437,8 @@ class saroman:
             self.Config_and_build_own()
         if self.generate_field_map:
             self.Generate_field_map()
-        if self.parse_gdml:
-            self.xml_parser.Parse_file()
+        #if self.parse_gdml:
+        #    self.xml_parser.Parse_file()
 
     def Shell_source(self, script):
         '''

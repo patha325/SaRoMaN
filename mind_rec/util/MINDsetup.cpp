@@ -694,12 +694,13 @@ void MINDsetup::readParam(){
   double z;
   double counter = 0;
   double counter2 = 0;
+  double counter3 = 0;
+  double counter4 = 0;
   std::vector<double> temp_vector;
   while(file >> word)
     {
       if(word == "ACTIVE")
 	{
-	  cerr<<"ACTIVE"<<endl;
 	  ostringstream convert;
 	  convert << counter;
 	  word = "S"+convert.str();
@@ -707,12 +708,26 @@ void MINDsetup::readParam(){
 	}
       if(word == "SFFFS")
 	{
-	  cerr<<"SFFFS"<<endl;
 	  ostringstream convert;
 	  convert << counter2;
 	  word+=convert.str();
 	  counter2++;
 	}
+      if(word == "SF")
+	{
+	  ostringstream convert;
+	  convert << counter3;
+	  word+=convert.str();
+	  counter3++;
+	}
+      if(word == "TASD")
+	{
+	  ostringstream convert;
+	  convert << counter4;
+	  word+=convert.str();
+	  counter4++;
+	}
+
       temp_vector.clear();
 
       cerr<<word<<" ";

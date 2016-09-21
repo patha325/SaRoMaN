@@ -14,7 +14,6 @@
 #include <G4HCofThisEvent.hh>
 
 
-
 MindBarSD::MindBarSD(G4String name): G4VSensitiveDetector(name)
 {
   G4String HCname;
@@ -82,17 +81,10 @@ G4bool MindBarSD::ProcessHits(G4Step* step, G4TouchableHistory*)
   G4ThreeVector copyTrans = theTouchable->GetTranslation();
   G4String volName = theTouchable->GetVolume()->GetName();
   G4int copyNo = theTouchable->GetCopyNumber();
-  
-  
-  std::cout << volName;
-  std::cout<<" hit position = ("<<pos.x()
-  	   <<","<<pos.y()<<","<<pos.z()<<"), copyNo = "<<copyNo;
-  std::cout<<" Copy Translation = ("<<copyTrans.x()
-  	   <<","<<copyTrans.y()<<","<<copyTrans.z()<<")\n";
-  
+    
   
   G4double barOffset = 0;
-
+ 
   hit->SetBarTranslation(copyTrans);
   
   // hit->SetModule(_volumelist[2]);
@@ -102,8 +94,24 @@ G4bool MindBarSD::ProcessHits(G4Step* step, G4TouchableHistory*)
   } else {
     hit->SetBarOrientation(0);
   }
+  if(volName.contains("BarX_")){
+    if(copyTrans.x() == 0.)
+      // the bar measures y
+      hit->SetBarOrientation(1);
+    else
+      // the bar measures x
+      hit->SetBarOrientation(0);
+  }
   hit->SetBarNumber(copyNo);
-
+  /*
+  std::cout << volName;
+  std::cout<<" hit position = ("<<pos.x()
+  	   <<","<<pos.y()<<","<<pos.z()<<"), copyNo = "<<copyNo;
+  std::cout<<" Copy Translation = ("<<copyTrans.x()
+  	   <<","<<copyTrans.y()<<","<<copyTrans.z()
+	   <<"), copy Orient = "<<hit->GetBarOrientation()<<"\n";
+  */
+  
   _MHCollection->insert(hit);
 }
 

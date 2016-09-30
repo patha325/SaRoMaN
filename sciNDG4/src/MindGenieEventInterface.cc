@@ -15,8 +15,11 @@ void MindGenieEventInterface::Initialize(){
   _verbose        = config.GetIParam("eventVerbose");
   _max_energy     = config.GetDParam("maxEnergy");
 
-  _geom_root_file = config.GetSParam("geomRootFile");
-  _musr_flux_tree = config.GetSParam("musrFluxTree");
+  _geom_root_file = config.GetSParam("geomRootFile"); 
+  // _musr_flux_tree = config.GetSParam("musrFluxTree");
+  _flux_species   = config.GetIVParam("nu_species");
+  _flux_specfiles = config.GetSVParam("nu_files");
+  _flux_spechists = config.GetSVParam("spec_hists");
   _genie_splines  = config.GetSParam("genieSplines");
 
   initRandGen();
@@ -34,7 +37,8 @@ void MindGenieEventInterface::Finalize(){
   if ( _geom_anal )         delete _geom_anal;
   if ( _root_geom )         delete _root_geom;
   if ( _geoMgr )            delete _geoMgr;
-  if ( _ntuple_flux_driver) delete _ntuple_flux_driver;
+  // if ( _ntuple_flux_driver) delete _ntuple_flux_driver;
+  if ( _hist_flux_driver)   delete _hist_flux_driver;
   if ( _flux_driver )       delete _flux_driver;
   if ( _mcj_driver )        delete _mcj_driver;
   if ( _mcjmonitor )        delete _mcjmonitor;
@@ -150,11 +154,18 @@ void MindGenieEventInterface::initGenieFluxDriver(){
   int all_nu[4] = {12, -12, 14, -14};
   for (int i=0; i<sizeof(all_nu)/sizeof(int); i++)
     _fluxParticles.push_back(all_nu[i]);
-  */
+  
   _ntuple_flux_driver = new flux::GSimpleNtpFlux;
   _ntuple_flux_driver->LoadBeamSimData(_musr_flux_tree, 
 				       MindConfigService::Instance().FileName());
-
+  */
+  _hist_flux_driver = new flux::GCylindTH1Flux;
+  for(size_t i=0; i<_flux_species.size(); i++){
+    TFile* f = new TFile(_flux_specfiles[i]);
+    TH1D* fluxhist = (TH1D*)f->Get(_flux_spechists[i]);
+    _hist_flux_driver->AddEnergySpectrum(_flux_species[i], fluxhist);
+  }
+  _hist_flux_driver->
   // _flux_driver = dynamic_cast<GFluxI*> (_ntuple_flux_driver)
 }
 

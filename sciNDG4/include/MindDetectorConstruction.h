@@ -45,7 +45,18 @@ public:
   /// Returns a pointer to the detector geometry description
   SciNearDetectorGeometry* GetDetectorGeometry()
   { return _detector; }
-
+  // returns the mass of a given region over the total mass
+  double GetRegionFractionalMass(G4String region_name)
+  { return regionmass[region_name] / _detectormass; }
+  double GetPassiveProb() { return regionmass["PASSIVE"] / _detectormass; }
+  double GetActiveProb() { return regionmass["ACTIVE"] / (_detectormass - regionmass["PASSIVE"]) ; }
+  
+  G4ThreeVector GetVertex(G4String region_name);
+  G4String GetRegion(G4ThreeVector vert);
+  G4int  GetRegionCode(G4ThreeVector vert){
+    return GetRegion(vert).contains("PASSIVE") ? 1: 0;
+  }    
+  
 private:
   void SetVolumeInformation(G4LogicalVolume* base, G4String detectorName);
   void SetAuxInformation(G4String basename, G4LogicalVolume* myvol,
@@ -57,6 +68,9 @@ private:
   std::string _gdml_file_name;
   bool _write_gdml;
   bool _use_gdml;
+  double _detectormass;
+  std::map<G4String, std::vector<G4VPhysicalVolume*> > regions;
+  std::map<G4String, double> regionmass;
   std::vector<MindBarSD*> sensDetList;
 
   std::ofstream _myfile;

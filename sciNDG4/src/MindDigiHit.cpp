@@ -6,7 +6,7 @@
 //
 //
 
-#include "MindDigiHit.hpp"
+#include "MindDigiHit.h"
 #include <G4Allocator.hh>
 
 G4Allocator<MindDigiHit> MindDigiHitAllocator;
@@ -45,3 +45,5 @@ G4int MindDigiHit::operator==(const MindDigiHit& right) const
 {
     return (this==&right) ? 1 : 0;
 }
+
+std::bitset<32> MindDigiHit::

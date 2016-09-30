@@ -83,7 +83,8 @@ class MindGenieEventInterface : public G4VPrimaryGenerator
   TGeoManager*                _geoMgr;
   // genie::PDGCodeList          _fluxParticles             
   
-  flux::GSimpleNtpFlux*       _ntuple_flux_driver;
+  // flux::GSimpleNtpFlux*       _ntuple_flux_driver;
+  flux::GCylindTH1Flux*       _hist_flux_driver;
   
   GFluxI*                     _flux_driver;
   GMCJDriver*                 _mcj_driver;

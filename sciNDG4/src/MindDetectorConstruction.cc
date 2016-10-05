@@ -127,16 +127,22 @@ G4VPhysicalVolume* MindDetectorConstruction::Construct()
     G4int nDaughters = world_physi->GetLogicalVolume()->GetDaughter(outerI)->GetLogicalVolume()->GetNoDaughters();
     
     for ( int i = 0; i < nDaughters; i++ ) {
+      G4VPhysicalVolume* outerDaughter = world_physi->GetLogicalVolume()->GetDaughter(outerI);
       G4VPhysicalVolume* daughter = world_physi->GetLogicalVolume()->GetDaughter(outerI)->GetLogicalVolume()->GetDaughter(i);
       
       G4LogicalVolume* myvol = daughter->GetLogicalVolume();
       G4Box* solidBox = (G4Box*) myvol->GetSolid();
       
+      cerr<<outerDaughter->GetLogicalVolume()->GetName()<<endl;
+      cerr<<outerDaughter->GetFrameTranslation()[2]<<endl;
+      cerr<<myvol->GetName()<<endl;
+      cerr<<daughter->GetFrameTranslation()[2]<<endl;
+
       _myfile<<myvol->GetName()<<" "
 	//<<myvol->GetMass()/solidBox->GetCubicVolume()<<" "
-	     <<daughter->GetFrameTranslation()[0]<<" "
-	     <<daughter->GetFrameTranslation()[1]<<" "
-	     <<daughter->GetFrameTranslation()[2]<<" "
+	     <<outerDaughter->GetFrameTranslation()[0] + daughter->GetFrameTranslation()[0]<<" "
+	     <<outerDaughter->GetFrameTranslation()[1] + daughter->GetFrameTranslation()[1]<<" "
+	     <<outerDaughter->GetFrameTranslation()[2] + daughter->GetFrameTranslation()[2]<<" "
 	     <<solidBox->GetXHalfLength()*2.0<<" "
 	     <<solidBox->GetYHalfLength()*2.0<<" "
 	     <<solidBox->GetZHalfLength()*2.0<<endl;

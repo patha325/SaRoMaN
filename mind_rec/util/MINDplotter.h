@@ -31,7 +31,7 @@ class MINDplotter{
 
  public:
 
-  MINDplotter();
+  MINDplotter(const bhep::gstore& pstore);
 
   virtual ~MINDplotter();
 
@@ -73,6 +73,8 @@ class MINDplotter{
 
 protected:
 
+  bhep::gstore _store;
+
   bhep::prlevel _level;
     
   bhep::messenger _m;
@@ -86,6 +88,8 @@ protected:
   
 
 private:
+
+  int _testBeam;
 
   EVector _fittedVert;
   EMatrix _vertMat;
@@ -157,6 +161,7 @@ private:
   std::vector<double> _YMeas;
   std::vector<double> _ZMeas;
   std::vector<double> _EMeas;
+  std::vector<double> _TMeas;
   std::vector<double> _MuProp;
 
   // For testbeam.

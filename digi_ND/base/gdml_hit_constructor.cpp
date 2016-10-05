@@ -79,7 +79,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   //copy hits so they can be sorted in z.
   std::vector<bhep::hit*> sortedHits = hits;
   sort( sortedHits.begin(), sortedHits.end(), forwardSortZ() );
-
+  /*
   cout<<"_testBeam"<<_testBeam<<endl;
   
   cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
@@ -95,9 +95,9 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
       //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
       //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
     }
-  
+    
   cout<<"starting ClusteringAida"<<endl;
-  
+  */
 
   if(_testBeam)
     {
@@ -117,14 +117,14 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
 
   //ClusteringAida(sortedHits);
 
-  cout<<"ending ClusteringAida"<<endl;
+  //cout<<"ending ClusteringAida"<<endl;
 
-  cout<<"GDML_HIT_CONSTRUCTOR _voxels.size()="<<_voxels.size()<<endl;
+  //cout<<"GDML_HIT_CONSTRUCTOR _voxels.size()="<<_voxels.size()<<endl;
 
   //Make rec_hits from vox.
   Construct_hits( rec_hit );
 
-  cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
+  //cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
 }
 
 
@@ -179,7 +179,7 @@ void gdml_hit_constructor::Clustering2(const std::vector<bhep::hit*>& zSortedHit
   }
   */
 
-  cout<<"to ClusteringHits"<<endl;
+  //cout<<"to ClusteringHits"<<endl;
   // Do the actually clustering
   for(int counter = 0; counter < moduleHitsVector.size(); counter++)
     {
@@ -240,7 +240,7 @@ void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSorted
   }
   */
 
-  cout<<"to ClusteringHits"<<endl;
+  //cout<<"to ClusteringHits"<<endl;
   // Do the actually clustering
   for(int counter = 0; counter < moduleHitsVector.size(); counter++)
     {
@@ -422,10 +422,10 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
 	      totHits.clear();
 	    }
 	}
-      cout<<"To ClusteringXY="<<totHitsVector.size()<<endl;
+      //cout<<"To ClusteringXY="<<totHitsVector.size()<<endl;
       for(int counter=0; counter<totHitsVector.size();counter++)
 	{
-	  cout<<"Correct="<<CorrectHit(totHitsVector[counter])<<endl;
+	  //cout<<"Correct="<<CorrectHit(totHitsVector[counter])<<endl;
 	  if(totHitsVector[counter].size() != 0 && CorrectHit(totHitsVector[counter]))
 	    {ClusteringXY(totHitsVector[counter], counter);}
 	} 
@@ -508,7 +508,7 @@ bool  gdml_hit_constructor::CorrectHit(const std::vector<bhep::hit*> hits)
 
 void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int key)
 {
-  cout<<"In ClusteringXY="<<endl;
+  //cout<<"In ClusteringXY="<<endl;
   /*
     Cluster the real hits (bar positions from hits) to produce hit positions.
     Also utilize the bar overlap to be able to give an even better position.

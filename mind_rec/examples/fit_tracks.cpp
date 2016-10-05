@@ -60,10 +60,10 @@ int main(int argc, char* argv[]){
   bhep::reader_root inDst;
   
   // fitter* fit = new fitter(ana_store,bhep::MUTE);
-  fitter fit(ana_store,bhep::VERBOSE);
+  fitter fit(ana_store,bhep::MUTE);
   
   //  MINDplotter* plot = new MINDplotter();
-  MINDplotter plot = MINDplotter();
+  MINDplotter plot = MINDplotter(ana_store);
   
   //catchOk = fit->initialize();
   fit.Initialize();

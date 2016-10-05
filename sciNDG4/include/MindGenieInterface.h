@@ -74,7 +74,7 @@ class MindGenieInterface: public G4VPrimaryGenerator
   /* G4PrimaryParticle* */
 /*     CreatePrimaryParticle(GHepParticle& part, G4int PDG); */
 
-  G4int SelectVertexRegion();
+  G4String SelectVertexRegion();
   G4double GetTargetProb();
   /* G4String InteractionType(G4int code); */
 

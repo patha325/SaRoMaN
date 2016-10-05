@@ -77,7 +77,9 @@ void MindGenieInterface::Finalize()
 
 void MindGenieInterface::GeneratePrimaryVertex(G4Event* event)
 {
-  G4int region_code = SelectVertexRegion();
+  G4String region_name = SelectVertexRegion();
+  G4int region_code = region_name.contains("PASSIVE") ? 1 : 0;
+  
   //EOF protection.
   if ( _evCount[region_code] >= _genieData[region_code]->GetEntries() )
      G4Exception("MindGenieInterface::GeneratePrimaryVertex",
@@ -99,12 +101,7 @@ void MindGenieInterface::GeneratePrimaryVertex(G4Event* event)
     
   MindDetectorConstruction* detConstr = (MindDetectorConstruction*) 
     G4RunManager::GetRunManager()->GetUserDetectorConstruction();
-  
-  G4String region_name;
-  
-  if (region_code == 0) region_name = "ACTIVE";
-  else region_name = "PASSIVE";
-  
+    
   G4ThreeVector position = detConstr->GetDetectorGeometry()->
     GetVertex( region_name );
 
@@ -199,44 +196,48 @@ void MindGenieInterface::GeneratePrimaryVertex(G4Event* event)
 
 }
 
-G4int MindGenieInterface::SelectVertexRegion()
+G4String MindGenieInterface::SelectVertexRegion()
 {
-  if      ( _tasd ) return 0;
-
-  if      (_vtx_location == "ACTIVE") return 0;
   
-  else if (_vtx_location == "PASSIVE") return 1;
-
+  G4String reg;
+  MindDetectorConstruction* detConstr = (MindDetectorConstruction*) 
+    G4RunManager::GetRunManager()->GetUserDetectorConstruction();
+  if (_vtx_location == "TASD" ||
+      _vtx_location == "ACTIVE" ||
+      _vtx_location == "PASSIVE") 
+    return _vtx_location;
   else if (_vtx_location == "RANDOM") {
     
     // Randomly select whether vertex should be located in
     // passive or active material
     
-    static G4double passive_target_prob = GetTargetProb();
+    static G4double passive_target_prob = detConstr->GetPassiveProb();
     
-    if (G4UniformRand() <= passive_target_prob) return 1;
-    else return 0;
+    if (G4UniformRand() <= passive_target_prob) return "PASSIVE";
+    else {
+      static G4double active_target_prob = detConstr->GetActiveProb();
+      if (G4UniformRand() <= active_target_prob) return "ACTIVE";
+      else return "TASD";
+    }
   }
-
   else if (_vtx_location == "FIXED") {
     if ( _evCount[0] == 0 && _evCount[1] == 0 ){
-    MindDetectorConstruction* detConstr = (MindDetectorConstruction*) 
-      G4RunManager::GetRunManager()->GetUserDetectorConstruction();
-    _fvecReg = detConstr->
-      GetDetectorGeometry()->GetRegion( _fvec.z() );
+      reg = detConstr->GetRegion( _fvec );
     }
-
-    return _fvecReg;
+    
+    return reg;
   }
 }
 
+/*
 G4double MindGenieInterface::GetTargetProb()
 {
   MindDetectorConstruction* detConstr = (MindDetectorConstruction*) 
     G4RunManager::GetRunManager()->GetUserDetectorConstruction();
   
-  return (detConstr->GetDetectorGeometry()->GetPassiveTargetProb());
+  return (detConstr->GetDetectorGeometry()->GetPassiveProb());
 }
+*/
 
 G4PrimaryParticle* 
 MindGenieInterface::CreatePrimaryParticle(GHepParticle& part, G4int PDG, bool primLep)

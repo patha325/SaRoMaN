@@ -19,6 +19,7 @@
 #include <G4PVPlacement.hh>
 #include <G4Material.hh>
 #include <G4VisAttributes.hh>
+#include <Randomize.hh>
 
 //ROOT
 /*
@@ -117,7 +118,11 @@ G4VPhysicalVolume* MindDetectorConstruction::Construct()
     _gdml.Read(_gdml_file_name);
     world_physi = dynamic_cast<G4PVPlacement*>(_gdml.GetWorldVolume());
     // SetNullField(*world_physi->GetLogicalVolume());
+    regionmass["TASD"] = 0;
+    regionmass["ACTIVE"] = 0;
+    regionmass["PASSIVE"] = 0;
     G4String detectorName = "MIND/";
+    _detectormass = world_physi->GetLogicalVolume()->GetMass();
     SetVolumeInformation(world_physi->GetLogicalVolume(), detectorName);
   }
 
@@ -157,7 +162,7 @@ void MindDetectorConstruction::SetVolumeInformation(G4LogicalVolume* base,
 
   // G4VPhysicalVolume* world = _parser.GetWorldVolume();
   G4int nDaughters = base->GetNoDaughters();
-
+ 
   for ( int i = 0; i < nDaughters; i++ ) {
     G4VPhysicalVolume* daughter = base->GetDaughter(i);
     G4LogicalVolume* myvol = daughter->GetLogicalVolume();
@@ -166,6 +171,18 @@ void MindDetectorConstruction::SetVolumeInformation(G4LogicalVolume* base,
     volumename += "/";
     // first check if there are auxiliary objects
     std::cout<<volumename.c_str()<<std::endl;
+    // If this name corresponds to one of the three regions add them to the map.
+    if (myvol->GetName().contains("TASD")){
+      regions["TASD"].push_back(daughter);
+      regionmass["TASD"] += myvol->GetMass();
+    } else if (myvol->GetName().contains("ACTIVE")){
+      regions["ACTIVE"].push_back(daughter);
+      regionmass["ACTIVE"] += myvol->GetMass();
+    } else if (myvol->GetName().contains("PASSIVE")){
+      regions["PASSIVE"].push_back(daughter);
+      regionmass["PASSIVE"] += myvol->GetMass();
+    } //Ignore otherwise
+    
     const G4GDMLAuxListType auxlist = 
       _gdml.GetVolumeAuxiliaryInformation(myvol);
 
@@ -288,6 +305,82 @@ void MindDetectorConstruction::SetMagneticField(G4LogicalVolume& vol) {
       }*/
   vol.SetFieldManager( fieldMgr, true );
 }
+
+G4ThreeVector MindDetectorConstruction::GetVertex(G4String region_name){
+  
+  G4int nvols = regions[region_name].size();
+  G4Box* solidBox;
+  G4ThreeVector offset;
+  if ( nvols > 1 ) {
+    G4int volselect = int(floor(G4UniformRand() * double(nvols)));
+    // Get the solid definition
+    solidBox = (G4Box*) regions[region_name][volselect]->GetLogicalVolume()->GetSolid();
+    offset = regions[region_name][volselect]->GetFrameTranslation();
+  } else if (nvols == 1){
+    solidBox = (G4Box*) regions[region_name][0]->GetLogicalVolume()->GetSolid();
+    offset = regions[region_name][0]->GetFrameTranslation();
+  } else {
+    // give up
+    return G4ThreeVector(0., 0., 0.);
+  }
+  double x = (2*G4UniformRand() - 1)*solidBox->GetXHalfLength();
+  double y = (2*G4UniformRand() - 1)*solidBox->GetYHalfLength();
+  double z = (2*G4UniformRand() - 1)*solidBox->GetZHalfLength();
+  return G4ThreeVector(x + offset[0], y + offset[1], z + offset[2]);
+  
+}
+
+G4String MindDetectorConstruction::GetRegion(G4ThreeVector vertex){
+  bool inTASD=false;
+  bool inACTIVE=false;
+  bool inPASSIVE=false;
+  for(int i=0; i<regions["TASD"].size(); i++){
+    if (regions["TASD"][i]->GetLogicalVolume()->GetSolid()->Inside(vertex) == kInside)
+      inTASD=true;
+  }
+  for(int i=0; i<regions["ACTIVE"].size(); i++){
+    if (regions["ACTIVE"][i]->GetLogicalVolume()->GetSolid()->Inside(vertex) == kInside)
+      inACTIVE=true;
+  }
+  for(int i=0; i<regions["PASSIVE"].size(); i++){
+    if (regions["PASSIVE"][i]->GetLogicalVolume()->GetSolid()->Inside(vertex) == kInside)
+      inPASSIVE=true;
+  }
+  G4String region="PASSIVE";
+  if (inTASD){
+    region = "TASD";
+  }
+  else if(inACTIVE){
+    region = "ACTIVE";
+  }
+  else if(inPASSIVE){
+    region = "PASSIVE";
+  }
+  return region;
+}
+
+/*
+void MindDetectorConstruction::FindVolume(G4LogicalVolume* vol, G4String region_name,
+					  std::vector<G4PhysicalVolume*> region_physi){
+  
+  for(G4int i=0; i < vol->GetNoDaughters(); i++){
+    G4VPhysicalVolume* daughter = vol->GetDaughter(i);
+    myvol = daughter->GetLogicalVolume();
+    G4String volumename = myvol->GetName();
+    if ( volumename.contains(region_name) ){
+      // This is the volume we are looking for
+      region_vol.push_back(daughter);
+    }
+    // Otherwise check if there are daughter volumes
+    else if ( myvol->GetNoDaughters() > 0 ){
+      // Use this function for the nex level down
+      FindVolume(myvol, region_name, region_physi);
+    }
+  }
+}
+*/
+
+
 
 /*
 void MindDetectorConstruction::ConstructSDanField(){

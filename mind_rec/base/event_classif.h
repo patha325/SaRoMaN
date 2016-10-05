@@ -104,7 +104,7 @@ protected:
 
   //bool get_patternRec_seed(State& seed, Trajectory& muontraj, vector<cluster*>& hits);
   double fit_parabola(EVector& vec, Trajectory& track);
-  void set_de_dx(double mom);
+  //void set_de_dx(double mom);
   bool perform_kalman_fit(State& seed, Trajectory& track);
   bool perform_muon_extraction(const State& seed, vector<cluster*>& hits,
 			       Trajectory& muontraj, vector<cluster*>& hads);

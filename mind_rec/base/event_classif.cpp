@@ -937,7 +937,7 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
   //cout<<"Charge in fit_parabola: "<<meansign<<endl;
 
 
-  //cout<<"Momentum guess: "<<meansign*p<<endl;
+  cout<<"Momentum guess: "<<meansign*p<<endl;
 
   //double p = RangeMomentum(pathlength,firstNodeZ);
 
@@ -965,19 +965,6 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
 
 }
 
-//***********************************************************************
-void event_classif::set_de_dx(double mom){
-  //***********************************************************************
-  
-  double de_dx = -( 12.37 * _FeWeight * pow( mom, 0.099) 
-		    + (1 - _FeWeight) * 2.16 * pow( mom, 0.075) );
-  de_dx *= MeV/cm;
-  
-  man().geometry_svc().setup().set_volume_property_to_sons("mother","de_dx",de_dx);
-
-}
-
-
 
 
 //***********************************************************************
@@ -989,6 +976,8 @@ bool event_classif::perform_kalman_fit(State& seed, Trajectory& track) {
 
   ///fit the track using the seed state                             
   bool ok = man().fitting_svc().fit(seed, track);
+
+  std::cout<<seed.hv()<<std::endl;
 
   //Trajectory& traj = *_trajs[i];///
   int _fitCheck = 0;

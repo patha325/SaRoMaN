@@ -153,7 +153,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	
       TGraph *grY = new TGraph((const int)minindex, z, y);
       
-      TF1 *funY = new TF1("liney","[0]+[1]*x",-400,400);
+      TF1 *funY = new TF1("liney","[0]+[1]*x",-4000,4000);
       funY->SetParameters(0.,0.001);
       
       fitcatcher = grY->Fit("liney", "QN");
@@ -163,7 +163,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
       TGraph *grX = new TGraph((const int)minindex, z, x);
       
-      TF1 *funX = new TF1("linex","[0]+[1]*x",-400,400);
+      TF1 *funX = new TF1("linex","[0]+[1]*x",-4000,4000);
       funX->SetParameters(0.,0.001);
       
       fitcatcher = grX->Fit("linex", "QN");
@@ -285,7 +285,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
       //double qtilde = 0.3*pow(1+pow(fun->GetParameter(1),2),3./2.)/
       //(2*fun->GetParameter(2));	
       //_trajs.push_back(traj);
-    }
+    } //end if(_testBeam)
   else
     {
   

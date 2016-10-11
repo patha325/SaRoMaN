@@ -439,6 +439,7 @@ void MINDsetup::addProperties(){
 	  std::cout<<"iron_z "<<IRON_z<<" scint_z "<<SCINT_z<<std::endl;
 
 	  fieldScale *= numFe > 0 ? IRON_z*numFe/length : 0;
+	  fieldScale *= 2 *1.2;
 	  //fieldScale *= IRON_z *numFe;
 
 	  _detector_Bscale_avr += fieldScale *length;
@@ -451,6 +452,7 @@ void MINDsetup::addProperties(){
 	  
 	  std::cout<<"Local Field Scaling is "<<fieldScale<<std::endl;
 	  //BFieldMap = MINDfieldMapReader(Bmap,fieldScale);
+	  //BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,1));
 	  BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,fieldScale));
 	  //BFieldMap = MINDfieldMapReader(Bmap,fieldScale);
 	  // Let the scale always be one and fill the proper one in moduleDataMap, the scaling is done in 

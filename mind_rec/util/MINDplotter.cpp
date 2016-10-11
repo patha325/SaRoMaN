@@ -19,9 +19,11 @@ public:
 };
 
 //*************************************************************************************
-MINDplotter::MINDplotter() {
+MINDplotter::MINDplotter(const bhep::gstore& pstore) {
   //*************************************************************************************
 
+  _store = pstore;
+  _testBeam = _store.fetch_istore("testBeam");
 }
 
 //*************************************************************************************
@@ -176,6 +178,7 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   _YMeas.clear();
   _ZMeas.clear();
   _EMeas.clear();
+  _TMeas.clear();
   _MuProp.clear();
 
   _xDir.clear();
@@ -225,8 +228,11 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   //cout<<"In MINDplotter.cpp _clu="<<_clu<<endl;
 
   ///true particle informations
-  if ( _clu )
-    //ok1 = extract_true_particle2(evt);
+  if(!_testBeam)
+    {
+      if ( _clu )
+	ok1 = extract_true_particle2(evt);
+    }
   // else
   //  ok1 = extract_true_particle1(evt, i);
   
@@ -585,6 +591,7 @@ void MINDplotter::define_tree_branches() {
   statTree->Branch("raw_Ymeas", &_YMeas, 32000,0);
   statTree->Branch("raw_Zmeas", &_ZMeas,32000,0);
   statTree->Branch("raw_EngMeas", &_EMeas,32000,0);
+  statTree->Branch("raw_TimeMeas", &_TMeas,32000,0);
   statTree->Branch("raw_MotherPrSop", &_MuProp, 32000, 0);
 
   statTree->Branch("test_beam_xDir", &_xDir,32000,0);  
@@ -1394,9 +1401,6 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
       }
 
     _MotherProp.push_back(mu/mother_particle.size());
-    
-
-
 
     _XMeas.push_back(Fit.GetMeas(ih)->position()[0]);
     _YMeas.push_back(Fit.GetMeas(ih)->position()[1]);
@@ -1407,6 +1411,8 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
 		     Fit.GetMeas(ih)->position()[0], 
 		     Fit.GetMeas(ih)->position()[1], 
 						      Fit.GetMeas(ih)->position()[2]));
+    //_TMeas.push_back((Fit.GetMeas(ih)->get_time()-Fit.GetMeas(0)->get_time())); // For testbeam
+    _TMeas.push_back((Fit.GetMeas(ih)->get_time()));
   
     _MuProp.push_back(Fit.GetMeas(ih)->get_mu_prop());
 

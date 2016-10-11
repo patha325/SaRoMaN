@@ -17,9 +17,9 @@ void MindGenieEventInterface::Initialize(){
 
   _geom_root_file = config.GetSParam("geomRootFile"); 
   // _musr_flux_tree = config.GetSParam("musrFluxTree");
-  _flux_species   = config.GetIVParam("nu_species");
-  _flux_specfiles = config.GetSVParam("nu_files");
-  _flux_spechists = config.GetSVParam("spec_hists");
+  _flux_species   = config.GetIParam("nu_species");
+  _flux_specfiles = config.GetSParam("nu_files");
+  _flux_spechists = config.GetSParam("spec_hists");
   _genie_splines  = config.GetSParam("genieSplines");
 
   initRandGen();
@@ -142,9 +142,14 @@ void MindGenieEventInterface::initGenieSplines(){
 
 void MindGenieEventInterface::initGenieGeomDriver(){
   
-  _geoMgr = new TGeoManager();
-  _geoMgr->Import(_geom_root_file.c_str());
-  _root_geom = new geometry::ROOTGeomAnalyzer(_geoMgr);
+  // _geoMgr = new TGeoManager();
+  // _geoMgr->Import(_geom_root_file.c_str());
+  _root_geom = new geometry::ROOTGeomAnalyzer(_geom_root_file.c_str());
+  double lunits = genie::utils::units::UnitFromString("mm");
+  double dunits = genie::utils::units::UnitFromString("g_cm3");
+  TGeoVolume* topvol = _root_geom->GetGeometry()->GetTopVolume();
+  cout<< "Top Volume is \""<< topvol->GetName() << "\""<<endl;
+
   _geom_anal = dynamic_cast<GeomAnalyzerI *> (_root_geom);
     
 }
@@ -160,18 +165,18 @@ void MindGenieEventInterface::initGenieFluxDriver(){
 				       MindConfigService::Instance().FileName());
   */
   _hist_flux_driver = new flux::GCylindTH1Flux;
-  for(size_t i=0; i<_flux_species.size(); i++){
-    TFile* f = new TFile(_flux_specfiles[i]);
-    TH1D* fluxhist = (TH1D*)f->Get(_flux_spechists[i]);
-    _hist_flux_driver->AddEnergySpectrum(_flux_species[i], fluxhist);
-  }
-  _hist_flux_driver->
+  // for(size_t i=0; i<_flux_species.size(); i++){
+  TFile* f = new TFile(_flux_specfiles.c_str());
+  TH1D* fluxhist = (TH1D*)f->Get(_flux_spechists.c_str());
+  _hist_flux_driver->AddEnergySpectrum(_flux_species, fluxhist);
+    // }
+  // _hist_flux_driver->
   // _flux_driver = dynamic_cast<GFluxI*> (_ntuple_flux_driver)
 }
 
 void MindGenieEventInterface::initGenieMCjobDriver(){
   _mcj_driver = new GMCJDriver;
-  _mcj_driver->UseFluxDriver(_ntuple_flux_driver);
+  _mcj_driver->UseFluxDriver(_hist_flux_driver);
   _mcj_driver->UseGeomAnalyzer(_geom_anal);
   _mcj_driver->Configure();
   _mcj_driver->UseSplines();

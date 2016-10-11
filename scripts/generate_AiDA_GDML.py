@@ -7,15 +7,15 @@ class generate_EMR_GDML:
         self.NbBarsPerPlane = 90
         self.NbPlanes = 45
         self.NbOfBars = self.NbPlanes * self.NbBarsPerPlane 
-        self.unit = 'cm'
-        self.BarWidth = 1.0
-        self.BarHeight = 0.75
-        self.BarLength = 90.0
-        self.Gap = 0.05
+        self.unit = 'mm'
+        self.BarWidth = 10
+        self.BarHeight = 7.5
+        self.BarLength = 900
+        self.Gap = 0.5
         self.ActiveDepth = self.NbPlanes * (self.BarHeight + self.Gap)
         self.PlaneWidth  = self.NbBarsPerPlane * (self.BarWidth + self.Gap)
-        self.HoleRad = 0.3
-        self.FiberCladdingExtRadius = 0.12
+        self.HoleRad = 3
+        self.FiberCladdingExtRadius = 1.2
         self.AddWLSFiber = 1
 
         self.outfilename = 'half_AiDA.gdml'
@@ -116,24 +116,24 @@ class generate_EMR_GDML:
   </materials>
   
   <solids>
-    <box x="108.40" y="108.40" z="%(ActiveDepth)s" lunit="cm" name="AiDA_solid"/>
-    <box x="108.40" y="108.40" z="%(ActiveDepth)s" lunit="cm" name="Calorimeter_solid"/>
-        <box x="158.40" y="158.40" z="1.75" lunit="cm"
+    <box x="1084.0" y="1084.0" z="%(ActiveDepth)s" lunit="mm" name="AiDA_solid"/>
+    <box x="1084.0" y="1084.0" z="%(ActiveDepth)s" lunit="mm" name="Calorimeter_solid"/>
+        <box x="1584.0" y="1584.0" z="17.5" lunit="mm"
 	 name="Plane_solid"/>
-    <box x="100" y="100" z="1.5" lunit="cm"
+    <box x="1000" y="1000" z="15" lunit="mm"
 	 name="PlanePair_solid"/>
 
-    <tube rmax="%(HoleRad)s" z="%(BarLength)s" lunit="cm" deltaphi="360" aunit="degree" name="hole_solid"/>
-    <tube rmax="%(FiberCladdingExtRadius)s" z="%(BarLength)s" lunit="cm" deltaphi="360" aunit="degree" name="Cladding_solid"/>
-    <tube rmax="0.114" z="%(BarLength)s" lunit="cm" deltaphi="360" aunit="degree" name="FiberCore_solid"/>
+    <tube rmax="%(HoleRad)s" z="%(BarLength)s" lunit="mm" deltaphi="360" aunit="degree" name="hole_solid"/>
+    <tube rmax="%(FiberCladdingExtRadius)s" z="%(BarLength)s" lunit="mm" deltaphi="360" aunit="degree" name="Cladding_solid"/>
+    <tube rmax="1.14" z="%(BarLength)s" lunit="mm" deltaphi="360" aunit="degree" name="FiberCore_solid"/>
     
-    <box x="%(BarLength)s" y="%(BarWidth)s" z="%(BarHeight)s" lunit="cm" name="activeX_bar_solid"/>
-    <box x="%(BarWidth)s" y="%(BarLength)s" z="%(BarHeight)s" lunit="cm" name="activeY_bar_solid"/>
-    <box x="%(BarLength)s" y="%(BarLength)s" z="%(BarHeight)s" lunit="cm"
+    <box x="%(BarLength)s" y="%(BarWidth)s" z="%(BarHeight)s" lunit="mm" name="activeX_bar_solid"/>
+    <box x="%(BarWidth)s" y="%(BarLength)s" z="%(BarHeight)s" lunit="mm" name="activeY_bar_solid"/>
+    <box x="%(BarLength)s" y="%(BarLength)s" z="%(BarHeight)s" lunit="mm"
 	 name="activeX_plane_solid"/>
-    <box x="%(BarLength)s" y="%(BarLength)s" z="%(BarHeight)s" lunit="cm"
+    <box x="%(BarLength)s" y="%(BarLength)s" z="%(BarHeight)s" lunit="mm"
 	 name="activeY_plane_solid"/>
-    <box x="%(PlaneWidth)s" y="%(PlaneWidth)s" z="%(ActiveDepth)s" lunit="cm"
+    <box x="%(PlaneWidth)s" y="%(PlaneWidth)s" z="%(ActiveDepth)s" lunit="mm"
 	 name="active_TASD_solid"/> 
 
   </solids>
@@ -199,8 +199,8 @@ class generate_EMR_GDML:
 
             data += '''
         <parameters number="%(copy)s">
-            <position name="bar%(copy)s" x="%(xpos)s" y="%(ypos)s" z="%(zpos)s" unit="cm"/>
-            <box_dimensions z="%(z)s" x="%(x)s" y="%(y)s" lunit="cm"/>
+            <position name="bar%(copy)s" x="%(xpos)s" y="%(ypos)s" z="%(zpos)s" unit="mm"/>
+            <box_dimensions z="%(z)s" x="%(x)s" y="%(y)s" lunit="mm"/>
         </parameters>'''%params
 
         # complete the definition of the EMR calorimeter
@@ -208,7 +208,7 @@ class generate_EMR_GDML:
       </parameterised_position_size>
     </paramvol>
     <auxiliary auxtype="NbOfBars" auxvalue="%(NbOfBars)s"/> 
-    <auxiliary auxtype="unit" auxvalue="cm"/>
+    <auxiliary auxtype="unit" auxvalue="mm"/>
     <auxiliary auxtype="BarWidth" auxvalue="%(BarWidth)s"/>
     <auxiliary auxtype="BarHeight" auxvalue="%(BarHeight)s"/>
     <auxiliary auxtype="BarLength" auxvalue="%(BarLength)s"/>

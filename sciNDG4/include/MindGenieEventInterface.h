@@ -31,7 +31,8 @@
 #include "EVGDrivers/GMCJDriver.h"
 #include "EVGDrivers/GMCJMonitor.h"
 #include "EVGCore/EventRecord.h"
-#include "FluxDrivers/GSimpleNtpFlux.h"
+// #include "FluxDrivers/GSimpleNtpFlux.h"
+#include "FluxDrivers/GCylindTH1Flux.h"
 #include "Messenger/Messenger.h"
 
 #include "MindConfigService.h"
@@ -71,7 +72,10 @@ class MindGenieEventInterface : public G4VPrimaryGenerator
   
  private:
   std::string _geom_root_file;
-  std::string _musr_flux_tree;
+  int _flux_species;
+  std::string _flux_specfiles;
+  std::string _flux_spechists;
+  // std::string _musr_flux_tree;
   std::string _genie_splines;
   bhep::vdouble _had4P;
   bhep::vdouble _fspdg;

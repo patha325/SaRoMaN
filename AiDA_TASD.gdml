@@ -96,13 +96,6 @@
   <solids>
     <box x="158.40" y="158.40" z="100.0" lunit="cm" name="EMR_solid"/>
     <box x="158.40" y="158.40" z="100.00" lunit="cm" name="Calorimeter_solid"/>
-    <box x="158.40" y="158.40" z="1.75" lunit="cm"
-	 name="Plane_solid"/>
-    <box x="100" y="100" z="1.5" lunit="cm"
-	 name="PlanePair_solid"/>
-    <tube rmax="0.3" z="110.0" lunit="cm" deltaphi="360" aunit="degree" name="hole_solid"/>
-    <tube rmax="0.12" z="110.0" lunit="cm" deltaphi="360" aunit="degree" name="Cladding_solid"/>
-    <tube rmax="0.114" z="110.0" lunit="cm" deltaphi="360" aunit="degree" name="FiberCore_solid"/>
     <trap z="1.7" theta="0.0" phi="0.0" y1="3.3" x1="110.0" x2="110.0" alpha1="0.0" y2="0.01" x3="110.0" x4="110.0" alpha2="0.0" lunit="cm" name="Bar_solid"/>
     <trap z="1.7" theta="45.0" aunit="degree" phi="0.0" y1="3.3"
 	  x1="110.0" x2="110.0" alpha1="0.0" y2="3.3" x3="110.0"
@@ -120,7 +113,7 @@
   </solids>
   
   <structure>       
-    <!--  -->
+    <!--  
     <volume name="fiberCore">
       <materialref ref="POLYSTYRENE"/>
       <solidref ref="FiberCore_solid"/>
@@ -146,7 +139,7 @@
       <auxiliary auxtype="Invisible" auxvalue="1"/>
     </volume>
     
-    
+    -->
     
     <!--<loop for="xl" from="0" to="58" step="1">
     <volume name="Bar">
@@ -257,7 +250,7 @@
     </volume>
     <volume name="EMRPlanePair">
       <materialref ref="POLYSTYRENE"/>
-      <solidref ref="PlanePair_solid"/>
+      <solidref ref="Pair_solid"/>
       <physvol>
 	<volumeref ref="PlaneX"/>
 	<position name="xplane_pos" x="0.0" y="0.0" z="-0.375"

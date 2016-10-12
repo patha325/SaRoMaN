@@ -59,6 +59,15 @@ GENERATION energy_max    D %(part_eng_max)s
 GENERATION generator S GENIE
 '''% dict(dictionary, **vars(self))			
 
+		if(self.GenerationMode == 'GENIE_EVENT'):
+			filedata += '''
+GENERATION generator S GENIE_EVENT
+
+GENERATION nu_species I %(pid)s
+GENERATION nu_files S %(nu_files)s
+GENERATION spec_hists S %(spec_hists)s
+GENERATION genieSplines S %(genie_splines)s
+'''% dict(dictionary, **vars(self))
 		
 
 		filedata += '''
@@ -94,6 +103,8 @@ GEOMETRY writeGDML I 0
 GEOMETRY GDMLFileName S %(xml_file_path)s
 GEOMETRY xml_parsed S %(parsed_file_path)s
 
+# Output root file written for root compatibility
+GEOMETRY geomRootFile S %(geom_root_file)s
 
 ### MAgnetic field. Still uniform vector.(T)
 ## A single bit to turn the uniform field off in favour of a toroidal field
@@ -120,7 +131,7 @@ GENERATION active_material_data S %(out_base)s/genie_samples/nd_%(part)s%(inttyp
 GENERATION passive_material_data S %(out_base)s/genie_samples/nd_%(part)s%(inttype)s/ev0_%(seed)s_%(pid)d_1000260560_%(Nevts)s.root
 #
 ### Vertex location (RANDOM, ACTIVE, PASSIVE, FIXED, GAUSS).
-GENERATION vertex_location S GAUSS
+GENERATION vertex_location S %(vert_local)s
 
 
 ### Special simulation for training purpose
@@ -199,9 +210,6 @@ RUN StepSize D %(config_rec_step_size)s
 
 # name of detector for hit getter.
 RUN detect S %(config_rec_detect)s
-
-#Are we running test beam data.
-RUN testBeam I %(testBeam)d
 
 ########
 # For hit clustering.(edge in cm)
@@ -334,9 +342,6 @@ DATA idst_files SV 1
 # number of events to be processed.
 RUN nEvents I %(Nevts)d
 
-#Are we running test beam data.
-RUN testBeam I %(testBeam)d
-
 # gausian sigma for smear (cm)
 RUN Gaus_Sigma D %(config_digi_gaus_sigma)s
 
@@ -371,7 +376,6 @@ DATA odst_file S %(out_base)s/digi_out/nd_%(part)s%(inttype)s/nd_%(part)s%(intty
 %(preParam)s MIND_x D %(MIND_xdim)s
 %(preParam)s MIND_y D %(MIND_ydim)s
 %(preParam)s MIND_z D %(MIND_zdim)s
-%(preParam)s test_Beam I %(testBeam)d
 %(preParam)s vertex_x D %(MIND_vertex_xdim)s
 %(preParam)s vertex_y D %(MIND_vertex_ydim)s
 %(preParam)s vertex_z D %(MIND_vertex_zdim)s //vertexDepth

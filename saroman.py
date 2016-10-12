@@ -21,8 +21,7 @@ import random
 from pythonlib import print_config
 from pythonlib import field_map_generator
 from pythonlib import handle_third_party
-#from pythonlib import xml_parser
-#from pythonlib import xml_AiDA_parser
+from pythonlib import xml_parser
 #import print_config
 #import field_map_generator
 #import handle_third_party
@@ -48,21 +47,18 @@ class saroman:
     perhaps make it possible to set up variables in another py file and import saroman.
     '''
 
-    def __init__(self):
+    def __init__(self, generation_mode):
         #Set up paths #
         self.home = os.getcwd()
-        #self.home = '/data/neutrino05/phallsjo/copy/SaRoMan'
         self.exec_base = self.home
         self.out_base  = os.path.join(self.home, 'out')
         #self.out_base  = os.path.join(self.home, 'batch')
         self.scripts_dir = os.path.join(self.exec_base, 'saroman')
         self.third_party_support = os.path.join(self.home, 'third_party') 
-        #self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
-        #self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
-        
+        self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
+        self.geom_root_file = os.path.join(self.out_base,'MIND.gdml')
         #self.xml_file_path = os.path.join(self.exec_base,'patMIND.gdml')
         self.parsed_file_path  = os.path.join(self.exec_base,'parsedGdml.log')
-        #self.parsed_file_test_path  = os.path.join(self.exec_base,'parsedGdml.test')
 
         #General flags
         self.need_third_party_install = False
@@ -84,31 +80,12 @@ class saroman:
         self.inttype = 'CC'
         self.Bfield = 1.5 #Tesla
 
-        self.testBeam = 1 #Should perhaps be renamed using AIDA in testbeam. Model is AIDA and parsing daq files.
-
-        if(self.testBeam):
-            self.MIND_xdim = 1#0.96#7.0 # m
-            self.MIND_ydim = 1#0.96#6.0 # m
-            self.MIND_zdim = 1#3.261# 2.0#13.0 # m
-            self.config_rec_pos_resZ = 1.0 #cm
-            self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
-        else:
-            self.MIND_xdim = 2.9#1#0.96#7.0 # m
-            self.MIND_ydim = 2#1#0.96#6.0 # m
-            self.MIND_zdim = 8#1#3.261# 2.0#13.0 # m
-            self.config_rec_pos_resZ = 1.5#1.0 #cm
-            self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
-            #self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
-            #self.xml_file_path = os.path.join(self.exec_base,'ND_v1.gdml')
-            #self.xml_file_path = os.path.join(self.exec_base,'MIND_v4.gdml')
-        
-
         #Mind geometry
         #Different types of geometry, 3 represents a rectangular detector.
         self.MIND_type = 3#0   # Cylinder
-        #self.MIND_xdim = 2.9#1#0.96#7.0 # m
-        #self.MIND_ydim = 2#1#0.96#6.0 # m
-        #self.MIND_zdim = 8#1#3.261# 2.0#13.0 # m
+        self.MIND_xdim = 2.9#0.96#7.0 # m
+        self.MIND_ydim = 2#0.96#6.0 # m
+        self.MIND_zdim = 8#3.261# 2.0#13.0 # m
         #Not used for rectangular detector
         self.MIND_vertex_xdim = 0#2.0 # m
         self.MIND_vertex_ydim = 0#2.0 # m
@@ -121,7 +98,7 @@ class saroman:
         #de_dx found at pdg.lbl.gov/2015/AtomicNuclearProperties
         self.MIND_active_mat = 'G4_POLYSTYRENE'
         self.MIND_active_de_dx = 0.2052 #MeV/mm
-        self.MIND_thickness_active = 3.0#1.5#1.5 # cm
+        self.MIND_thickness_active = 3.0#1.5 # cm
         self.MIND_thickness_sigma = self.MIND_thickness_active / math.sqrt(12)
         self.MIND_width_activeX = 8.5 #cm
         self.MIND_width_sigmaX = self.MIND_width_activeX / math.sqrt(12)
@@ -151,14 +128,15 @@ class saroman:
 
         #Print config object, used to generate config files correctly
         #Set to either single_particle generation or generation through genie.
-        self.GenerationMode = 'SINGLE_PARTICLE' #GENIE
+        self.vert_local = 'GAUSS'
+        self.GenerationMode = generation_mode # 'SINGLE_PARTICLE' #GENIE
         self.print_config=print_config(self.GenerationMode)
 
         #Setup for field_map_generator.py
         #self.CreateFieldMap = True
         #self.field_map_generator = field_map_generator(self.Bfield,self.MIND_ydim+self.MIND_ear_ydim,
         #    self.MIND_xdim+self.MIND_ear_xdim, self.MIND_npanels)
-        #self.field_map_name = 'field_map_test.res'
+        # self.field_map_name = 'field_map_test.res'
         self.field_map_name = 'CenterPlate.table'
         self.field_map_folder = self.out_base
         self.field_map_full_name =os.path.join(self.field_map_folder,self.field_map_name)
@@ -167,8 +145,7 @@ class saroman:
         self.handle_third_party = handle_third_party(self.exec_base,self.third_party_support)
 
         #Setup for xml_parser.py
-        #self.xml_parser = xml_parser(self.xml_file_path,self.parsed_file_path)
-        #self.xml_parser = xml_AiDA_parser(self.xml_file_path,self.parsed_file_path)
+        self.xml_parser = xml_parser(self.xml_file_path,self.parsed_file_path)
         self.useGDML = 0
         if self.parse_gdml:
             self.useGDML = 1
@@ -232,7 +209,7 @@ class saroman:
         self.config_rec_step_size = 5 #cm
         self.config_rec_pos_resX = 8.5 #cm
         self.config_rec_pos_resY = 1.5 #cm
-        #self.config_rec_pos_resZ = 1.5#1.0 #cm
+        self.config_rec_pos_resZ = 1.5 #cm
         self.config_rec_meas_type = 'xyz'
         self.config_rec_WLSatten = 5000
         # relative density, Sc/Fe, AIR/Sc.
@@ -266,8 +243,8 @@ class saroman:
         Clean up our own software, use before building and before committing to git.
         '''
         #sciNDG4
-        #command = [self.third_party_support+'/bin/scons','-c']
-        #subprocess.call(command, cwd = self.exec_base+'/sciNDG4')
+        command = [self.third_party_support+'/bin/scons','-c']
+        subprocess.call(command, cwd = self.exec_base+'/sciNDG4')
 
         #digi_ND
         subprocess.call('make clean', shell=True, cwd = self.exec_base+'/digi_ND') 
@@ -437,8 +414,8 @@ class saroman:
             self.Config_and_build_own()
         if self.generate_field_map:
             self.Generate_field_map()
-        #if self.parse_gdml:
-        #    self.xml_parser.Parse_file()
+        if self.parse_gdml:
+            self.xml_parser.Parse_file()
 
     def Shell_source(self, script):
         '''
@@ -573,7 +550,8 @@ class saroman:
             genieOutLog = os.path.join(genieOutDir,'nd_'+self.part+self.inttype+'_'+str(self.seed)+'.log')
             FeTargetCode="1000260560"
             C12HTargetCode='1000060120[0.922582],1000010010[0.077418]'
-            equation ='1/(0.0069*x) +1'
+            # equation ='1/(0.0069*x) +1'
+            equation = self.nu_file+','+self.spec_hists
             vE ='0.01,4.0'
 
             # Check if the target directories exist if not create it
@@ -686,7 +664,7 @@ class saroman:
 #######################################################################################################################
 
 if __name__ == "__main__":
-    s=saroman()
+    s=saroman("SINGLE_PARTICLE")
     s.Handle_commandline_input(sys.argv[1:])
 
 #######################################################################################################################

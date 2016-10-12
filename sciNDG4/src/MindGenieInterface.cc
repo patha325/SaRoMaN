@@ -78,6 +78,7 @@ void MindGenieInterface::Finalize()
 void MindGenieInterface::GeneratePrimaryVertex(G4Event* event)
 {
   G4String region_name = SelectVertexRegion();
+  G4cout<<"Generate event in "<<region_name<<std::endl;
   G4int region_code = region_name.contains("PASSIVE") ? 1 : 0;
   
   //EOF protection.
@@ -102,8 +103,7 @@ void MindGenieInterface::GeneratePrimaryVertex(G4Event* event)
   MindDetectorConstruction* detConstr = (MindDetectorConstruction*) 
     G4RunManager::GetRunManager()->GetUserDetectorConstruction();
     
-  G4ThreeVector position = detConstr->GetDetectorGeometry()->
-    GetVertex( region_name );
+  G4ThreeVector position = detConstr->GetVertex( region_name );
 
   if ( _vtx_location == "FIXED" )
     position = _fvec;
@@ -210,12 +210,15 @@ G4String MindGenieInterface::SelectVertexRegion()
     
     // Randomly select whether vertex should be located in
     // passive or active material
-    
-    static G4double passive_target_prob = detConstr->GetPassiveProb();
-    
+    double active_frac = detConstr->GetRegionFractionalMass("ACTIVE");
+    double passive_frac = detConstr->GetRegionFractionalMass("PASSIVE");
+    double tasd_frac = detConstr->GetRegionFractionalMass("TASD");
+
+    static G4double passive_target_prob = passive_frac/ (active_frac + passive_frac + tasd_frac);
+    static G4double active_target_prob = active_frac/ (active_frac + tasd_frac);
+    G4cout<<"Probabilities are "<<passive_target_prob<<" for Fe and "<<active_target_prob<<" for scintillator planes.\n";
     if (G4UniformRand() <= passive_target_prob) return "PASSIVE";
     else {
-      static G4double active_target_prob = detConstr->GetActiveProb();
       if (G4UniformRand() <= active_target_prob) return "ACTIVE";
       else return "TASD";
     }

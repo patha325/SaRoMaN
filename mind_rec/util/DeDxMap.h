@@ -1,8 +1,13 @@
 #ifndef DeDxMap_hxx
 #define DeDxMap_hxx 1
 
+
 #include <recpack/DynamicProperty.h>
 #include <bhep/system_of_units.h>
+
+#include <bhep/messenger.h>
+#include <bhep/gstore.h>
+
 //#include <HEPUnits.hxx>
 
 using namespace Recpack;

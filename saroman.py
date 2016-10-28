@@ -78,7 +78,8 @@ class saroman:
         self.seed = 1000
         self.Nevts = 1000
         self.inttype = 'CC'
-        self.Bfield = 1.5 #Tesla
+        #self.Bfield = 1.5 #Tesla
+        self.BfieldScaling = 1.0
 
         self.testBeam = 0 #Should perhaps be renamed using AIDA in testbeam. Model is AIDA and parsing daq files.
         
@@ -161,9 +162,9 @@ class saroman:
 
         #Setup for field_map_generator.py
         #self.CreateFieldMap = True
-        #self.field_map_generator = field_map_generator(self.Bfield,self.MIND_ydim+self.MIND_ear_ydim,
+        #self.field_map_generator = field_map_generator(self.BfieldScaling,self.MIND_ydim+self.MIND_ear_ydim,
         #    self.MIND_xdim+self.MIND_ear_xdim, self.MIND_npanels)
-        # self.field_map_name = 'field_map_test.res'
+        #self.field_map_name = 'field_map_test.res'
         self.field_map_name = 'CenterPlate.table'
         self.field_map_folder = self.out_base
         self.field_map_full_name =os.path.join(self.field_map_folder,self.field_map_name)

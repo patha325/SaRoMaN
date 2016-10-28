@@ -121,7 +121,7 @@ GEOMETRY field DV 3
 # must be entered here.
 GEOMETRY FieldMap S %(field_map_full_name)s
 
-GEOMETRY FieldScaling D %(Bfield)s
+GEOMETRY FieldScaling D %(BfieldScaling)s
 
 ### GENERATION configuration parameters ################### 
 
@@ -192,7 +192,7 @@ RUN mag_field DV 3
 
 RUN mag_field_map S %(field_map_full_name)s
 
-RUN fieldScale D %(Bfield)s
+RUN fieldScale D %(BfieldScaling)s
 ########
 
 # energy loss (MeV/mm)

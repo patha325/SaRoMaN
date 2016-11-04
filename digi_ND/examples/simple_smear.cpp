@@ -45,6 +45,15 @@
 
 using namespace std;
 
+class forwardSortInZ{
+ public:
+  bool operator()(const bhep::hit* p1, const bhep::hit* p2){
+    if (p2->x()[2] > p1->x()[2]) return true;
+    return false;
+  }
+
+};
+
 class TempHit
 {
 public:
@@ -182,6 +191,18 @@ vector<bhep::hit*>ConvertToHit(vector<TempHit*> hitsVector, string xmlName)
     returnVector.back()->add_property("EnergyDep",tempEdep);
     returnVector.back()->add_property("time",(double)hitsVector[cnt]->timeing);
 
+    if((15 < hitsVector[cnt]->channelId && hitsVector[cnt]->channelId < 32) ||
+       (47 < hitsVector[cnt]->channelId && hitsVector[cnt]->channelId < 64) ||
+       (79 < hitsVector[cnt]->channelId && hitsVector[cnt]->channelId < 96))
+      {
+	returnVector.back()->add_property("rHit",1);
+      }
+    else
+      {
+	returnVector.back()->add_property("rHit",0);
+      }
+
+    /*
     if(hitsVector[cnt]->boardId == 1 && hitsVector[cnt]->channelId == 8) counterFEB18++;
     if(hitsVector[cnt]->boardId == 3 && hitsVector[cnt]->channelId == 8) counterFEB38++;
 
@@ -190,7 +211,7 @@ vector<bhep::hit*>ConvertToHit(vector<TempHit*> hitsVector, string xmlName)
 
     if(hitsVector[cnt]->boardId == 1 && hitsVector[cnt]->channelId == 15) counterFEB115++;
     if(hitsVector[cnt]->boardId == 3 && hitsVector[cnt]->channelId == 15) counterFEB315++;
-
+    */
     ConvertToPosition(returnVector.back(),hitsVector[cnt]->boardId,hitsVector[cnt]->channelId,&parse,root_element);
   }
   /*
@@ -939,9 +960,9 @@ void HandleData(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h1
  
 }
 
-void func(vector<char*> eventBuffers,
+void convert_to_internal(vector<char*> eventBuffers,
 	  vector<vector<TempHit*> >* tempVectorHits,
-	  TH1I* h1)
+			 TH1I* h1, double* noCut, double* firstCut,double* secondCut,double* thirdCut,double* forthCut,double* fifthCut)
 {
   vector<pair<double,vector<TempHit*> > > tempHitsPerSpill[4]; 
   try {
@@ -963,43 +984,68 @@ void func(vector<char*> eventBuffers,
 	  MDpartEventBM * event = spill.GetTriggerEventPtr(triggNum);
 	  
 	  //if(event->getNumDataWords() < 2+4*6) continue;
+	  (*noCut)++;
 	  if(event->getNumDataWords() < 12) continue;
+	  (*firstCut)++;
 
 	  
 	  for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) {
 	    int nHits = event->GetNLeadingEdgeHits(ich);
+	    
+	    int otherSide = false;
+
+	    if(ich<16) otherSide= event->GetNLeadingEdgeHits(ich+16);
+
+	    if(15<ich&&ich<32) otherSide= event->GetNLeadingEdgeHits(ich-16);
+	    
+	    if(31<ich&&ich<48) otherSide= event->GetNLeadingEdgeHits(ich+16);
+
+	    if(47<ich&&ich<64) otherSide= event->GetNLeadingEdgeHits(ich-16);
+
+	    if(63<ich&&ich<80) otherSide= event->GetNLeadingEdgeHits(ich+16);
+
+	    if(79<ich&&ich<96) otherSide= event->GetNLeadingEdgeHits(ich-16);
+
+
 	    if (nHits)
 	      {
 		if(event->GetHitTime(0,ich, 'l')>0)
 		  {
 		    h1->Fill(triggNum);
 		  }
+		(*secondCut)++;
 	      }
-	    for(int ih=0; ih<nHits; ih++)
+	    
+	    if(nHits && otherSide)
 	      {
-		if(event->GetHitTime(ih,ich, 'l')>0)
+		(*thirdCut)++;
+		for(int ih=0; ih<nHits; ih++)
 		  {
-		    //h1->Fill(triggNum);
-		    if(ich<32) asic1++;
-		    
-		    if(31<ich && ich<64) asic2++;
-		    
-		    if(63<ich && ich<96) asic3++;
-		    
-		    //counter++;
-		    tempVec.push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
-						  event->GetHitTime(ih,ich, 'l'),
-						  ich,spill.GetBoardId()));
-		    //tempPairVec.push_back(make_pair(events[i]->GetTriggerTime(),
-		    //			  (new TempHit(events[i]->GetHitAmplitude(ich, 'h'),
-		    //				       events[i]->GetHitTime(ih,ich, 'l'),
-		    //				       ich,spills[i]->GetBoardId()))));
+		    if(event->GetHitTime(ih,ich, 'l')>0)
+		      {
+			//h1->Fill(triggNum);
+			if(ich<32) asic1++;
+			
+			if(31<ich && ich<64) asic2++;
+			
+			if(63<ich && ich<96) asic3++;
+			
+			//counter++;
+			tempVec.push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
+						      event->GetHitTime(ih,ich, 'l'),
+						      ich,spill.GetBoardId()));
+			//tempPairVec.push_back(make_pair(events[i]->GetTriggerTime(),
+			//			  (new TempHit(events[i]->GetHitAmplitude(ich, 'h'),
+			//				       events[i]->GetHitTime(ih,ich, 'l'),
+			//				       ich,spills[i]->GetBoardId()))));
+		      }
 		  }
 	      }
 	  }//END for channels
 	  
-	  
+	  (*forthCut)++;
 	  if(asic1 > 1 && asic2 > 1 && asic3 > 1) 
+	    (*fifthCut)++;
 	    //tempHitsPerSpill[i].push_back(make_pair(triggNum,tempVec));
 	    tempHitsPerSpill[eventNum].push_back(make_pair(event->GetTriggerTime(),tempVec));
 	  tempVec.clear();
@@ -1082,9 +1128,59 @@ spill.Clean();
 
 void HandleData2(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h1)
 {
+  double noCut = 0;
+  double firstCut = 0;
+  double secondCut = 0;
+  double thirdCut = 0;
+  double forthCut = 0;
+  double fifthCut = 0;
+  double sixthCut = 0;
+  double seventhCut = 0;
+  double eightCut = 0;
+  double ninthCut = 0;
+
+
   vector<MDdateFile*> dfiles;
   vector<char*> eventBuffers;
   int evt_read = 0;
+
+  TFile rfile("new.root", "recreate");
+  TTree* statTree = new TTree("tree", "Tree");
+  int _evNo;
+
+  std::vector<double> _evNoVec;
+
+  std::vector<vector <double> > _R;
+  std::vector<vector <double> > _Y;
+  std::vector< vector<double> > _XPos;
+  std::vector< vector<double> > _YPos;
+  std::vector< vector<double> > _ZPos;
+  std::vector< vector<double> > _HTimeL;
+  std::vector< vector<double> > _HTimeR;
+  std::vector< vector<double> > _HTime;
+
+
+  std::vector<double> _RTemp;
+  std::vector<double> _YTemp;
+
+  std::vector<double> _XPosTemp;
+  std::vector<double> _YPosTemp;
+  std::vector<double> _ZPosTemp;
+  std::vector<double> _HTimeLTemp;
+  std::vector<double> _HTimeRTemp;
+  std::vector<double> _HTimeTemp;
+
+  statTree->Branch("MC_Evt", &_evNo, "MC_EventNo/I");
+  statTree->Branch("EvNoVec", &_evNoVec, 32000,0);
+  statTree->Branch("R", &_R,32000,0);
+  statTree->Branch("Y", &_Y,32000,0);
+  statTree->Branch("XPos", &_XPos,32000,0);
+  statTree->Branch("YPos", &_YPos, 32000,0);
+  statTree->Branch("ZPos", &_ZPos,32000,0);
+  statTree->Branch("TimeL", &_HTimeL,32000,0);
+  statTree->Branch("TimeR", &_HTimeR,32000,0);
+  statTree->Branch("Time", &_HTime,32000,0);
+
 
   for(unsigned int fileInt=0; fileInt<filenames.size();fileInt++)
     {
@@ -1120,13 +1216,13 @@ void HandleData2(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h
 
 
       //eventBuffer =  dfiles[0]->GetNextEvent();
-      if(counter == 3) break;
+      if(counter == 2) break;
       counter++;
       cout<<"dfile.NSpills()="<<dfiles[0]->NSpills()<<endl;
       //if(eventBuffer== NULL) break;
     
-      func(eventBuffers,&tempVectorHits,h1);
-    
+      convert_to_internal(eventBuffers,&tempVectorHits,h1,&noCut,&firstCut,&secondCut,&thirdCut,&forthCut,&fifthCut);
+
     ++xEv;
     //       } while (xEv < 5);
     //} while ( eventBuffers[0] );
@@ -1137,23 +1233,128 @@ void HandleData2(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h
     
     //inDst.open( input_data[0] );
     iEvent = 0;
-    
+
+    _evNoVec.clear();
+    _R.clear();
+    _Y.clear();
+    _XPos.clear();
+    _YPos.clear();
+    _ZPos.clear();
+    _HTimeL.clear();
+    _HTimeR.clear();
+    _HTime.clear();
+
     for(unsigned int event=0;event<tempVectorHits.size();event++)
       {
+	_evNo = event;
+	sixthCut++;
 	if(tempVectorHits[event].size()<12) continue;
-	
+	seventhCut++;
 	cout<<"eventNum="<<event<<endl;
 	string filepath2="/data/neutrino05/phallsjo/SaRoMan";
-	vector<bhep::hit*> hits = ConvertToHit(tempVectorHits[event],filepath2+"/test2.xml");
+	//vector<bhep::hit*> hits = ConvertToHit(tempVectorHits[event],filepath2+"/test2.xml");
+	vector<bhep::hit*> unSortedhits = ConvertToHit(tempVectorHits[event],filepath2+"/test2.xml");
+
+	std::vector<bhep::hit*> hits = unSortedhits;
+	sort( hits.begin(), hits.end(), forwardSortInZ() );
 	
 	ptype pT = DIGI;
 	string detect = "tracking";
 	vector<particle*> hitsParticle;
 	hitsParticle.push_back(new particle(pT,detect));
+
+	_evNoVec.push_back(event);
+
+	_RTemp.clear();
+	_YTemp.clear();
+	_XPosTemp.clear();
+	_YPosTemp.clear();
+	_ZPosTemp.clear();
+	_HTimeLTemp.clear();
+	_HTimeRTemp.clear();
+	_HTimeTemp.clear();
+
+	double initTime = hits[0]->ddata("time");
+
+	double initTimeL = 0;
+	double initTimeR = 0;
+
+	if( hits[0]->idata("rHit"))
+	  {
+	    initTimeR = hits[0]->ddata("time");
+	    initTimeL = hits[1]->ddata("time");
+	  }
+	else
+	  {
+	    initTimeL = hits[0]->ddata("time");
+	    initTimeR = hits[1]->ddata("time");
+	  }
+	  
+
 	for(unsigned int i = 0; i<hits.size();i++)
 	  {
-	    hitsParticle.back()->add_hit(detect,hits[i]);
+	    //hitsParticle.back()->add_hit(detect,hits[i]);
+
+	    eightCut++;
+
+	    if(fabs(hits[i]->ddata("time") - initTime) > 10) continue;//filter
+	      
+	    ninthCut++;
+
+
+	    _ZPosTemp.push_back(hits[i]->ddata("barPosZ"));
+	    if(hits[i]->idata("IsYBar"))
+	      {
+		_YPosTemp.push_back(hits[i]->ddata("barPosT"));
+	      }
+	    else
+	      {
+		_XPosTemp.push_back(hits[i]->ddata("barPosT"));
+	      }
+
+	    _YTemp.push_back(hits[i]->idata("IsYBar"));
+	    _RTemp.push_back(hits[i]->idata("rHit"));
+	      /*
+	    if(hits[i]->idata("rHit"))
+	      {
+		_HTimeRTemp.push_back(hits[i]->ddata("time")-initTimeR);
+	      }
+	    else
+	      {
+		_HTimeLTemp.push_back(hits[i]->ddata("time")-initTimeL);
+	      }
+	      */
+	      /*
+	    if(fabs(hits[i]->ddata("time") - initTime) > 3000)
+	      {
+		cerr<<hits[i]->ddata("time")<<endl;
+		cerr<<initTime<<endl;
+	      }
+	      */
+	    _HTimeTemp.push_back(hits[i]->ddata("time") - initTime);
+
+
+	    hitsParticle.back()->add_hit(detect,hits[i]); //new
+
 	  }
+	_R.push_back(_RTemp);
+	_Y.push_back(_YTemp);
+	
+	_XPos.push_back(_XPosTemp);
+	_YPos.push_back(_YPosTemp);
+	_ZPos.push_back(_ZPosTemp);
+	_HTimeL.push_back(_HTimeLTemp);
+	_HTimeR.push_back(_HTimeRTemp);
+	_HTime.push_back(_HTimeTemp);
+	
+	/*
+	  int _evNo;
+	  std::vector< vector<double> > _XPos
+	  std::vector< vector<double> > _YPos;
+	  std::vector< vector<double> > _ZPos;
+	  std::vector< vector<double> > _HTimeLHTimeL;
+	  std::vector< vector<double> > _HTimeR;
+	*/
 	
 	cout<<"particles size="<<hitsParticle.back()->hits(detect).size()<<endl;
 	
@@ -1173,6 +1374,7 @@ void HandleData2(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h
 	hitsParticle.clear();
 	
       }
+    statTree->Fill();
     
 
 
@@ -1188,6 +1390,21 @@ void HandleData2(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h
 
   //MDdateFile dfile(filenames[0], filepath);
 
+  rfile.Write();
+  rfile.Close();
+
+      cerr<<"CUTS:"<<endl;
+      cerr<<noCut<<endl;
+      cerr<<firstCut<<endl;
+      cerr<<secondCut<<endl;
+      cerr<<thirdCut<<endl;
+      cerr<<forthCut<<endl;
+      cerr<<fifthCut<<endl;
+      cerr<<sixthCut<<endl;
+      cerr<<seventhCut<<endl;
+      cerr<<eightCut<<endl;
+      cerr<<ninthCut<<endl;
+      cerr<<"CUTS done"<<endl;
 
 }
 
@@ -1438,14 +1655,14 @@ int main(int argc, char* argv[]) {
 
 
 
-      cerr<<"start of handledata"<<endl;
-      HandleData2(tester,filepath,cvt,&h1);
-      cerr<<"End of handledata"<<endl;
+ cerr<<"start of handledata"<<endl;
+ HandleData2(tester,filepath,cvt,&h1);
+ cerr<<"End of handledata"<<endl;
 
   
-      h1.Write();
-      h2.Write();
-      rfile.Close();
+ h1.Write();
+ h2.Write();
+ rfile.Close();
       
       /*
 

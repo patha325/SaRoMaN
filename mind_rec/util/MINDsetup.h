@@ -4,9 +4,11 @@
 
 #include <recpack/RecPackManager.h>
 #include <mind/SetupSk.h>
-#include <mind/MINDfieldMapReader.h>
-#include <mind/DeDxMap.h>
-
+//#include <mind/MINDfieldMapReader.h>
+//#include <mind/DeDxMap.h>
+#include <mind/detector.h>
+#include <mind/MINDplate.h>
+#include <mind/EMINDplate.h>
 //#include <string.h>
 
 //USING THE GDML PARSED FILE
@@ -25,7 +27,7 @@ public:
   virtual ~MINDsetup();
     
   Setup& setup();
-   
+
   // void init(bhep::gstore store,bhep::sstore,
   // 	    bhep::prlevel level=bhep::NORMAL);
   void init(bhep::gstore store, bhep::prlevel level=bhep::NORMAL);
@@ -53,6 +55,8 @@ public:
   double getPieceWidth() {return _pieceWidth;}
 
   std::map<dict::Key,vector<double> > getModuleDataMap() {return _moduleDataMap;}
+
+  Detector getDetectorModel() {return detectorModel;};
 
   // vol_name, module position z, module size z, wFe, MagFieldScale
   std::map<dict::Key,vector<double> > _moduleDataMap;
@@ -127,7 +131,7 @@ protected:
 
   DeDxMap* zeroMap;
 
-
+  Detector detectorModel;
 
 
   //-------------------------------------------------------------//

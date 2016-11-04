@@ -21,7 +21,7 @@ import random
 from pythonlib import print_config
 from pythonlib import field_map_generator
 from pythonlib import handle_third_party
-from pythonlib import xml_parser
+#from pythonlib import xml_parser
 #import print_config
 #import field_map_generator
 #import handle_third_party
@@ -47,7 +47,7 @@ class saroman:
     perhaps make it possible to set up variables in another py file and import saroman.
     '''
 
-    def __init__(self, generation_mode):
+    def __init__(self, generation_mode='SINGLE_PARTICLE'):
         #Set up paths #
         self.home = os.getcwd()
         self.exec_base = self.home
@@ -55,7 +55,7 @@ class saroman:
         #self.out_base  = os.path.join(self.home, 'batch')
         self.scripts_dir = os.path.join(self.exec_base, 'saroman')
         self.third_party_support = os.path.join(self.home, 'third_party') 
-        self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
+        #self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
         self.geom_root_file = os.path.join(self.out_base,'MIND.gdml')
         #self.xml_file_path = os.path.join(self.exec_base,'patMIND.gdml')
         self.parsed_file_path  = os.path.join(self.exec_base,'parsedGdml.log')
@@ -78,14 +78,42 @@ class saroman:
         self.seed = 1000
         self.Nevts = 1000
         self.inttype = 'CC'
-        self.Bfield = 1.5 #Tesla
+        #self.Bfield = 1.5 #Tesla
+        self.BfieldScaling = 1.0
+
+        self.testBeam = 0 #Should perhaps be renamed using AIDA in testbeam. Model is AIDA and parsing daq files.
+        
+        if(self.testBeam):
+            self.MIND_xdim = 1#0.96#7.0 # m
+            self.MIND_ydim = 1#0.96#6.0 # m
+            self.MIND_zdim = 1#3.261# 2.0#13.0 # m
+            self.config_rec_pos_resZ = 1.0 #cm
+            self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
+        else:
+            #self.MIND_xdim = 1#0.96#7.0 # m
+            #self.MIND_ydim = 1#0.96#6.0 # m
+            #self.MIND_zdim = 1#3.261# 2.0#13.0 # m
+            #self.config_rec_pos_resZ = 1.0 #cm
+            #self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
+            
+            self.MIND_xdim = 2.9#1#0.96#7.0 # m
+            self.MIND_ydim = 2#1#0.96#6.0 # m
+            self.MIND_zdim = 8#1#3.261# 2.0#13.0 # m
+            self.config_rec_pos_resZ = 1.5#1.0 #cm
+            #self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
+            self.xml_file_path = os.path.join(self.exec_base,'MIND_v3.gdml')
+
+            #self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'ND_v1.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'MIND_v4.gdml')
+
 
         #Mind geometry
         #Different types of geometry, 3 represents a rectangular detector.
         self.MIND_type = 3#0   # Cylinder
-        self.MIND_xdim = 2.9#0.96#7.0 # m
-        self.MIND_ydim = 2#0.96#6.0 # m
-        self.MIND_zdim = 8#3.261# 2.0#13.0 # m
+        #self.MIND_xdim = 2.9#0.96#7.0 # m
+        #self.MIND_ydim = 2#0.96#6.0 # m
+        #self.MIND_zdim = 8#3.261# 2.0#13.0 # m
         #Not used for rectangular detector
         self.MIND_vertex_xdim = 0#2.0 # m
         self.MIND_vertex_ydim = 0#2.0 # m
@@ -134,9 +162,9 @@ class saroman:
 
         #Setup for field_map_generator.py
         #self.CreateFieldMap = True
-        #self.field_map_generator = field_map_generator(self.Bfield,self.MIND_ydim+self.MIND_ear_ydim,
+        #self.field_map_generator = field_map_generator(self.BfieldScaling,self.MIND_ydim+self.MIND_ear_ydim,
         #    self.MIND_xdim+self.MIND_ear_xdim, self.MIND_npanels)
-        # self.field_map_name = 'field_map_test.res'
+        #self.field_map_name = 'field_map_test.res'
         self.field_map_name = 'CenterPlate.table'
         self.field_map_folder = self.out_base
         self.field_map_full_name =os.path.join(self.field_map_folder,self.field_map_name)
@@ -145,7 +173,7 @@ class saroman:
         self.handle_third_party = handle_third_party(self.exec_base,self.third_party_support)
 
         #Setup for xml_parser.py
-        self.xml_parser = xml_parser(self.xml_file_path,self.parsed_file_path)
+        #self.xml_parser = xml_parser(self.xml_file_path,self.parsed_file_path)
         self.useGDML = 0
         if self.parse_gdml:
             self.useGDML = 1
@@ -209,7 +237,7 @@ class saroman:
         self.config_rec_step_size = 5 #cm
         self.config_rec_pos_resX = 8.5 #cm
         self.config_rec_pos_resY = 1.5 #cm
-        self.config_rec_pos_resZ = 1.5 #cm
+        #self.config_rec_pos_resZ = 1.5 #cm
         self.config_rec_meas_type = 'xyz'
         self.config_rec_WLSatten = 5000
         # relative density, Sc/Fe, AIR/Sc.
@@ -414,8 +442,8 @@ class saroman:
             self.Config_and_build_own()
         if self.generate_field_map:
             self.Generate_field_map()
-        if self.parse_gdml:
-            self.xml_parser.Parse_file()
+        #if self.parse_gdml:
+         #   self.xml_parser.Parse_file()
 
     def Shell_source(self, script):
         '''

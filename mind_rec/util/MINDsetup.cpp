@@ -3,13 +3,9 @@
 #include <recpack/dictionary.h>
 #include <string>
 #include <algorithm>
-#include <mind/MINDplate.h>
-#include <mind/EMINDplate.h>
-#include <mind/DeDxMap.h>
+//#include <mind/DeDxMap.h>
 
 #include <bhep/system_of_units.h>
-
-
 
 //*************************************************************
 MINDsetup::MINDsetup() {
@@ -174,6 +170,8 @@ void MINDsetup::createGeom(){
 	  // Create the box with the position and the dimentions of the module
 	  detVector.push_back(new Box(pos, zaxis, xaxis, it_int->second[2]/2.,
 	  		      it_int->second[0]/2, it_int->second[1]/2));
+
+	  detectorModel.GetSubDetectorVec()->push_back(new SubDetector(vol_name,pos,it_int->second));
 
 	  //_gsetup.add_volume("mother",vol_name,det);
 	  _gsetup.add_volume("mother",vol_name,detVector.back());
@@ -480,6 +478,15 @@ void MINDsetup::addProperties(){
 	  //_gsetup.set_volume_property(vol_name,RP::BFieldMap,BFieldMap);
 	  _gsetup.set_volume_property(vol_name,RP::BFieldMap,*BFieldMapVec.back());
 
+	  SubDetector* subDetector = detectorModel.GetSubDetector(vol_name);
+	  
+	  //cerr<<"subDetector size="<<detectorModel.GetNSubDetectors()<<endl;
+	  if(subDetector)
+	    {
+	      subDetector->SetProperties(BFieldMapVec.back(),de_dx_map_vec.back());
+	      //cerr<<"Set up correctly"<<endl;
+	    }
+
 	}
     }
 
@@ -732,7 +739,7 @@ void MINDsetup::readParam(){
 
       temp_vector.clear();
 
-      cerr<<word<<" ";
+      //cerr<<word<<" ";
 
       file >> temp;
       x = mm*(double)atof(temp.c_str());
@@ -745,9 +752,9 @@ void MINDsetup::readParam(){
       temp_vector.push_back(z);
       _gdml_pos_map[word] = temp_vector;
 
-      cerr<<x<<" ";
-      cerr<<y<<" ";
-      cerr<<z<<" ";
+      //cerr<<x<<" ";
+      //cerr<<y<<" ";
+      //cerr<<z<<" ";
       
       temp_vector.clear();
       file >> temp;
@@ -761,9 +768,9 @@ void MINDsetup::readParam(){
       temp_vector.push_back(z);
       _gdml_solid_map[word] = temp_vector;
 
-      cerr<<x<<" ";
-      cerr<<y<<" ";
-      cerr<<z<<" ";
+      //cerr<<x<<" ";
+      //cerr<<y<<" ";
+      //cerr<<z<<" ";
     }
 
 

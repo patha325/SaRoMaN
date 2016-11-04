@@ -3,7 +3,7 @@
 
 #include <recpack/Volume.h>
 #include <recpack/Rectangle.h>
-#include <MINDsection.h>
+#include <mind/MINDsection.h>
 
 using namespace Recpack;
 

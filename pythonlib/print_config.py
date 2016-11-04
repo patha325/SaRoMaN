@@ -121,7 +121,7 @@ GEOMETRY field DV 3
 # must be entered here.
 GEOMETRY FieldMap S %(field_map_full_name)s
 
-GEOMETRY FieldScaling D %(Bfield)s
+GEOMETRY FieldScaling D %(BfieldScaling)s
 
 ### GENERATION configuration parameters ################### 
 
@@ -192,7 +192,7 @@ RUN mag_field DV 3
 
 RUN mag_field_map S %(field_map_full_name)s
 
-RUN fieldScale D %(Bfield)s
+RUN fieldScale D %(BfieldScaling)s
 ########
 
 # energy loss (MeV/mm)
@@ -210,6 +210,8 @@ RUN StepSize D %(config_rec_step_size)s
 
 # name of detector for hit getter.
 RUN detect S %(config_rec_detect)s
+
+RUN testBeam I %(testBeam)d
 
 ########
 # For hit clustering.(edge in cm)
@@ -342,6 +344,8 @@ DATA idst_files SV 1
 # number of events to be processed.
 RUN nEvents I %(Nevts)d
 
+RUN testBeam I %(testBeam)d
+
 # gausian sigma for smear (cm)
 RUN Gaus_Sigma D %(config_digi_gaus_sigma)s
 
@@ -376,6 +380,7 @@ DATA odst_file S %(out_base)s/digi_out/nd_%(part)s%(inttype)s/nd_%(part)s%(intty
 %(preParam)s MIND_x D %(MIND_xdim)s
 %(preParam)s MIND_y D %(MIND_ydim)s
 %(preParam)s MIND_z D %(MIND_zdim)s
+%(preParam)s test_Beam I %(testBeam)d
 %(preParam)s vertex_x D %(MIND_vertex_xdim)s
 %(preParam)s vertex_y D %(MIND_vertex_ydim)s
 %(preParam)s vertex_z D %(MIND_vertex_zdim)s //vertexDepth

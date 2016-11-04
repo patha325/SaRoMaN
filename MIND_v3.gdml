@@ -174,7 +174,7 @@
     
     <box lunit="mm" name="SFModule_solid" x="FeWidth" y="FeHeight" z="2*(SciDepth + FeDepth + 2*AlWidth + Gap0)"/>
     <box lunit="mm" name="SFFModule_solid" x="FeWidth" y="FeHeight" z="2*(SciDepth + 2*FeDepth + 4*AlWidth + 2*Gap0)"/>
-    <box lunit="mm" name="SFFFModule_solid" x="FeWidth" y="FeHeight"
+    <box lunit="mm" name="SFFF_solid" x="FeWidth" y="FeHeight"
 	 z="(SciDepth + 3*FeDepth + 6*AlWidth + 3*Gap0)"/>
     <box lunit="mm" name="SFFFFModule_solid" x="FeWidth" y="FeHeight" z="3*(SciDepth + 4*FeDepth + 8*AlWidth + 4*Gap0)"/>
     <box lunit="mm" name="DETECTOR_solid" x="FeWidth" y="FeHeight"
@@ -1071,9 +1071,9 @@
       <auxiliary auxtype="EMField" auxvalue="NULL"/>
       <auxiliary auxtype="Invisible" auxvalue="1"/>
     </volume>
-    <volume name="SFFFModule">
+    <volume name="SFFF">
       <materialref ref="G4_AIR0x19316e30"/>
-      <solidref ref="SFFFModule_solid"/>
+      <solidref ref="SFFF_solid"/>
       <physvol name="SFFF_physi1">
 	<volumeref ref="SFFF"/>
 	<position name="SFFF_pos1" unit="mm" x="0.0" y="0.0" z="0.0"/>
@@ -1156,9 +1156,9 @@
 		  z="-DetectorLength/2 + 8*SciDepth + 8 * (FeDepth +
 		     2*AlWidth + Gap0) + 2*Gap0 + 2*Gap1 + Gap2"/>
       </physvol>
-      <physvol name="SFFFModule_physi">
-        <volumeref ref="SFFFModule"/>
-        <position name="SFFFModule_pos" x="0.0" y="0.0"
+      <physvol name="SFFF_physi">
+        <volumeref ref="SFFF"/>
+        <position name="SFFF_pos" x="0.0" y="0.0"
 		  z="-DetectorLength/2 + 9.5*SciDepth + 11.5 * (FeDepth
 		     + 2*AlWidth + Gap0) + 2*Gap0 + 2*Gap1 + Gap2"/>
       </physvol>

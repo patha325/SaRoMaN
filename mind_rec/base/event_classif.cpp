@@ -83,8 +83,8 @@ void event_classif::Initialize(const bhep::gstore& pstore, bhep::prlevel vlevel,
 
   _supergeom = *geom;
 
-  //cout<<"max_z: "<<_geom.getZMax()<<endl;
-  //cout<<"min_z: "<<_geom.getZMin()<<endl;
+  cout<<"max_z: "<<_geom.getZMax()<<endl;
+  cout<<"min_z: "<<_geom.getZMin()<<endl;
   
   double vertdepth = _infoStore.find_dstore("vertexDepth")?
     _infoStore.fetch_dstore("vertexDepth") : 0.0;
@@ -144,6 +144,7 @@ bool event_classif::Execute(const vector<cluster*>& hits,
     //cout<<"hits2: "<<hits2.size()<<endl;
     ///calculate the number of planes containing single hit and arrange the z-position, energy of the hits in increasing z 
     //Occupancy.
+    _geom.getDetectorModel()->Reset();
     ok = get_plane_occupancy( hits2 );
     ///called if liklihood output has to generate
     if ( _outLike )
@@ -321,9 +322,15 @@ bool event_classif::get_plane_occupancy(vector<cluster*>& hits){
     if(testY != testY) continue;
     if(testZ != testZ) continue;
     
+    //cout<<"testZ "<<testZ<<endl;
+
     ///create plane info
     plane_info* plane = new plane_info(planeIndex, testZ, _infoStore);
     plane->AddHit(hits[imeas]);
+    //if(_geom.getDetectorModel()->GetSubDetector(testZ))
+    //{
+    //_geom.getDetectorModel()->GetSubDetector(testZ)->GetPlanes()->push_back(plane);
+    //}
     //cout<<"testZ: "<<testZ<<endl;
     
     ///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
@@ -380,6 +387,13 @@ bool event_classif::get_plane_occupancy(vector<cluster*>& hits){
     
   } while (hits_used != nHits);
   
+  //if(_geom.getDetectorModel()->GetSubDetector(testZ))
+  //{
+  //cout<<"Detector planes"<<_geom.getDetectorModel()->GetSubDetectorVec()->at(0)->GetPlanes()->size()<<endl;
+  cout<<"Detector planes"<<_geom.getDetectorModel()->GetNPlanes()<<endl;
+
+  //_geom.getDetectorModel()->CalculateCharge();
+ //}
   
   ///total no of planes
   _nplanes = (int)_planes.size();
@@ -572,6 +586,14 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
     RecObject* ro = dynamic_cast<RecObject*>(&(*(_planes[pl]->GetHits()[0])));
     muontraj.add_node(Node(*ro));
     (_planes[pl]->GetHits()[0])->set_name(candHit, hit_in);
+
+    if( _geom.getDetectorModel()->
+	GetSubDetector((_planes[pl]->GetHits()[0])->position()[2]))
+      {
+	_geom.getDetectorModel()->
+	  GetSubDetector((_planes[pl]->GetHits()[0])->position()[2])->
+	  GetPlanes()->push_back(_planes[pl]);
+      }
   }  
   
   _m.message("The free section muontraj=",muontraj, bhep::DETAILED);
@@ -904,12 +926,12 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
   double pathlength=track.nodes()[0]->measurement().position()[2] - firstNodeZ;
 
   // Need to get the start Z-pos of the last Scintilator module.
-  double zMax = 1600; //mm
+  //double zMax = 1600; //mm
   
-  zMax = _geom.getZMax()-_geom.get_Fe_prop();
+  //zMax = _geom.getZMax()-_geom.get_Fe_prop();
   //cout<<"zMax: "<<zMax<<endl;
 
-  zMax = 1000;
+  //zMax = 1000;
   std::cout<<"pathLength: "<<pathlength<<std::endl;
   double final_Zpos=track.nodes()[0]->measurement().position()[2];
   std::cout<<"Final_Zpos"<<final_Zpos<<endl;
@@ -1222,6 +1244,27 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
   //cout<<"size04:"<<muontraj.size()<<endl;  
   if ( _endProj ) check_forwards( seed, hits, muontraj );
   _m.message("At the end of muon_extraction size in traj =",muontraj.size(), bhep::VERBOSE);
+  
+  _geom.getDetectorModel()->Reset();
+
+
+  const dict::Key candHit = "inMu";
+
+  for(int pl=_planes.size()-1; pl >= 0; pl-- ){
+
+    for(int hit =_planes[pl]->GetHits().size()-1;hit>=0; hit--)
+      {
+	if ( !_planes[pl]->GetHits()[hit]->names().has_key(candHit) ) continue;
+	else if( _geom.getDetectorModel()->
+		 GetSubDetector((_planes[pl]->GetHits()[hit])->position()[2]))
+	  {
+	    _geom.getDetectorModel()->
+	      GetSubDetector((_planes[pl]->GetHits()[hit])->position()[2])->
+	      GetPlanes()->push_back(_planes[pl]);
+	  }
+      }
+  }  
+ 
   return true;
 }
 
@@ -1986,7 +2029,7 @@ bool event_classif::get_radial_occupancy(vector<cluster*>& hits)
     ///create plane info
     plane_info* radPlane = new plane_info(planeIndex, testZ, testR, _infoStore);
     radPlane->AddHit(hits[imeas]);
-    
+ 
     ///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
     for (size_t i = hits_used;i <nHits;i++) {
       curX = hits_temp[i]->position()[0];

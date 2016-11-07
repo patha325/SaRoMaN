@@ -145,15 +145,15 @@ void MINDsetup::createGeom(){
       pos[1]= it->second[1];
       pos[2]= it->second[2];
 
-      if(isdigit(it->first.at(it->first.length() -1)))
-	{
+      //if(isdigit(it->first.at(it->first.length() -1)))
+      //{
 	  //If the string ends on a digit, remove it before using as a key
-	  it_int =_gdml_solid_map.find(it->first.substr(0,it->first.length()-1));
-	} 
-      else
-	{
+      //  it_int =_gdml_solid_map.find(it->first.substr(0,it->first.length()-1));
+      //} 
+      //else
+      //{
 	  it_int =_gdml_solid_map.find(it->first);
-	}
+	  //}
       
       if(it_int!= _gdml_solid_map.end())
 	{
@@ -182,7 +182,7 @@ void MINDsetup::createGeom(){
 
 	  _moduleDataMap[vol_name] = tempVector;
 	}
-      //  std::cout << it->first << " " << it->second[0] << " " << it->second[1] << " "  <<it->second[2]<< "\n";
+      //std::cout << it->first << " " << it->second[0] << " " << it->second[1] << " "  <<it->second[2]<< "\n";
     }
 }
 
@@ -300,8 +300,8 @@ void MINDsetup::addProperties(){
 
   _detector_Bscale_avr = 0;
 
-  //_generalBFieldMap = MINDfieldMapReader(Bmap,_fieldScale);
-  _generalBFieldMap = MINDfieldMapReader(Bmap,1.0);
+  _generalBFieldMap = MINDfieldMapReader(Bmap,_fieldScale);
+  //_generalBFieldMap = MINDfieldMapReader(Bmap,1.0);
   _gsetup.set_volume_property("mother","X0",X0AIR);
   //_gsetup.set_volume_property("detector","X0",X0AIR);
 
@@ -348,8 +348,8 @@ void MINDsetup::addProperties(){
       it != _gdml_pos_map.end(); ++it)
     {
 
-      //double fieldScale = _fieldScale;
-      double fieldScale = 1.0;
+      double fieldScale = _fieldScale;
+      //double fieldScale = 1.0;
       string name = it->first;
       int numScint=0;
       int numFe=0;
@@ -369,15 +369,15 @@ void MINDsetup::addProperties(){
 	    }
 	  else if("M" == current_string)
 	    {
-	      if(numFe ==3)
+	      if(numFe ==4)
 		{
-		  numFe *= 6;
-		  numScint *= 6;
+		  numFe *= 3;
+		  numScint *= 3;
 		}
 	      else
 		{
-		  numFe *=3;
-		  numScint *=3;
+		  numFe *=2;
+		  numScint *=2;
 		}
 	      //_gsetup.set_volume_property(vol_name,"StepSize",minStepSize);
 	      break;
@@ -391,15 +391,15 @@ void MINDsetup::addProperties(){
       // Find the solid reference for the module
       std::map<string,std::vector<double> >::iterator it_int;
       
-      if(isdigit(it->first.at(it->first.length() -1)))
-	{
+      //if(isdigit(it->first.at(it->first.length() -1)))
+      //{
 	  //If the string ends on a digit, remove it before using as a key
-	  it_int =_gdml_solid_map.find(it->first.substr(0,it->first.length()-1));
-	} 
-      else
-	{
+      //  it_int =_gdml_solid_map.find(it->first.substr(0,it->first.length()-1));
+      //} 
+      //else
+      //{
 	  it_int =_gdml_solid_map.find(it->first);
-	}
+	  //}
   
 	if ((numScint != 0 || numFe != 0) & it_int!= _gdml_solid_map.end())
 	{
@@ -437,16 +437,17 @@ void MINDsetup::addProperties(){
 	  std::cout<<"iron_z "<<IRON_z<<" scint_z "<<SCINT_z<<std::endl;
 
 	  fieldScale *= numFe > 0 ? IRON_z*numFe/length : 0;
-	  fieldScale *= 2 *1.2;
+	  //fieldScale *= 2 *1.2;
 	  //fieldScale *= IRON_z *numFe;
 
 	  _detector_Bscale_avr += fieldScale *length;
-	  /*
-	  if (fieldScale == 0)
-	    {
-	      fieldScale = 5e-5 * tesla;
-	    }
-	  */
+	  
+	  //if (fieldScale == 0)
+	  //{
+	  //  fieldScale = 5e-5 * tesla;
+	  //}
+	  
+	  cout<<"tesla="<<tesla<<endl;
 	  
 	  std::cout<<"Local Field Scaling is "<<fieldScale<<std::endl;
 	  //BFieldMap = MINDfieldMapReader(Bmap,fieldScale);
@@ -484,6 +485,7 @@ void MINDsetup::addProperties(){
 	  if(subDetector)
 	    {
 	      subDetector->SetProperties(BFieldMapVec.back(),de_dx_map_vec.back());
+	      subDetector->SetSecondaryProperties(wSc,wFe,X0Eff,de_dx,fieldScale,length);
 	      //cerr<<"Set up correctly"<<endl;
 	    }
 
@@ -607,11 +609,11 @@ void MINDsetup::readParam(){
     //                       |  MAGNETIC FIELD |                    //
     // -------------------------------------------------------------//
     
-    //_fieldScale = 1.0;
-    //if (_pstore.find_dstore("fieldScale") ) {
-    //_fieldScale = _pstore.fetch_dstore("fieldScale");
+    _fieldScale = 1.0;
+    if (_pstore.find_dstore("fieldScale") ) {
+    _fieldScale = _pstore.fetch_dstore("fieldScale");
       //std::cout<<"Field Scaling is "<<_fieldScale<<std::endl;
-    //}
+    }
 
     Bmap = _pstore.fetch_sstore("mag_field_map");
 	  
@@ -705,6 +707,8 @@ void MINDsetup::readParam(){
   double counter2 = 0;
   double counter3 = 0;
   double counter4 = 0;
+  double counter5 = 0;
+  double counter6 = 0;
   std::vector<double> temp_vector;
   while(file >> word)
     {
@@ -715,26 +719,40 @@ void MINDsetup::readParam(){
 	  word = "S"+convert.str();
 	  counter++;
 	}
-      if(word == "SFFFS")
+      if(word == "SFFFFS")
 	{
 	  ostringstream convert;
 	  convert << counter2;
 	  word+=convert.str();
 	  counter2++;
 	}
-      if(word == "SF")
+      if(word == "SFFFS")
 	{
 	  ostringstream convert;
 	  convert << counter3;
 	  word+=convert.str();
 	  counter3++;
 	}
-      if(word == "TASD")
+      if(word == "SFFS")
 	{
 	  ostringstream convert;
 	  convert << counter4;
 	  word+=convert.str();
 	  counter4++;
+	}
+      if(word == "SF")
+	{
+	  ostringstream convert;
+	  convert << counter5;
+	  word+=convert.str();
+	  counter5++;
+	}
+      if(word == "TASD")
+	{
+	  ostringstream convert;
+	  convert << counter6;
+	  word+=convert.str();
+	  counter6++;
 	}
 
       temp_vector.clear();
@@ -743,13 +761,13 @@ void MINDsetup::readParam(){
 
       file >> temp;
       x = mm*(double)atof(temp.c_str());
-      temp_vector.push_back(x);
+      temp_vector.push_back(-1*x);
       file >> temp;
       y = mm*(double)atof(temp.c_str());
-      temp_vector.push_back(y);
+      temp_vector.push_back(-1*y);
       file >> temp;
       z = mm*(double)atof(temp.c_str());
-      temp_vector.push_back(z);
+      temp_vector.push_back(-1*z);
       _gdml_pos_map[word] = temp_vector;
 
       //cerr<<x<<" ";

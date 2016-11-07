@@ -56,7 +56,7 @@ public:
 
   std::map<dict::Key,vector<double> > getModuleDataMap() {return _moduleDataMap;}
 
-  Detector getDetectorModel() {return detectorModel;};
+  Detector* getDetectorModel() {return &detectorModel;};
 
   // vol_name, module position z, module size z, wFe, MagFieldScale
   std::map<dict::Key,vector<double> > _moduleDataMap;
@@ -124,7 +124,7 @@ protected:
     
   double B_int;
   EVector BField;
-  //double _fieldScale;
+  double _fieldScale;
   //MINDfieldMapReader BFieldMap;
   vector<MINDfieldMapReader*> BFieldMapVec;
   MINDfieldMapReader _generalBFieldMap;

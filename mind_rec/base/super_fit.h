@@ -44,6 +44,9 @@ class super_fit{
   // Calculate the charge by using a quadratic fit.
   double CalculateCharge(const Trajectory& startTrack);
 
+  double Helper(const Trajectory& traj, int startPoint,double minP);
+
+
 };
 
 #endif

@@ -8,6 +8,14 @@
 
 #include <mind/subDetector.h>
 
+#include <TH1F.h>
+#include <TGraphErrors.h>
+#include <TF1.h>
+#include <TCanvas.h>
+#include <TMath.h>
+
+#include <math.h>
+
 #include <vector>
 
 
@@ -24,6 +32,22 @@ public:
   std::vector<SubDetector*>* GetSubDetectorVec(){return &_subDetectorVec;};
 
   SubDetector* GetSubDetector(dict::Key vol_name);
+  SubDetector* GetSubDetector(double zPosition);
+
+  double CalculateChargeMomentum();
+
+  int GetNPlanes();
+
+  void Reset();
+
+  double CalculateCharge();
+
+  double ChargeOne(std::vector<cluster*>& hits, SubDetector* detector);
+
+  //double Quadratic(std::vector<cluster*>& hits);
+  vector<double> Quadratic(std::vector<cluster*>& hits);
+
+  vector<double> ThreePointCircle(std::vector<cluster*>& hits);
 
  private:
 

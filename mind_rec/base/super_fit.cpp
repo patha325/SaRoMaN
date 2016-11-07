@@ -309,7 +309,7 @@ double super_fit::MomentumFromCurvature(const Trajectory& traj, int startPoint,d
 	V[5] /= GeV;
       } else break;
     }
-    cout<<"deleter death"<<endl;
+    //cout<<"deleter death"<<endl;
     delete trajFitXZ;
     delete trajFitYZ;
     delete trajFitUZ;
@@ -321,7 +321,13 @@ double super_fit::MomentumFromCurvature(const Trajectory& traj, int startPoint,d
     delete func4;
   }
   //cout<<"before return"<<endl;
-  return fabs((1/V[5]/10.0));
+  //return fabs((1/V[5]/10.0));
+
+
+  double meansign = _supergeom.getDetectorModel()->CalculateChargeMomentum();
+
+  return fabs(meansign);
+
   //std::cout<<"Momentum guess from polynomial fit: p/q = "<<1./V[5]<<std::endl;
 }
 
@@ -438,7 +444,7 @@ double super_fit::MomentumFromCurvature3(const Trajectory& startTrack, int start
 //***********************************************************************
 double super_fit::CalculateCharge(const Trajectory& startTrack) {
   //***********************************************************************
-
+  /*
   int fitcatcher;
   int nMeas = startTrack.size();
   bool removeHits = false;
@@ -454,8 +460,8 @@ double super_fit::CalculateCharge(const Trajectory& startTrack) {
 
   //if (nMeas > 4) nMeas = 4;
 
-  if(nMeas > 16)
-    removeHits = true;
+  //if(nMeas > 16)
+  //removeHits = true;
 
   // If we pass through the detector, remove the last 2? Plane hits.
 
@@ -538,6 +544,148 @@ double super_fit::CalculateCharge(const Trajectory& startTrack) {
     {
       meansign = 1;
     }
+  */
 
+  //double meansign = _supergeom.getDetectorModel()->CalculateCharge();
+
+  double meansign = _supergeom.getDetectorModel()->CalculateChargeMomentum();
+
+  meansign/=fabs(meansign);
+
+  //double meansign =Helper(startTrack,0,0);
+  
   return meansign;
+}
+
+//*****************************************************************************
+double super_fit::Helper(const Trajectory& traj, int startPoint,double minP){
+  //*****************************************************************************
+
+  //cout<<"in new MomentumFromCurvature"<<endl;
+
+  //Some catchers for pointless returns.
+  int fitcatch;
+  //
+  int nfit, sign;
+  int fitRange[3];
+  int nplanes = traj.size()-2;
+  int firsthit = startPoint;
+  const int fitpoints =  traj.size()-2;//nplanes - firsthit;
+  
+  double xpos[fitpoints], ypos[fitpoints], zpos[fitpoints];
+  double upos[fitpoints], vpos[fitpoints];
+
+  int pos = 0;
+
+  EVector currentpos = EVector(3,0);
+  EVector currentB   = EVector(3,0);
+  EVector V = EVector(6,0);
+  EVector z = EVector(3,0);
+  z[2] = 1;
+  double Bmean=0;
+  for( int ipoint=firsthit; ipoint < nplanes; ipoint ++ ){
+    xpos[pos] = traj.node(ipoint).measurement().position()[0];
+    ypos[pos] = traj.node(ipoint).measurement().position()[1];
+    zpos[pos] = traj.node(ipoint).measurement().position()[2]
+      - traj.node(firsthit).measurement().position()[2];
+    currentpos[0] = traj.node(ipoint).measurement().position()[0];
+    currentpos[1] = traj.node(ipoint).measurement().position()[1];
+    currentpos[2] = 0.;
+    currentB = _supergeom.getBField(currentpos);
+    //double field = _supergeom.getRawBField(track.nodes()[0]->measurement().vector())[0]*_supergeom.getBScaleAvr();
+    upos[pos] = xpos[pos] > 0 ? asin(ypos[pos]/currentpos.norm())
+      : -asin(ypos[pos]/currentpos.norm());
+    vpos[pos] = dot(currentpos,crossprod(z,currentB))/currentB.norm();
+    Bmean += currentB.norm();
+    ++pos;
+  }
+  Bmean /= pos;
+  Bmean /= tesla;
+  
+  if (fitpoints <= 15) { nfit = 1; fitRange[0] = fitpoints;}
+  else if (fitpoints <= 40) { 
+    nfit = 2;
+    fitRange[0] = 15; fitRange[1] = (int)(0.7*fitpoints);
+  }
+  else if (fitpoints > 40) { 
+    nfit = 3;
+    fitRange[0] = 15; fitRange[1] = (int)(fitpoints/2); fitRange[2] = (int)(0.7*fitpoints);
+  }
+  for (int ifit = 0;ifit < nfit;ifit++) {
+    //cout<<"for ifit "<<ifit<<endl;
+    TGraph *trajFitXZ = new TGraph(fitRange[ifit],zpos, xpos);
+    TGraph *trajFitYZ = new TGraph(fitRange[ifit],zpos, ypos);
+    TGraph *trajFitUZ = new TGraph(fitRange[ifit],zpos, upos);
+    TGraph *trajFitVZ = new TGraph(fitRange[ifit],zpos, vpos);
+    
+    TF1 *func = new TF1("fit",fitf3,-3,3,3);
+    func->SetParameters(0.,0.,0.001,0.0001,0.0001);
+    func->SetParNames("a", "b", "c", "d", "e");
+    
+    TF1 *func2 = new TF1("fit2",fitf3,-3,3,3);
+    func2->SetParameters(0.,0.,0.001,0.0001,0.0001);
+    func2->SetParNames("f", "g", "h", "i", "j");
+
+    TF1 *func3 = new TF1("fit3",fitf3,-3,3,3);
+    func3->SetParameters(0.,0.,0.001,0.0001,0.0001);
+    func3->SetParNames("a1", "b1", "c1", "d1", "e1");
+    
+    TF1 *func4 = new TF1("fit4",fitf3,-3,3,3);
+    func4->SetParameters(0.,0.,0.001,0.0001,0.0001);
+    func4->SetParNames("f1", "g1", "h1", "i1", "j1");
+
+    fitcatch = trajFitXZ->Fit("fit", "QN");
+    fitcatch = trajFitYZ->Fit("fit2", "QN");
+    fitcatch = trajFitUZ->Fit("fit3", "QN");
+    fitcatch = trajFitVZ->Fit("fit4", "QN");
+    
+    double b = func->GetParameter(1);
+    double c = func->GetParameter(2);
+    double g = func2->GetParameter(1);
+    /*double f = func2->GetParameter(0);
+      double a = func->GetParameter(0);
+      double h = func2->GetParameter(2);  
+      double a1 = func3->GetParameter(0);
+      double b1 = func3->GetParameter(1);
+      double c1 = func3->GetParameter(2);  
+      double f1 = func4->GetParameter(0);*////
+    double g1 = func4->GetParameter(1);
+    double h1 = func4->GetParameter(2);  
+    
+    //cout<<"after fitters"<<endl;
+
+    if (ifit == 0) {
+
+      V[4] = g;   //func2->GetParameter(1);
+      V[3] = b;
+
+      if (h1!=0) {
+	V[5] = 1./(-0.3*Bmean*pow((1+g1*g1),3./2.)/
+		   (2*h1)*0.01);
+	V[5] /= GeV;
+	sign = (int)( V[5]/fabs( V[5] ));
+      } else V[5] = 0;
+    } else {
+      if ((int)(-c/fabs(c)) == sign) {
+	V[4] = g;
+	V[3] = b;
+	V[5] = 1/(-0.3*Bmean*pow((1+g1*g1),3./2.)/(2*h1)*0.01);
+	V[5] /= GeV;
+      } else break;
+    }
+    //cout<<"deleter death"<<endl;
+    delete trajFitXZ;
+    delete trajFitYZ;
+    delete trajFitUZ;
+    delete trajFitVZ;
+  
+    delete func;
+    delete func2;
+    delete func3;
+    delete func4;
+  }
+
+  //cout<<"before return"<<endl;
+  return ((1/V[5]/10.0)/fabs((1/V[5]/10.0)));
+  //std::cout<<"Momentum guess from polynomial fit: p/q = "<<1./V[5]<<std::endl;
 }

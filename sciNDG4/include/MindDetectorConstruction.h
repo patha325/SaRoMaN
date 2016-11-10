@@ -51,6 +51,7 @@ public:
   double GetPassiveProb() { return regionmass["PASSIVE"] / _detectormass; }
   double GetActiveProb() { return regionmass["ACTIVE"] / (_detectormass - regionmass["PASSIVE"]) ; }
   
+
   G4ThreeVector GetVertex(G4String region_name);
   G4String GetRegion(G4ThreeVector vert);
   G4int  GetRegionCode(G4ThreeVector vert){
@@ -58,7 +59,7 @@ public:
   }    
   
 private:
-  void SetVolumeInformation(G4LogicalVolume* base, G4String detectorName);
+  void SetVolumeInformation(G4VPhysicalVolume* pbase, G4String detectorName);
   void SetAuxInformation(G4String basename, G4LogicalVolume* myvol,
 			 const G4GDMLAuxListType auxlist);
   void SetNullField(G4LogicalVolume& detector_logic);
@@ -70,6 +71,7 @@ private:
   bool _use_gdml;
   double _detectormass;
   std::map<G4String, std::vector<G4VPhysicalVolume*> > regions;
+  std::map<G4String, std::vector<G4ThreeVector> > regionoffset;
   std::map<G4String, double> regionmass;
   std::vector<MindBarSD*> sensDetList;
 

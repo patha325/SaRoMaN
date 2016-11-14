@@ -429,6 +429,9 @@ void MINDsetup::addProperties(){
 
 	  double de_dx = (numScint * SCINT_z * de_dx_scint + numFe * IRON_z * de_dx_fe)/length;
 
+	  //double de_dx = (numScint * SCINT_z * de_dx_scint + numFe * IRON_z * de_dx_fe)/
+	  //(numScint * SCINT_z + numFe * IRON_z);
+
 	  _moduleDataMap[vol_name].push_back(de_dx);
 
 	  std::cout<<"Local de_dx is "<<de_dx<<std::endl;

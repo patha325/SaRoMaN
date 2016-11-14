@@ -1405,9 +1405,13 @@ void fitter::ComputeMomFromRange(const Trajectory& traj, int nplanes, int firsth
 
   double meansign = 1;
 
-  meansign = CalculateCharge(traj);
+  //meansign = CalculateCharge(traj);
   p = RangeMomentum(pathlength,traj.node(firsthit).measurement().position()[2]);
-  p=fabs(MomentumFromCurvature(traj,0,p));//-p);
+  //p=fabs(MomentumFromCurvature(traj,0,p));//-p);
+
+  p=MomentumFromCurvature(traj,0,p);//-p);
+
+  meansign = p/fabs(p);
 
   
   int pi3=0, pi4=0;

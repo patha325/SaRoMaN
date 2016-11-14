@@ -326,7 +326,9 @@ double super_fit::MomentumFromCurvature(const Trajectory& traj, int startPoint,d
 
   double meansign = _supergeom.getDetectorModel()->CalculateChargeMomentum();
 
-  return fabs(meansign);
+  //return fabs(meansign);
+
+  return meansign;
 
   //std::cout<<"Momentum guess from polynomial fit: p/q = "<<1./V[5]<<std::endl;
 }

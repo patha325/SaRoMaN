@@ -34,9 +34,13 @@ public:
   SubDetector* GetSubDetector(dict::Key vol_name);
   SubDetector* GetSubDetector(double zPosition);
 
+double Helix(std::vector<cluster*>& hits);
+
   double CalculateChargeMomentum();
 
   int GetNPlanes();
+
+  int GetNHits();
 
   void Reset();
 

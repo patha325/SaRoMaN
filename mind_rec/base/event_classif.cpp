@@ -390,7 +390,7 @@ bool event_classif::get_plane_occupancy(vector<cluster*>& hits){
   //if(_geom.getDetectorModel()->GetSubDetector(testZ))
   //{
   //cout<<"Detector planes"<<_geom.getDetectorModel()->GetSubDetectorVec()->at(0)->GetPlanes()->size()<<endl;
-  cout<<"Detector planes"<<_geom.getDetectorModel()->GetNPlanes()<<endl;
+  //cout<<"Detector planes"<<_geom.getDetectorModel()->GetNPlanes()<<endl;
 
   //_geom.getDetectorModel()->CalculateCharge();
  //}
@@ -586,7 +586,7 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
     RecObject* ro = dynamic_cast<RecObject*>(&(*(_planes[pl]->GetHits()[0])));
     muontraj.add_node(Node(*ro));
     (_planes[pl]->GetHits()[0])->set_name(candHit, hit_in);
-
+    
     if( _geom.getDetectorModel()->
 	GetSubDetector((_planes[pl]->GetHits()[0])->position()[2]))
       {
@@ -594,6 +594,7 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
 	  GetSubDetector((_planes[pl]->GetHits()[0])->position()[2])->
 	  GetPlanes()->push_back(_planes[pl]);
       }
+    
   }  
   
   _m.message("The free section muontraj=",muontraj, bhep::DETAILED);
@@ -941,7 +942,11 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
 
   p = RangeMomentum(pathlength,firstNodeZ);
 
-  p=fabs(MomentumFromCurvature(track,0,p));//;-p);
+  //p=fabs(MomentumFromCurvature(track,0,p));//;-p);
+
+  p=MomentumFromCurvature(track,0,p);//;-p);
+
+  int meansign = p/fabs(p);
 
   //p=MomentumFromCurvature(track,0,p);
 
@@ -954,7 +959,7 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
     }
   */
 
-  int meansign = CalculateCharge(track);
+  //int meansign = CalculateCharge(track);
 
   //cout<<"Charge in fit_parabola: "<<meansign<<endl;
 
@@ -966,11 +971,17 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
   EVector B = _supergeom.getRawBField(track.nodes()[0]->measurement().vector());
   //cout<<B[0]<<" "<<B[1]<<" "<<B[2]<<endl;
 
+  //vec[3] = (track.nodes()[0]->measurement().vector()[0] -track.nodes()[1]->measurement().vector()[0])/
+  //(track.nodes()[0]->measurement().vector()[2] -track.nodes()[1]->measurement().vector()[2]);
+  //vec[4] = (track.nodes()[0]->measurement().vector()[1] -track.nodes()[1]->measurement().vector()[1])/
+  //(track.nodes()[0]->measurement().vector()[2] -track.nodes()[1]->measurement().vector()[2]);
+    
+
   vec[3] = (track.nodes()[0]->measurement().vector()[0] -track.nodes()[1]->measurement().vector()[0])/
     (track.nodes()[0]->measurement().vector()[2] -track.nodes()[1]->measurement().vector()[2]);
   vec[4] = (track.nodes()[0]->measurement().vector()[1] -track.nodes()[1]->measurement().vector()[1])/
     (track.nodes()[0]->measurement().vector()[2] -track.nodes()[1]->measurement().vector()[2]);
-    
+
 
   //0.29;//p/(B[0]); 10^7 too big.
   vec[5] = meansign/p;
@@ -1265,6 +1276,7 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
       }
   }  
  
+  
   return true;
 }
 

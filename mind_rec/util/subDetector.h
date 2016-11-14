@@ -46,6 +46,7 @@ public:
   double GetMomentum(){return _momentum;};
   void SetMomentum(double momentum){_momentum=momentum;};
 
+  double GetCharge(){return _charge;};
   void SetCharge(double charge){_charge=charge;};
 
 

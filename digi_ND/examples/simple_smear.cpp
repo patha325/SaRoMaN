@@ -900,7 +900,7 @@ void HandleData(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h1
 	  bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
 	  evt_read++;
 	  
-	  cout<<e<<endl;
+	  //cout<<e<<endl;
 	  e.clear();
 	  
 	  hitsParticle.clear();
@@ -1368,7 +1368,7 @@ void HandleData2(vector<string> filenames, string filepath,root2dst* cvt,TH1I* h
 	bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
 	evt_read++;
 	
-	cout<<e<<endl;
+	//cout<<e<<endl;
 	e.clear();
 	
 	hitsParticle.clear();
@@ -1797,7 +1797,7 @@ int main(int argc, char* argv[]) {
 	  
 	  e.add_digi_particle( digi_part );
 
-	  cout<<e<<endl;
+	  //cout<<e<<endl;
 	  
 	  bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
 	  e.clear();

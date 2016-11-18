@@ -75,6 +75,24 @@ public:
   
  bool get_patternRec_seed(State& seed, Trajectory& muontraj);
 
+
+
+  std::vector<double> _helix;
+  std::vector<double> _quad;
+  std::vector<double> _lever1;
+  std::vector<double> _angle1;
+  std::vector<double> _lever2;
+  std::vector<double> _angle2;
+
+  
+  std::vector<double> GetHelix() {return _helix;}
+  std::vector<double> GetQuad() {return _quad;}
+  std::vector<double> GetLever1() {return _lever1;}
+  std::vector<double> GetAngle1() {return _angle1;}
+  std::vector<double> GetLever2() {return _lever2;}
+  std::vector<double> GetAngle2() {return _angle2;}
+
+
 protected:
   
   void readParam();
@@ -218,7 +236,6 @@ protected:
   void traj_like(const vector<cluster*>& hits);
   void out_like();
   //
-
 
   ///int _trajs_no;
   double _Xtent; 

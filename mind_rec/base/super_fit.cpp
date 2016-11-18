@@ -150,12 +150,14 @@ double super_fit::MomentumFromCurvature2(const Trajectory& traj, int startPoint,
 
   cout<<"Momentum highPt final super"<<finalP<<endl;
 
+  vector<double> debug;
+
   if(finalP<minP)
     {
       // Try to recursivly find a better value.
       if((start +1)< point)
 	{
-	  finalP =  MomentumFromCurvature(traj,start+1,minP);
+	  finalP =  MomentumFromCurvature(traj,start+1,minP,debug);
 	}
       else
 	{
@@ -168,7 +170,7 @@ double super_fit::MomentumFromCurvature2(const Trajectory& traj, int startPoint,
       // Try to recursivly find a better value.
       if((start +1)< point)
 	{
-	  finalP =  MomentumFromCurvature(traj,start+1,minP);
+	  finalP =  MomentumFromCurvature(traj,start+1,minP,debug);
 	}
       else
 	{
@@ -194,9 +196,9 @@ double fitf3(Double_t *x,Double_t *par) {
 //void fitter::ComputeMomFromParabola(const Trajectory& traj, int nplanes, int firsthit, EVector& V){
 //MomentumFromCurvature(const Trajectory& startTrack, int startPoint,double minP){
 //*****************************************************************************
-double super_fit::MomentumFromCurvature(const Trajectory& traj, int startPoint,double minP){
+double super_fit::MomentumFromCurvature(const Trajectory& traj, int startPoint,double minP, vector<double>& debug){
   //*****************************************************************************
-
+  /*
   //cout<<"in new MomentumFromCurvature"<<endl;
 
   //Some catchers for pointless returns.
@@ -278,14 +280,14 @@ double super_fit::MomentumFromCurvature(const Trajectory& traj, int startPoint,d
     double b = func->GetParameter(1);
     double c = func->GetParameter(2);
     double g = func2->GetParameter(1);
-    /*double f = func2->GetParameter(0);
-      double a = func->GetParameter(0);
-      double h = func2->GetParameter(2);  
-      double a1 = func3->GetParameter(0);
-      double b1 = func3->GetParameter(1);
-      double c1 = func3->GetParameter(2);  
-      double f1 = func4->GetParameter(0);*////
-    double g1 = func4->GetParameter(1);
+    //double f = func2->GetParameter(0);
+      //double a = func->GetParameter(0);
+      //double h = func2->GetParameter(2);  
+      //double a1 = func3->GetParameter(0);
+      //double b1 = func3->GetParameter(1);
+     // double c1 = func3->GetParameter(2);  
+     //double f1 = func4->GetParameter(0);////
+     double g1 = func4->GetParameter(1);
     double h1 = func4->GetParameter(2);  
     
     //cout<<"after fitters"<<endl;
@@ -322,9 +324,9 @@ double super_fit::MomentumFromCurvature(const Trajectory& traj, int startPoint,d
   }
   //cout<<"before return"<<endl;
   //return fabs((1/V[5]/10.0));
+*/
 
-
-  double meansign = _supergeom.getDetectorModel()->CalculateChargeMomentum();
+  double meansign = _supergeom.getDetectorModel()->CalculateChargeMomentum(debug);
 
   //return fabs(meansign);
 
@@ -548,9 +550,12 @@ double super_fit::CalculateCharge(const Trajectory& startTrack) {
     }
   */
 
+
+  vector<double> debug;
+
   //double meansign = _supergeom.getDetectorModel()->CalculateCharge();
 
-  double meansign = _supergeom.getDetectorModel()->CalculateChargeMomentum();
+  double meansign = _supergeom.getDetectorModel()->CalculateChargeMomentum(debug);
 
   meansign/=fabs(meansign);
 

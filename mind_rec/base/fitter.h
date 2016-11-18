@@ -97,7 +97,22 @@ public:
   std::vector<double> _ychi;
   std::vector<double> _hitsPerPlanes;
   std::vector<double> _avrHitsPerUsedPlanes;
+
+  std::vector<double> _helix;
+  std::vector<double> _quad;
+  std::vector<double> _lever1;
+  std::vector<double> _angle1;
+  std::vector<double> _lever2;
+  std::vector<double> _angle2;
   
+  std::vector<double> GetHelix() {return _helix;}
+  std::vector<double> GetQuad() {return _quad;}
+  std::vector<double> GetLever1() {return _lever1;}
+  std::vector<double> GetAngle1() {return _angle1;}
+  std::vector<double> GetLever2() {return _lever2;}
+  std::vector<double> GetAngle2() {return _angle2;}
+
+
   std::vector<double> GetXDir() {return _xDir;}
   std::vector<double> GetYDir() {return _yDir;}
   std::vector<double> GetX0() {return _x0;}
@@ -106,6 +121,7 @@ public:
   std::vector<double> GetYChi() {return _ychi;}
   std::vector<double> GetHPP() {return _hitsPerPlanes;}
   std::vector<double> GetAHPP() {return _avrHitsPerUsedPlanes;}
+
 
 protected:
   

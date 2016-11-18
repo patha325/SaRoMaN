@@ -171,6 +171,13 @@ bool fitter::Execute(bhep::particle& part,int evNo){
       //cout<<"kX="<<funX->GetParameter(1)<<endl;
       //cout<<"x2X="<<funX->GetChisquare()<<endl;
 
+      _xDir.clear();
+      _yDir.clear();
+      _x0.clear();
+      _y0.clear();
+      _xchi.clear();
+      _ychi.clear();
+
       _xDir.push_back(funX->GetParameter(1));
       _yDir.push_back(funY->GetParameter(1));
       _x0.push_back(funX->GetParameter(0));
@@ -1409,7 +1416,27 @@ void fitter::ComputeMomFromRange(const Trajectory& traj, int nplanes, int firsth
   p = RangeMomentum(pathlength,traj.node(firsthit).measurement().position()[2]);
   //p=fabs(MomentumFromCurvature(traj,0,p));//-p);
 
-  p=MomentumFromCurvature(traj,0,p);//-p);
+
+  _helix.clear();
+  _quad.clear();
+  _lever1.clear();
+  _angle1.clear();
+  _lever2.clear();
+  _angle2.clear();
+  vector<double> debug;
+
+  p=MomentumFromCurvature(traj,0,p,debug);//-p);
+
+  //cout<<"debug.size()="<<debug.size()<<endl;
+  if(debug.size()==6)
+    {
+      _helix.push_back(debug[0]);
+      _quad.push_back(debug[1]);
+      _lever1.push_back(debug[2]);
+      _angle1.push_back(debug[3]);
+      _lever2.push_back(debug[4]);
+      _angle2.push_back(debug[5]);
+    }
 
   meansign = p/fabs(p);
 

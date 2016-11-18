@@ -34,9 +34,14 @@ public:
   SubDetector* GetSubDetector(dict::Key vol_name);
   SubDetector* GetSubDetector(double zPosition);
 
-double Helix(std::vector<cluster*>& hits);
+  double Helix(std::vector<cluster*>& hits);
+  
+  double LeverArmQuadratic(vector<double>& debug);
+  //double LeverArm(unsigned int i);
 
-  double CalculateChargeMomentum();
+  vector<double> LeverArm(unsigned int i);
+
+  double CalculateChargeMomentum(vector<double>& debug);
 
   int GetNPlanes();
 

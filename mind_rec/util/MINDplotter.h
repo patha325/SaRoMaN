@@ -164,6 +164,20 @@ private:
   std::vector<double> _TMeas;
   std::vector<double> _MuProp;
 
+  std::vector<double> _helix;
+  std::vector<double> _quad;
+  std::vector<double> _lever1;
+  std::vector<double> _angle1;
+  std::vector<double> _lever2;
+  std::vector<double> _angle2;
+  
+  std::vector<double> _fitHelix;
+  std::vector<double> _fitQuad;
+  std::vector<double> _fitLever1;
+  std::vector<double> _fitAngle1;
+  std::vector<double> _fitLever2;
+  std::vector<double> _fitAngle2;
+
   // For testbeam.
   std::vector<double> _xDir;
   std::vector<double> _yDir;

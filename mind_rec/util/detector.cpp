@@ -197,7 +197,7 @@ Sort subdetectors by z position and planes. Have function to find next subdetect
 */
 
 //*************************************************************
-double Detector::CalculateChargeMomentum() {
+double Detector::CalculateChargeMomentum(vector<double>& debug) {
 //*************************************************************
 
 // fill prev de_dx for all subdetectors.
@@ -208,13 +208,13 @@ double Detector::CalculateChargeMomentum() {
 
   double retVal = 0;
 
-  bool used = false;
+  //bool used = false;
 
   sort( _subDetectorVec.begin(), _subDetectorVec.end(), sortDetectorsByZ() );
-
-    for(unsigned int i=0;i<_subDetectorVec.size();i++)
+  
+  for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
-    	// Fill de_dx properties and do sorting of planes.
+      // Fill de_dx properties and do sorting of planes.
       _subDetectorVec[i]->ClearEstimate();
       sort( _subDetectorVec[i]->GetPlanes()->begin(), _subDetectorVec[i]->GetPlanes()->end(), sortPlanesByZ() );
       if(i!=0)
@@ -226,464 +226,117 @@ double Detector::CalculateChargeMomentum() {
 					   _subDetectorVec[i-1]->GetPrevde_dx());
 	}
     }
-    /*
+  /*
     for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
+    
+    cout<<_subDetectorVec[i]->GetName()<<endl;
+    cout<<_subDetectorVec[i]->Getde_dx()<<endl;
+    cout<<_subDetectorVec[i]->GetLength()<<endl;
+    cout<<_subDetectorVec[i]->GetPrevde_dx()<<endl;
+    }
+  */
+  std::vector<cluster*> stackHits;
+  int nPlanes = 0;
+  for(unsigned int i=0;i<_subDetectorVec.size();i++)
+    {
+      // cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
+      // Count number of hits in the stack to see if we can use helix.
+      if(_subDetectorVec[i]->GetName() == "SFFFS0" ||
+	 _subDetectorVec[i]->GetName() == "S0" ||
+	 _subDetectorVec[i]->GetName() == "S1" ||
+	 _subDetectorVec[i]->GetName() == "SFS" ||
+	 _subDetectorVec[i]->GetName() == "SFFS" ||
+	 _subDetectorVec[i]->GetName() == "SFFFS" ||
+	 _subDetectorVec[i]->GetName() == "SFS0" ||
+	 _subDetectorVec[i]->GetName() == "SFFS0" ||
+	 //_subDetectorVec[i]->GetName() == "SFFFFS0" ||
+	 _subDetectorVec[i]->GetName() == "SFFFFS1" ||
+	 _subDetectorVec[i]->GetName() == "SFFS1" ||
+	 _subDetectorVec[i]->GetName() == "SFFFS1"
+	 )
+	{
+	  continue;
+	}
+      else
+	{
+	  
+	  for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
+	    {
+	      if(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size()) nPlanes++;
+	      for(unsigned int k=0;k<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size();k++)
+		{
+		  stackHits.push_back(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
+		}
+	    }
+	}
       
-      cout<<_subDetectorVec[i]->GetName()<<endl;
-      cout<<_subDetectorVec[i]->Getde_dx()<<endl;
-      cout<<_subDetectorVec[i]->GetLength()<<endl;
-      cout<<_subDetectorVec[i]->GetPrevde_dx()<<endl;
     }
-    */
-	std::vector<cluster*> helixHits;
-	int nPlanes = 0;
-    for(unsigned int i=0;i<_subDetectorVec.size();i++)
+  
+  //cout<<"helixHits.size()="<<helixHits.size()<<endl;
+  // If enough hits, use only helix and leverarm.
+  // else? Lever arm and quadratic in one region?
+  //if(helixHits>10)
+  
+  //double retVal;
+  
+  //vector<double> debug2;
+
+  vector<double> temp;
+
+  if(stackHits.size()>5)
     {
-      cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
-    // Count number of hits in the stack to see if we can use helix.
-	if(_subDetectorVec[i]->GetName() == "SFFFS0" ||
-	   _subDetectorVec[i]->GetName() == "S0" ||
-	   _subDetectorVec[i]->GetName() == "S1" ||
-	   _subDetectorVec[i]->GetName() == "SFS" ||
-	   _subDetectorVec[i]->GetName() == "SFFS" ||
-	   _subDetectorVec[i]->GetName() == "SFFFS" ||
-	   _subDetectorVec[i]->GetName() == "SFS0" ||
-	   _subDetectorVec[i]->GetName() == "SFFS0" ||
-	   //_subDetectorVec[i]->GetName() == "SFFFFS0" ||
-	   _subDetectorVec[i]->GetName() == "SFFFFS1" ||
-	   _subDetectorVec[i]->GetName() == "SFFS1" ||
-	   _subDetectorVec[i]->GetName() == "SFFFS1"
-	   )
-	{
-		continue;
-	}
-	else
-	{
+      //double helixVal =Helix(helixHits);
+      retVal = Helix(stackHits);
+      //cout<<"Helix returns="<<helixVal<<endl;
+      //if(helixVal==0 || fabs(helixVal) >8000 || isnan(helixVal)) helixVal = 4000;
+      
+      debug.push_back(retVal);
+      debug.push_back(Quadratic(stackHits)[0]);
+      temp = LeverArm(1);
+      debug.push_back(temp[0]);
+      debug.push_back(temp[1]);
+      temp = LeverArm(2);
+      debug.push_back(temp[0]);
+      debug.push_back(temp[1]);
 
-		for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
-		{
-			if(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size()) nPlanes++;
-			for(unsigned int k=0;k<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size();k++)
-			{
-				helixHits.push_back(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
-			}
-		}
-	}
-
+      //return helixVal;
     }
-
-   	cout<<"helixHits.size()="<<helixHits.size()<<endl;
-// If enough hits, use only helix and leverarm.
-    // else? Lever arm and quadratic in one region?
-    //if(helixHits>10)
-
-	cout<<"Helix returns="<<Helix(helixHits)<<endl;
-
-
-
-
-    for(unsigned int i=1;i<_subDetectorVec.size()-2;i++)
-      {
-	//cout<<i<<endl;
-	if(_subDetectorVec[i]->GetName() == "SFFFS0" ||
-	   _subDetectorVec[i]->GetName() == "SFS" ||
-	   _subDetectorVec[i]->GetName() == "SFFS" ||
-	   _subDetectorVec[i]->GetName() == "SFFFS" ||
-	   _subDetectorVec[i]->GetName() == "SFS0" ||
-	   _subDetectorVec[i]->GetName() == "SFFS0" ||
-	   //_subDetectorVec[i]->GetName() == "SFFFFS0" ||
-	   _subDetectorVec[i]->GetName() == "SFFFFS1" ||
-	   _subDetectorVec[i]->GetName() == "SFFS1" ||
-	   _subDetectorVec[i]->GetName() == "SFFFS1"
-	   )
-	  {
-	    /*
-	    if(_subDetectorVec[i-1]->GetNHits()>0 && 
-	       _subDetectorVec[i]->GetNHits()>0 && 
-	       _subDetectorVec[i+1]->GetNHits()>0)
-
-	    */
-	    //if(_subDetectorVec[i-1]->GetNPlanes()==1 &&
-	    // _subDetectorVec[i]->GetNPlanes()>1 &&
-	    // _subDetectorVec[i+1]->GetNPlanes()>1)
-	    //{
-	    /*
-		if(
-	       _subDetectorVec[i]->GetPlanes()->at(0)->GetHits().size()>0 &&
-	       _subDetectorVec[i-1]->GetPlanes()->at(0)->GetHits().size()>0 &&
-	       _subDetectorVec[i]->GetPlanes()->at(1)->GetHits().size()>0 &&
-	       _subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits().size()>0)
-	    */
-
-	    if( _subDetectorVec[i-1]->GetMaxPlane() &&_subDetectorVec[i]->GetMinPlane() && 
-		_subDetectorVec[i]->GetMaxPlane() &&  _subDetectorVec[i+1]->GetMinPlane())
-	      {
-	    if(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0 &&
-	       _subDetectorVec[i]->GetMinPlane()->GetHits().size()>0 &&
-	       _subDetectorVec[i]->GetMinPlane() !=  _subDetectorVec[i]->GetMaxPlane() &&
-	       _subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0 &&
-	       _subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)
-	      {
-		//cout<<"before theta1"<<endl;
-		//double theta1 =  atan((_subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position()[1] -_subDetectorVec[i-1]->GetPlanes()->at(0)->GetHits()[0]->position()[1])/
-		//	      (_subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position()[2] - _subDetectorVec[i-1]->GetPlanes()->at(0)->GetHits()[0]->position()[2]));
-		
-		
-		double dy = (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[1] -_subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[1]);
-		double dz = (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[2]);
-
-		
-
-
-
-		//double theta1 =  atan((_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[1] -_subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[1])/
-		//	      (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[2]));
-		
-		double theta1 = atan(dy/dz);
-
-		//double errZ = 10; //mm
-		double errZ = 0; //mm
-		double errY = 15; //mm
-
-		//double errTheta1 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * (errY*errY+errY*errY/(errZ*errZ*errZ*errZ));//(2*errZ*errZ+2*errY*errY);
-
-		//double errTheta1 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * errY*errY /(dz*dz) + errZ*errZ*dy*dy/(dz*dz*dz*dz);  
-
-		double errTheta1 = 1.0/(dy*dy+dz*dz) * 1.0/(dy*dy+dz*dz) * (dz*dz*errY*errY + dy*dy*errZ*errZ);
-
-
-		errTheta1 = sqrt(errTheta1);
-
-
-		//cout<<"before theta2"<<endl;
-		//double theta2 =  atan((_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits()[0]->position()[1] -_subDetectorVec[i]->GetPlanes()->at(1)->GetHits()[0]->position()[1])/
-		//	      (_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits()[0]->position()[2] - _subDetectorVec[i]->GetPlanes()->at(1)->GetHits()[0]->position()[2]));
-		
-
-		dy = (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[1] -_subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[1]);
-
-		dz = (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[2]);
-
-		double theta2 =atan(dy/dz);
-
-		//double errTheta2 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * (errY*errY+errY*errY/(errZ*errZ*errZ*errZ));
-
-		//double errTheta2 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * errY*errY /(dz*dz) + errZ*errZ*dy*dy/(dz*dz*dz*dz);  
-
-		double errTheta2 = 1.0/(dy*dy+dz*dz) * 1.0/(dy*dy+dz*dz) * (dz*dz*errY*errY + dy*dy*errZ*errZ);
-
-
-		errTheta2 = sqrt(errTheta2);
-
-		//double theta2 =  atan((_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[1] -_subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[1])/
-		//	      (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[2]));
-		
-
-		//cout<<"before delta1"<<endl;
-
-
-		double delta1 = theta2-theta1;
-
-		//double delta1 = theta1-theta2;
-
-		double errDelta1 = errTheta2*errTheta2 + errTheta1*errTheta1;
-
-		errDelta1 = sqrt(errDelta1);
-
-		//double delta1 = theta1-theta2;
-		/*
-		cout<<"field"<<endl;
-		cout<< _subDetectorVec[i-1]->GetBField()->vector(_subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position())[0]<<endl;
-		cout<< _subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position())[0]<<endl;
-		cout<< _subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position())[0]<<endl;
-		cout<< _subDetectorVec[i+1]->GetBField()->vector(_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position())[0]<<endl;
-		*/
-
-
-		//cout<<"before l"<<endl;
-		double l = (_subDetectorVec[i]->GetPlanes()->at(1)->GetHits()[0]->position()[2]  - 
-			    _subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position()[2])*1000;
-		//cout<<"before p"<<endl;
-		//double p = 0.3* 
-		  //_subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position())[0] *
-		  //l/ delta1;
-
-		  double p = 0.3* 
-		    _subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position())[0]*
-		    l/ delta1;
-
-
-		//cout<<"Momentum="<<p<<endl;
-		
-		_subDetectorVec[i]->SetCharge(p/fabs(p));
-		_subDetectorVec[i]->SetMomentum(fabs(p));
-		_subDetectorVec[i]->SetError(fabs(p*errDelta1/delta1));
-
-		double X0 = _subDetectorVec[i]->GetX0Eff();
-
-		double chargeWidth = 13.6/(fabs(p)*(fabs(p)/sqrt(p*p+105.65*105.65))) *
-					  sqrt(l/X0) *
-					  (1+0.0036*log(l/X0));
-
-		chargeWidth = chargeWidth*chargeWidth + errDelta1*errDelta1;
-		chargeWidth= sqrt(chargeWidth);
-		
-
-		//double angularResolution = 1.0/
-
-		// B field negative, changes places of the probabilities.
-
-
-		//double chargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(delta1-chargeWidth)*(delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
-
-		//double negChargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(-delta1-chargeWidth)*(-delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
-
-		double negChargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(delta1-chargeWidth)*(delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
-
-		double chargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(-delta1-chargeWidth)*(-delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
-
-
-
-		//cout<<errDelta1<<endl;
-		//cout<<"Delta="<<delta1<<endl;
-		//cout<<chargeProb<<endl;
-		//cout<<negChargeProb<<endl;
-
-
-		_subDetectorVec[i]->SetChargeProb(chargeProb);
-
-		_subDetectorVec[i]->SetNegChargeProb(negChargeProb);
-
-
-	      } // End if enough hits
-	      } // End if good pointers
-		//}
-
-
-	  }
-	else // Do not use leverarm. (In stack)
-	  {
-	    //cout<<"In stack"<<endl;
-
-	    if(_subDetectorVec[i]->GetName() == "SFFFFS0" && used) continue;
-
-	    std::vector<cluster*> hits;
-
-	    if(_subDetectorVec[i]->GetName() == "SFFFFModule" &&
-	       _subDetectorVec[i+1]->GetName() == "SFFFFS0")
-	      {
-		for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
-		  {
-		    for(unsigned int k=0;k<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size();k++)
-		      {
-			hits.push_back(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
-		      }
-		  }
-		
-		for(unsigned int j=0;j<_subDetectorVec[i+1]->GetPlanes()->size();j++)
-		  {
-		    for(unsigned int k=0;k<_subDetectorVec[i+1]->GetPlanes()->at(j)->GetHits().size();k++)
-		      {
-			hits.push_back(_subDetectorVec[i+1]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
-		      }
-		  }
-		used = true;
-	      }
-	    else
-	      {	
-		
-		for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
-		  {
-		    for(unsigned int k=0;k<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size();k++)
-		      {
-			hits.push_back(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
-		      }
-		  }
-		if(_subDetectorVec[i+1]->GetPlanes()->size())
-		  {
-		    if(_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits().size())
-		      {
-			hits.push_back(_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits()[0]);
-		      }
-		  }
-	      }		
-
-	    //cout<<_subDetectorVec[i]->GetName()<<" "<<hits.size()<<endl;
-
-	    if(hits.size()>2)
-	      {
-		if(hits.size()>3 && _subDetectorVec[i]->GetNPlanes()> 2)
-		  {
-		    vector<double> p;
-		    //cout<<"Before quadratic "<<_subDetectorVec[i]->GetName()<<endl;
-		    p = Quadratic(hits);
-		    
-		    _subDetectorVec[i]->SetCharge(p[0]/fabs(p[0]));
-		    _subDetectorVec[i]->SetMomentum(fabs(p[0]));
-		    //_subDetectorVec[i]->SetChargeProb(chargeProb);
-		    _subDetectorVec[i]->SetError(p[1]);
-		    
-		    // Set to crazy value, needs to be calculated after mean p;
-		    
-		    _subDetectorVec[i]->SetChargeProb(1.0);		  
-		    _subDetectorVec[i]->SetNegChargeProb(1.0);
-		    
-		  }
-		else
- 		  {
-		    /*
-		    vector<double> p;
-		    cout<<"Using threePoint"<<endl;
-		    p = ThreePointCircle(hits);
-		    
-		    _subDetectorVec[i]->SetCharge(p[0]/fabs(p[0]));
-		    _subDetectorVec[i]->SetMomentum(fabs(p[0]));
-		    _subDetectorVec[i]->SetError(p[1]);
-		    cout<<"Returns="<<p[0]<<" "<<p[1]<<endl;
-
-		     // Set to crazy value, needs to be calculated after mean p;
-		     _subDetectorVec[i]->SetChargeProb(1.0);
-		     _subDetectorVec[i]->SetNegChargeProb(1.0);
-		    */
-		  }
-	      }
-	    //else
-		 
-	  }
-
-
-      }//end for.
-
-
-    double tempP =0;
-    double tempErr =0;
-
-for(unsigned int i=0;i<_subDetectorVec.size();i++)
+  else if(stackHits.size()>3)
     {
-      //cout<<"subDetector="<<_subDetectorVec[i]->GetMomentum()<<endl;
-
-
-      if(_subDetectorVec[i]->GetMomentum() == 0 || isinf(_subDetectorVec[i]->GetMomentum()) ||
-	 isnan(_subDetectorVec[i]->GetMomentum()) || isnan(_subDetectorVec[i]->GetError()) ||
-	 _subDetectorVec[i]->GetError() == 0 || isinf(_subDetectorVec[i]->GetError()))
-	{
-	  continue;
-	}
-      else
-	{
-	  /*
-	  cout<<"Using detector="<<_subDetectorVec[i]->GetName()<<endl;
-	  cout<<_subDetectorVec[i]->GetMomentum()<<endl;
-	  cout<<_subDetectorVec[i]->GetError()<<endl;
-	  cout<<_subDetectorVec[i]->GetChargeProb()<<endl;
-	  cout<< _subDetectorVec[i]->GetNegChargeProb()<<endl;
-	  */
-	  tempP += (_subDetectorVec[i]->GetMomentum()+ _subDetectorVec[i]->GetPrevde_dx())
-	    /(_subDetectorVec[i]->GetError() *_subDetectorVec[i]->GetError() );
-		     //+ _subDetectorVec[i]->GetPrevde_dx();
-
-	  tempErr += 1/(_subDetectorVec[i]->GetError()*_subDetectorVec[i]->GetError());
-	}
-
+      debug.push_back(0);
+      retVal = Quadratic(stackHits)[0];
+      debug.push_back(retVal);
+      temp = LeverArm(1);
+      debug.push_back(temp[0]);
+      debug.push_back(temp[1]);
+      temp = LeverArm(2);
+      debug.push_back(temp[0]);
+      debug.push_back(temp[1]);
     }
-
-//cout<<"TempP="<<tempP<<endl;
-//cout<<"TempErr="<<tempErr<<endl;
-
- tempP=tempP/tempErr;
-
- //cout<<"Final="<<tempP<<endl;
-
-
- double chargeProb = 1;
- double negChargeProb = 1;
-for(unsigned int i=0;i<_subDetectorVec.size();i++)
+  else
     {
-      //cout<<"chargeProb="<<chargeProb<<endl;
-      //cout<<"NchargeProb="<<negChargeProb<<endl;
+      debug.push_back(0);
+      debug.push_back(0);
 
-      if(_subDetectorVec[i]->GetMomentum() == 0 || isinf(_subDetectorVec[i]->GetMomentum()) ||
-	 isnan(_subDetectorVec[i]->GetMomentum()) || isnan(_subDetectorVec[i]->GetError()) ||
-	 _subDetectorVec[i]->GetError() == 0 || isinf(_subDetectorVec[i]->GetError()))
-	{
-	  continue;
-	}
-      else
-	{
-	  double tempChargeProb;
-	  double tempNegChargeProb;
+      temp = LeverArm(1);
+      retVal = temp[0];
+      debug.push_back(temp[0]);
+      debug.push_back(temp[1]);
+      temp = LeverArm(2);
+      debug.push_back(temp[0]);
+      debug.push_back(temp[1]);
 
-	  if(_subDetectorVec[i]->GetChargeProb() == 1 &&  _subDetectorVec[i]->GetNegChargeProb() == 1)
-	    {
-	      // Need to calculate prob from meanP;
-
-	      double subP = _subDetectorVec[i]->GetCharge() *_subDetectorVec[i]->GetMomentum();
-	      //double subC = _subDetectorVec[i]->GetCharge();
-	      double subE = _subDetectorVec[i]->GetError();
-
-
-	      tempChargeProb=  1/(sqrt(2* M_PI) * fabs(subE)) * exp(-(subP-tempP)*(subP-tempP)/(2*subE*subE));
-	      tempNegChargeProb= 1/(sqrt(2* M_PI) * fabs(subE)) * exp(-(-subP-tempP)*(-subP-tempP)/(2*subE*subE));
-
-	      if(!tempChargeProb || !tempNegChargeProb) 
-		{
-		  //cout<<"Prob is 0 ?! Mom="<<subP<<"+-"<<subE<<endl;
-		  continue;
-		}
-	      else
-		{
-		  chargeProb *= tempChargeProb;
-		  //chargeProb *= tempNegChargeProb;
-		  negChargeProb *= tempNegChargeProb;
-		  //negChargeProb *= tempChargeProb;
-		}
-
-	    }
-	  else
-	    {
-	      tempChargeProb =_subDetectorVec[i]->GetChargeProb();
-	      tempNegChargeProb = _subDetectorVec[i]->GetNegChargeProb();
-
-	      chargeProb *= tempChargeProb;
-	      negChargeProb *= tempNegChargeProb;
-	      //chargeProb*=_subDetectorVec[i]->GetChargeProb();
-	      //negChargeProb*= _subDetectorVec[i]->GetNegChargeProb();
-	    }
-	  /*	
-      cout<<_subDetectorVec[i]->GetName()<<" "
-	  <<_subDetectorVec[i]->GetMomentum()*_subDetectorVec[i]->GetCharge()<<" "
-	  <<_subDetectorVec[i]->GetMomentum()+_subDetectorVec[i]->GetPrevde_dx()<<" "
-	  <<_subDetectorVec[i]->GetError()<<" "
-	  <<tempChargeProb<<" "
-	  <<tempNegChargeProb<<endl;
-	  */
-	}
-
+      if(retVal = 0) retVal = temp[0];
     }
 
-//cout<<"final chargeProb="<<chargeProb<<endl;
-//cout<<"final NchargeProb="<<negChargeProb<<endl;
- 
- if(chargeProb<negChargeProb)
-   {
-     retVal = -1* tempP;
-   }
- else
-   {
-     retVal = tempP;
-   }
-
-
-
- if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 4000;
-
-
- //cout<<"retVal="<<retVal<<endl;
-
- //retVal = 4500;
-
- return retVal;
+      //retVal = LeverArmQuadratic(debug2);
+      //cout<<"Debug size="<<debug2.size()<<endl;
+    
+  
+  //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 4000;
+  
+  return retVal;
 }
 
 
@@ -1042,6 +695,12 @@ vector<double> Detector::Quadratic(std::vector<cluster*>& hits) {
 
   //return qtilde;
 
+  //if(qtilde==0 || fabs(qtilde) >8000 || isnan(qtilde)) qtilde = 400;
+
+  if(isnan(qtilde)) qtilde = 0;
+
+  if(qtilde != 0) qtilde = qtilde/fabs(qtilde) * (fabs(qtilde) + GetSubDetector(hits[0]->vector()[2])->Getde_dx());
+
   retVec.push_back(qtilde);
   retVec.push_back(qerr);
 
@@ -1183,7 +842,7 @@ double fitfunc(Double_t *x,Double_t *par) {
 //*****************************************************************************
 double Detector::Helix(std::vector<cluster*>& hits){
   //*****************************************************************************
-
+  /*
   cout<<"in Helix"<<endl;
 
   for(unsigned int cnt = 0; cnt<hits.size();cnt++) 
@@ -1193,7 +852,7 @@ double Detector::Helix(std::vector<cluster*>& hits){
 	  <<hits[cnt]->vector()[2]<<endl;
     }
   
-
+  */
 
   //Some catchers for pointless returns.
   int fitcatch;
@@ -1317,9 +976,430 @@ double Detector::Helix(std::vector<cluster*>& hits){
     delete func3;
     delete func4;
   }
-    return 1/V[5];
+
+
+  double retVal = 1/V[5];
+
+  //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 400;
+
+  if(isnan(retVal)) retVal = 0;
+
+  if(retVal != 0) retVal = retVal/fabs(retVal) * (fabs(retVal) + GetSubDetector(hits[0]->vector()[2])->Getde_dx());
+  
+  return retVal;
 
   //std::cout<<"Momentum guess from polynomial fit: p/q = "<<1./V[5]<<std::endl;
+}
+
+//*****************************************************************************
+double Detector::LeverArmQuadratic(vector<double>& debug){
+//*****************************************************************************
+
+
+  double retVal = 0;
+
+  bool used = false;
+
+  for(unsigned int i=1;i<_subDetectorVec.size()-2;i++)
+    {
+      //cout<<i<<endl;
+      if(_subDetectorVec[i]->GetName() == "SFFFS0" ||
+	 _subDetectorVec[i]->GetName() == "SFS" ||
+	 _subDetectorVec[i]->GetName() == "SFFS" ||
+	 _subDetectorVec[i]->GetName() == "SFFFS" ||
+	 _subDetectorVec[i]->GetName() == "SFS0" ||
+	 _subDetectorVec[i]->GetName() == "SFFS0" ||
+	 //_subDetectorVec[i]->GetName() == "SFFFFS0" ||
+	 _subDetectorVec[i]->GetName() == "SFFFFS1" ||
+	 _subDetectorVec[i]->GetName() == "SFFS1" ||
+	 _subDetectorVec[i]->GetName() == "SFFFS1"
+	 )
+	{
+	  
+	  if( _subDetectorVec[i-1]->GetMaxPlane() &&_subDetectorVec[i]->GetMinPlane() && 
+	      _subDetectorVec[i]->GetMaxPlane() &&  _subDetectorVec[i+1]->GetMinPlane())
+	    {
+	      if(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0 &&
+		 _subDetectorVec[i]->GetMinPlane()->GetHits().size()>0 &&
+		 _subDetectorVec[i]->GetMinPlane() !=  _subDetectorVec[i]->GetMaxPlane() &&
+		 _subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0 &&
+		 _subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)
+		{
+		  debug.push_back(LeverArm(i)[0]);
+
+		} // End if enough hits
+	    } // End if good pointers
+	  //}
+	  
+	}
+      else // Do not use leverarm. (In stack) but can not use helix.
+	{
+	  //cout<<"In stack"<<endl;
+	  
+	  if(_subDetectorVec[i]->GetName() == "SFFFFS0" && used) continue;
+	  
+	  std::vector<cluster*> hits;
+	  
+	  if(_subDetectorVec[i]->GetName() == "SFFFFModule" &&
+	     _subDetectorVec[i+1]->GetName() == "SFFFFS0")
+	    {
+	      for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
+		{
+		  for(unsigned int k=0;k<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size();k++)
+		    {
+		      hits.push_back(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
+		    }
+		}
+	      
+	      for(unsigned int j=0;j<_subDetectorVec[i+1]->GetPlanes()->size();j++)
+		{
+		  for(unsigned int k=0;k<_subDetectorVec[i+1]->GetPlanes()->at(j)->GetHits().size();k++)
+		    {
+		      hits.push_back(_subDetectorVec[i+1]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
+		    }
+		}
+	      used = true;
+	    }
+	  else
+	    {	
+	      
+	      for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
+		{
+		  for(unsigned int k=0;k<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size();k++)
+		    {
+		      hits.push_back(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
+		    }
+		}
+	      if(_subDetectorVec[i+1]->GetPlanes()->size())
+		{
+		  if(_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits().size())
+		    {
+		      hits.push_back(_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits()[0]);
+		    }
+		}
+	    }		
+	  
+	  //cout<<_subDetectorVec[i]->GetName()<<" "<<hits.size()<<endl;
+	  
+	  if(hits.size()>2)
+	    {
+	      if(hits.size()>3 && _subDetectorVec[i]->GetNPlanes()> 2)
+		{
+		  vector<double> p;
+		  //cout<<"Before quadratic "<<_subDetectorVec[i]->GetName()<<endl;
+		  p = Quadratic(hits);
+		  
+		  _subDetectorVec[i]->SetCharge(p[0]/fabs(p[0]));
+		  _subDetectorVec[i]->SetMomentum(fabs(p[0]));
+		  //_subDetectorVec[i]->SetChargeProb(chargeProb);
+		  _subDetectorVec[i]->SetError(p[1]);
+		  
+		  // Set to crazy value, needs to be calculated after mean p;
+		  
+		  _subDetectorVec[i]->SetChargeProb(1.0);		  
+		  _subDetectorVec[i]->SetNegChargeProb(1.0);
+		  
+		}
+	      else
+		{
+		  /*
+		    vector<double> p;
+		    cout<<"Using threePoint"<<endl;
+		    p = ThreePointCircle(hits);
+		    
+		    _subDetectorVec[i]->SetCharge(p[0]/fabs(p[0]));
+		    _subDetectorVec[i]->SetMomentum(fabs(p[0]));
+		    _subDetectorVec[i]->SetError(p[1]);
+		    cout<<"Returns="<<p[0]<<" "<<p[1]<<endl;
+		    
+		    // Set to crazy value, needs to be calculated after mean p;
+		    _subDetectorVec[i]->SetChargeProb(1.0);
+		    _subDetectorVec[i]->SetNegChargeProb(1.0);
+		  */
+		}
+	    }
+	  //else
+	  
+	}
+      
+      
+    }//end for.
+
+  //Combine the guesses.
+  
+  double tempP =0;
+  double tempErr =0;
+  
+  for(unsigned int i=0;i<_subDetectorVec.size();i++)
+    {
+      //cout<<"subDetector="<<_subDetectorVec[i]->GetMomentum()<<endl;
+      
+      
+      if(_subDetectorVec[i]->GetMomentum() == 0 || isinf(_subDetectorVec[i]->GetMomentum()) ||
+	 isnan(_subDetectorVec[i]->GetMomentum()) || isnan(_subDetectorVec[i]->GetError()) ||
+	 _subDetectorVec[i]->GetError() == 0 || isinf(_subDetectorVec[i]->GetError()))
+	{
+	  continue;
+	}
+      else
+	{
+	  /*
+	    cout<<"Using detector="<<_subDetectorVec[i]->GetName()<<endl;
+	    cout<<_subDetectorVec[i]->GetMomentum()<<endl;
+	    cout<<_subDetectorVec[i]->GetError()<<endl;
+	    cout<<_subDetectorVec[i]->GetChargeProb()<<endl;
+	    cout<< _subDetectorVec[i]->GetNegChargeProb()<<endl;
+	  */
+	  tempP += (_subDetectorVec[i]->GetMomentum()+ _subDetectorVec[i]->GetPrevde_dx())
+	    /(_subDetectorVec[i]->GetError() *_subDetectorVec[i]->GetError() );
+	  //+ _subDetectorVec[i]->GetPrevde_dx();
+	  
+	  tempErr += 1/(_subDetectorVec[i]->GetError()*_subDetectorVec[i]->GetError());
+	}
+      
+    }
+
+//cout<<"TempP="<<tempP<<endl;
+//cout<<"TempErr="<<tempErr<<endl;
+
+ tempP=tempP/tempErr;
+
+ //cout<<"Final="<<tempP<<endl;
+
+
+ double chargeProb = 1;
+ double negChargeProb = 1;
+ for(unsigned int i=0;i<_subDetectorVec.size();i++)
+   {
+     //cout<<"chargeProb="<<chargeProb<<endl;
+     //cout<<"NchargeProb="<<negChargeProb<<endl;
+     
+     if(_subDetectorVec[i]->GetMomentum() == 0 || isinf(_subDetectorVec[i]->GetMomentum()) ||
+	isnan(_subDetectorVec[i]->GetMomentum()) || isnan(_subDetectorVec[i]->GetError()) ||
+	_subDetectorVec[i]->GetError() == 0 || isinf(_subDetectorVec[i]->GetError()))
+       {
+	 continue;
+       }
+     else
+       {
+	 double tempChargeProb;
+	 double tempNegChargeProb;
+	 
+	 if(_subDetectorVec[i]->GetChargeProb() == 1 &&  _subDetectorVec[i]->GetNegChargeProb() == 1)
+	   {
+	     // Need to calculate prob from meanP;
+	     
+	     double subP = _subDetectorVec[i]->GetCharge() *_subDetectorVec[i]->GetMomentum();
+	     //double subC = _subDetectorVec[i]->GetCharge();
+	     double subE = _subDetectorVec[i]->GetError();
+	     
+	     
+	     tempChargeProb=  1/(sqrt(2* M_PI) * fabs(subE)) * exp(-(subP-tempP)*(subP-tempP)/(2*subE*subE));
+	     tempNegChargeProb= 1/(sqrt(2* M_PI) * fabs(subE)) * exp(-(-subP-tempP)*(-subP-tempP)/(2*subE*subE));
+	     
+	     if(!tempChargeProb || !tempNegChargeProb) 
+	       {
+		 //cout<<"Prob is 0 ?! Mom="<<subP<<"+-"<<subE<<endl;
+		 continue;
+	       }
+	     else
+	       {
+		 chargeProb *= tempChargeProb;
+		 //chargeProb *= tempNegChargeProb;
+		 negChargeProb *= tempNegChargeProb;
+		 //negChargeProb *= tempChargeProb;
+	       }
+	     
+	   }
+	 else
+	   {
+	     tempChargeProb =_subDetectorVec[i]->GetChargeProb();
+	     tempNegChargeProb = _subDetectorVec[i]->GetNegChargeProb();
+	     
+	     chargeProb *= tempChargeProb;
+	     negChargeProb *= tempNegChargeProb;
+	     //chargeProb*=_subDetectorVec[i]->GetChargeProb();
+	     //negChargeProb*= _subDetectorVec[i]->GetNegChargeProb();
+	   }
+	 /*	
+	   cout<<_subDetectorVec[i]->GetName()<<" "
+	   <<_subDetectorVec[i]->GetMomentum()*_subDetectorVec[i]->GetCharge()<<" "
+	   <<_subDetectorVec[i]->GetMomentum()+_subDetectorVec[i]->GetPrevde_dx()<<" "
+	   <<_subDetectorVec[i]->GetError()<<" "
+	   <<tempChargeProb<<" "
+	   <<tempNegChargeProb<<endl;
+	 */
+       }
+     
+   }//end for
+
+ //cout<<"final chargeProb="<<chargeProb<<endl;
+ //cout<<"final NchargeProb="<<negChargeProb<<endl;
+ 
+ if(chargeProb<negChargeProb)
+   {
+     retVal = -1* tempP;
+   }
+ else
+   {
+     retVal = tempP;
+   }
+ 
+ 
+ 
+ if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 4000;
+ 
+ 
+ //cout<<"retVal="<<retVal<<endl;
+ 
+ //retVal = 4500;
+ 
+ return retVal;
+}
+
+//*****************************************************************************
+vector<double> Detector::LeverArm(unsigned int i){
+//*****************************************************************************
+
+  double retVal;
+  double angle = 0;
+  vector<double> retValVec;
+ 
+  cout<<_subDetectorVec[i-1]->GetMaxPlane()<<endl;
+  cout<<_subDetectorVec[i]->GetMinPlane()<<endl;
+  cout<<_subDetectorVec[i]->GetMaxPlane()<<endl;
+  cout<<_subDetectorVec[i+1]->GetMinPlane()<<endl;
+
+  
+  if( _subDetectorVec[i-1]->GetMaxPlane() &&_subDetectorVec[i]->GetMinPlane() && 
+      _subDetectorVec[i]->GetMaxPlane() &&  _subDetectorVec[i+1]->GetMinPlane())
+    {
+
+      cout<<(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0)<<endl;
+      cout<<(_subDetectorVec[i]->GetMinPlane()->GetHits().size()>0)<<endl;
+      cout<<(_subDetectorVec[i]->GetMinPlane() !=  _subDetectorVec[i]->GetMaxPlane())<<endl;
+      cout<<(_subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0)<<endl;
+      cout<<(_subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)<<endl;
+
+      
+      if(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0 &&
+	 _subDetectorVec[i]->GetMinPlane()->GetHits().size()>0 &&
+	 _subDetectorVec[i]->GetMinPlane() !=  _subDetectorVec[i]->GetMaxPlane() &&
+	 _subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0 &&
+	 _subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)
+	{
+
+
+  double dy = (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[1] -
+	       _subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[1]);
+  double dz = (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[2] - 
+	       _subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[2]);
+  
+  double theta1 = atan(dy/dz);
+  
+  //double errZ = 10; //mm
+  double errZ = 0; //mm
+  double errY = 15; //mm
+  
+  //double errTheta1 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * (errY*errY+errY*errY/(errZ*errZ*errZ*errZ));//(2*errZ*errZ+2*errY*errY);
+  
+  //double errTheta1 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * errY*errY /(dz*dz) + errZ*errZ*dy*dy/(dz*dz*dz*dz);  
+  
+  double errTheta1 = 1.0/(dy*dy+dz*dz) * 1.0/(dy*dy+dz*dz) * (dz*dz*errY*errY + dy*dy*errZ*errZ);
+  
+  errTheta1 = sqrt(errTheta1);
+  
+  dy = (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[1] -_subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[1]);
+  
+  dz = (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[2]);
+  
+  double theta2 =atan(dy/dz);
+  
+  //double errTheta2 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * (errY*errY+errY*errY/(errZ*errZ*errZ*errZ));
+  
+  //double errTheta2 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * errY*errY /(dz*dz) + errZ*errZ*dy*dy/(dz*dz*dz*dz);  
+  
+  double errTheta2 = 1.0/(dy*dy+dz*dz) * 1.0/(dy*dy+dz*dz) * (dz*dz*errY*errY + dy*dy*errZ*errZ);
+  
+  errTheta2 = sqrt(errTheta2);
+  
+  double delta1 = theta2-theta1;
+
+  angle = delta1;
+  
+  //double delta1 = theta1-theta2;
+  
+  double errDelta1 = errTheta2*errTheta2 + errTheta1*errTheta1;
+  
+  errDelta1 = sqrt(errDelta1);
+  
+  //cout<<"before l"<<endl;
+  double l = (_subDetectorVec[i]->GetPlanes()->at(1)->GetHits()[0]->position()[2]  - 
+	      _subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position()[2])*1000;
+  //cout<<"before p"<<endl;
+  //double p = 0.3* 
+  //_subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position())[0] *
+  //l/ delta1;
+  
+  double p = 0.3* 
+    _subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position())[0]*
+    l/ delta1;
+  
+  
+  //cout<<"Momentum="<<p<<endl;
+  
+  _subDetectorVec[i]->SetCharge(p/fabs(p));
+  _subDetectorVec[i]->SetMomentum(fabs(p));
+  _subDetectorVec[i]->SetError(fabs(p*errDelta1/delta1));
+  
+  double X0 = _subDetectorVec[i]->GetX0Eff();
+  
+  double chargeWidth = 13.6/(fabs(p)*(fabs(p)/sqrt(p*p+105.65*105.65))) *
+    sqrt(l/X0) *
+    (1+0.0036*log(l/X0));
+  
+  chargeWidth = chargeWidth*chargeWidth + errDelta1*errDelta1;
+  chargeWidth= sqrt(chargeWidth);
+  
+  //double angularResolution = 1.0/
+  
+  // B field negative, changes places of the probabilities.
+		  	  
+  //double chargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(delta1-chargeWidth)*(delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
+  
+  //double negChargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(-delta1-chargeWidth)*(-delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
+  
+  double negChargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(delta1-chargeWidth)*(delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
+  
+  double chargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(-delta1-chargeWidth)*(-delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
+  
+  _subDetectorVec[i]->SetChargeProb(chargeProb);
+  
+  _subDetectorVec[i]->SetNegChargeProb(negChargeProb);
+    
+  retVal = p;
+
+  //retVal = delta1;
+	}
+      else
+	{
+	  cout<<"Lever arm fail 1"<<endl;
+	}
+    }
+  else
+    {
+      cout<<"Lever arm fail 2"<<endl;
+    }
+
+  //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 400;
+  if(isnan(retVal)) retVal = 0;
+
+  if(retVal != 0) retVal = retVal/fabs(retVal) * (fabs(retVal) + _subDetectorVec[i]->Getde_dx());
+
+  retValVec.push_back(retVal);
+  retValVec.push_back(angle);
+
+  return retValVec;
 }
 
 

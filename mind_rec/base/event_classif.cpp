@@ -940,11 +940,31 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
 
   double p;
 
+
+  _helix.clear();
+  _quad.clear();
+  _lever1.clear();
+  _angle1.clear();
+  _lever2.clear();
+  _angle2.clear();
+  vector<double> debug;
+
   p = RangeMomentum(pathlength,firstNodeZ);
 
   //p=fabs(MomentumFromCurvature(track,0,p));//;-p);
 
-  p=MomentumFromCurvature(track,0,p);//;-p);
+  p=MomentumFromCurvature(track,0,p,debug);//;-p);
+
+  //cout<<"debug.size()="<<debug.size()<<endl;
+  if(debug.size()==6)
+    {
+      _helix.push_back(debug[0]);
+      _quad.push_back(debug[1]);
+      _lever1.push_back(debug[2]);
+      _angle1.push_back(debug[3]);
+      _lever2.push_back(debug[4]);
+      _angle2.push_back(debug[5]);
+    }
 
   int meansign = p/fabs(p);
 
@@ -1257,8 +1277,7 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
   _m.message("At the end of muon_extraction size in traj =",muontraj.size(), bhep::VERBOSE);
   
   _geom.getDetectorModel()->Reset();
-
-
+  
   const dict::Key candHit = "inMu";
 
   for(int pl=_planes.size()-1; pl >= 0; pl-- ){
@@ -1274,7 +1293,8 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
 	      GetPlanes()->push_back(_planes[pl]);
 	  }
       }
-  }  
+  } 
+  
  
   
   return true;

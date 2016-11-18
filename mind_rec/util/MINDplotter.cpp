@@ -181,6 +181,20 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   _TMeas.clear();
   _MuProp.clear();
 
+  _helix.clear();
+  _quad.clear();
+  _lever1.clear();
+  _angle1.clear();
+  _lever2.clear();
+  _angle2.clear();
+
+  _fitHelix.clear();
+  _fitQuad.clear();
+  _fitLever1.clear();
+  _fitAngle1.clear();
+  _fitLever2.clear();
+  _fitAngle2.clear();
+
   _xDir.clear();
   _yDir.clear();
   _x0.clear();
@@ -593,6 +607,21 @@ void MINDplotter::define_tree_branches() {
   statTree->Branch("raw_EngMeas", &_EMeas,32000,0);
   statTree->Branch("raw_TimeMeas", &_TMeas,32000,0);
   statTree->Branch("raw_MotherPrSop", &_MuProp, 32000, 0);
+
+  statTree->Branch("traj_initPHelix", &_helix,32000,0);
+  statTree->Branch("traj_initPQuad", &_quad,32000,0);
+  statTree->Branch("traj_initPLever1", &_lever1,32000,0);
+  statTree->Branch("traj_initPAngle1", &_angle1,32000,0);
+  statTree->Branch("traj_initPLever2", &_lever2,32000,0);
+  statTree->Branch("traj_initPAngle2", &_angle2,32000,0);
+
+  statTree->Branch("traj_fitPHelix", &_fitHelix,32000,0);
+  statTree->Branch("traj_fitPQuad", &_fitQuad,32000,0);
+  statTree->Branch("traj_fitPLever1", &_fitLever1,32000,0);
+  statTree->Branch("traj_fitPAngle2", &_fitAngle1,32000,0);
+  statTree->Branch("traj_fitPLever2", &_fitLever2,32000,0);
+  statTree->Branch("traj_fitPAngle2", &_fitAngle2,32000,0);
+
 
   statTree->Branch("test_beam_xDir", &_xDir,32000,0);  
   statTree->Branch("test_beam_yDir", &_yDir,32000,0);  
@@ -1356,6 +1385,20 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
   _hitHad = 0;
   const dict::Key hadHit = "inhad";
 
+
+  _helix = Fit.get_classifier().GetHelix();
+  _quad = Fit.get_classifier().GetQuad();
+  _lever1 = Fit.get_classifier().GetLever1();
+  _angle1 = Fit.get_classifier().GetAngle1();
+  _lever2 = Fit.get_classifier().GetLever2();
+  _angle2 = Fit.get_classifier().GetAngle2();
+
+  _fitHelix = Fit.GetHelix();
+  _fitQuad = Fit.GetQuad();
+  _fitLever1 = Fit.GetLever1();
+  _fitAngle1 = Fit.GetAngle1();
+  _fitLever2 = Fit.GetLever2();
+  _fitAngle2 = Fit.GetAngle2();
 
   _xDir = Fit.GetXDir();
   _yDir = Fit.GetYDir();

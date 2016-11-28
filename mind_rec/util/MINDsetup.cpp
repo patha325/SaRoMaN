@@ -319,7 +319,11 @@ void MINDsetup::addProperties(){
   _gsetup.set_volume_property("mother",RP::BField,BField);
   //_gsetup.set_volume_property("detector",RP::BField,BField);
 
-  zeroMap = new DeDxMap(0);
+
+  // Use de_dx of air
+  //zeroMap = new DeDxMap(0);
+
+  zeroMap = new DeDxMap(2.398e-4 *MeV/mm);
 
   _gsetup.set_volume_property("mother",RP::de_dx_map,*zeroMap);
   //_gsetup.set_volume_property("detector",RP::de_dx_map,*zeroMap);
@@ -439,7 +443,7 @@ void MINDsetup::addProperties(){
 	  std::cout<<"modulelength "<<length<<" numFe "<<numFe<<" numScint "<<numScint<<std::endl;
 	  std::cout<<"iron_z "<<IRON_z<<" scint_z "<<SCINT_z<<std::endl;
 
-	  fieldScale *= numFe > 0 ? IRON_z*numFe/length : 0;
+	  fieldScale *= numFe > 0 ? IRON_z*numFe/length : earth;
 	  //fieldScale *= 2 *1.2;
 	  //fieldScale *= IRON_z *numFe;
 
@@ -505,6 +509,8 @@ EVector MINDsetup::getBField(EVector pos){
 
   // Return the value from a general fieldmap scaled correctly for the subdetector.
 
+  //cout<<"In getBField"<<endl;
+
   EVector BfieldVector = _generalBFieldMap.vector(pos);
   
   double properScale = 0;
@@ -526,7 +532,7 @@ EVector MINDsetup::getBField(EVector pos){
 
     }
 
-
+  //cout<<"returning "<<BfieldVector[0]<<endl;
 
   return properScale*BfieldVector;
 }

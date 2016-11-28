@@ -296,13 +296,16 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       temp = LeverArm(1);
       debug.push_back(temp[0]);
       debug.push_back(temp[1]);
+      temp.clear();
       temp = LeverArm(2);
       debug.push_back(temp[0]);
       debug.push_back(temp[1]);
 
+      cout<<"Helix  used"<<endl;
+
       //return helixVal;
     }
-  else if(stackHits.size()>3)
+  /*else if(stackHits.size()>3)
     {
       debug.push_back(0);
       retVal = Quadratic(stackHits)[0];
@@ -310,32 +313,47 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       temp = LeverArm(1);
       debug.push_back(temp[0]);
       debug.push_back(temp[1]);
+      temp.clear();
       temp = LeverArm(2);
       debug.push_back(temp[0]);
       debug.push_back(temp[1]);
-    }
+      cout<<"Quadratic used"<<endl;
+      }*/
   else
     {
+      //cout<<"LeverArm"<<endl;
       debug.push_back(0);
       debug.push_back(0);
+
+      cout<<"Call="<<LeverArm(1)[0]<<endl;
+      temp.clear();
 
       temp = LeverArm(1);
       retVal = temp[0];
+      cout<<"Should be good here"<<retVal<<endl;
+
       debug.push_back(temp[0]);
       debug.push_back(temp[1]);
+      temp.clear();
       temp = LeverArm(2);
+      cout<<"Second call"<<retVal<<endl;
       debug.push_back(temp[0]);
       debug.push_back(temp[1]);
 
-      if(retVal = 0) retVal = temp[0];
+      if(retVal == 0) retVal = temp[0];
+      cout<<"Lever arm used"<<endl;
     }
 
       //retVal = LeverArmQuadratic(debug2);
       //cout<<"Debug size="<<debug2.size()<<endl;
     
   
+  cout<<"in detector.cpp="<<retVal<<endl;
+
   //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 4000;
   
+  //retVal = 1000;
+
   return retVal;
 }
 
@@ -691,7 +709,7 @@ vector<double> Detector::Quadratic(std::vector<cluster*>& hits) {
 
   //if(meansign == 0) meansign = 1;
 
-  //cout<<"quadratic="<<qtilde<<endl;
+  cout<<"quadratic="<<qtilde<<endl;
 
   //return qtilde;
 
@@ -1025,7 +1043,7 @@ double Detector::LeverArmQuadratic(vector<double>& debug){
 		 _subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0 &&
 		 _subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)
 		{
-		  debug.push_back(LeverArm(i)[0]);
+		  //debug.push_back(LeverArm(i)[0]);
 
 		} // End if enough hits
 	    } // End if good pointers
@@ -1265,21 +1283,21 @@ vector<double> Detector::LeverArm(unsigned int i){
   double angle = 0;
   vector<double> retValVec;
  
-  cout<<_subDetectorVec[i-1]->GetMaxPlane()<<endl;
-  cout<<_subDetectorVec[i]->GetMinPlane()<<endl;
-  cout<<_subDetectorVec[i]->GetMaxPlane()<<endl;
-  cout<<_subDetectorVec[i+1]->GetMinPlane()<<endl;
+  //cout<<_subDetectorVec[i-1]->GetMaxPlane()<<endl;
+  //cout<<_subDetectorVec[i]->GetMinPlane()<<endl;
+  //cout<<_subDetectorVec[i]->GetMaxPlane()<<endl;
+  //cout<<_subDetectorVec[i+1]->GetMinPlane()<<endl;
 
   
   if( _subDetectorVec[i-1]->GetMaxPlane() &&_subDetectorVec[i]->GetMinPlane() && 
       _subDetectorVec[i]->GetMaxPlane() &&  _subDetectorVec[i+1]->GetMinPlane())
     {
 
-      cout<<(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0)<<endl;
-      cout<<(_subDetectorVec[i]->GetMinPlane()->GetHits().size()>0)<<endl;
-      cout<<(_subDetectorVec[i]->GetMinPlane() !=  _subDetectorVec[i]->GetMaxPlane())<<endl;
-      cout<<(_subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0)<<endl;
-      cout<<(_subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)<<endl;
+      //cout<<(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0)<<endl;
+      //cout<<(_subDetectorVec[i]->GetMinPlane()->GetHits().size()>0)<<endl;
+      //cout<<(_subDetectorVec[i]->GetMinPlane() !=  _subDetectorVec[i]->GetMaxPlane())<<endl;
+      //cout<<(_subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0)<<endl;
+      //cout<<(_subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)<<endl;
 
       
       if(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0 &&
@@ -1398,6 +1416,9 @@ vector<double> Detector::LeverArm(unsigned int i){
 
   retValVec.push_back(retVal);
   retValVec.push_back(angle);
+
+
+  cout<<"lever_arm function="<<retVal<<endl;
 
   return retValVec;
 }

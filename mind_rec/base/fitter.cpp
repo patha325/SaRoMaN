@@ -422,6 +422,19 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	  _m.message("- traj size=",_traj.nodes().size(),bhep::DETAILED);
 
 	  // if (ok)cout<<"if classifier3="<<endl; 
+
+	  cout<<"before fitTrajectory"<<endl;
+	  for(int j = 0; j<_traj.size();j++)
+	    {
+	      if(_traj.nodes()[j]->status("fitted"))
+		{
+		  cout<<"momentum: "<<1.0/_traj.nodes()[j]->state().hv().vector()[5]<<endl;
+		  cout<<_traj.nodes()[j]->measurement().position()[2]<<endl;
+		  cout<<_geom.getBField(_traj.nodes()[j]->measurement().position())[0]<<endl;
+		}
+	      else break;
+	    }
+
 	  _fitted = FitTrajectory(seedState,i);
 	  
 	  _m.message("- traj node0=",*(_traj.nodes()[0]),bhep::DETAILED);
@@ -453,7 +466,26 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
 	//cout<<"End of fitter.cpp momentum: "<<_traj.state().hv().vector()[5]<<endl;
 	if(_fitted && _fitCheck){
+
+	  for(int j = 0; j<_traj.size();j++)
+	    {
+	      if(_traj.nodes()[j]->status("fitted"))
+		{
+		  cout<<"momentum: "<<1.0/_traj.nodes()[j]->state().hv().vector()[5]<<endl;
+		  cout<<_traj.nodes()[j]->measurement().position()[2]<<endl;
+		  cout<<_geom.getBField(_traj.nodes()[j]->measurement().position())[0]<<endl;
+		}
+	      else break;
+	    }
+
+
+	  
 	  cout<<"End of fitter.cpp momentum: "<<1.0/_traj.node(_traj.first_fitted_node()).state().hv().vector()[5]<<endl;
+	  /*
+	  cout<<_geom.getBField(_traj.node(_traj.first_fitted_node()).measurement().position())[0]<<endl;
+	  cout<<"End of fitter.cpp momentum: "<<1.0/_traj.node(_traj.last_fitted_node()).state().hv().vector()[5]<<endl;
+	  cout<<_geom.getBField(_traj.node(_traj.last_fitted_node()).measurement().position())[0]<<endl;
+	  */
 	}
 	///assign quality for each trajectory
 	_traj.set_quality("failType",_failType);
@@ -590,12 +622,12 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
   
   // Check the quality if the traj is fitted
   if(ok0) ok_quality = CheckQuality(_traj); 
-  /*
+  
   if(!ok_quality)
     {
       cout<<"bad quality"<<endl;
     }
-  */
+  
   ///refit the trajectory only when the quality is not good
   if (_refit && ok0 && !ok_quality){    
     State seedState1;
@@ -1047,9 +1079,14 @@ void fitter::rec_had_edep(int j){
 bool fitter::CheckQuality(const Trajectory& traj){
   //*************************************************************
     
+ _m.message("+++CheckQuality++++",bhep::VERBOSE);
+
   bool ok = true;
     
   if (traj.quality()>_chi2fit_max) ok=false;
+
+  cout<<"traj.quality()="<<traj.quality()<<endl;
+  cout<<"_chi2fit_max="<<_chi2fit_max<<endl;
        
   return ok;
 
@@ -1211,23 +1248,19 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   //use position slightly offset from first meas as seed 
   ///_lastIso is the total no of candidate muon hits inside Traj in free section 
   
+  /*
   if ( (double)(traj.quality("lastIso"))/(double)traj.size() > _min_iso_prop )
     firsthit = (int)traj.size() - (int)(traj.quality("lastIso"));
-  
+  */
+
   EVector v(6,0), v2(1,0);
   EMatrix C(6,6,0), C2(1,1,0);
     
-  // take the position from the first hit
-  /*
-  v[0] = traj.nodes()[firsthit+1]->measurement().position()[0];
-  v[1] = traj.nodes()[firsthit+1]->measurement().position()[1];
-  v[2] = traj.nodes()[firsthit+1]->measurement().position()[2];   
-  */
   v[0] = traj.nodes()[firsthit]->measurement().position()[0];
   v[1] = traj.nodes()[firsthit]->measurement().position()[1];
   v[2] = traj.nodes()[firsthit]->measurement().position()[2];  
 
-  //cout<<"z pos in fitter_seed: "<<v[2]<<endl; 
+  cout<<"z pos in fitter_seed: "<<v[2]<<endl; 
 
   // Estime the momentum from range
   ComputeMomFromRange( traj, (int)traj.size(), firsthit, v);
@@ -1246,20 +1279,53 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   v[4] = 0;
 
 
+  /*
+  // Create and fill the state vector 
+  EVector v(6,0); 
+  v[0]= 0; // x position of the state 
+  v[1]= 0; // y position 
+  v[2]= 0; // z position 
+  v[3]= 0; // x slope (dx/dz) 
+  v[4]= 0; // y slope (dy/dz) 
+  v[5]= 1; // q/p (charge over momentum) 
+  
+  // Create and fill the state matrix 
+  EMatrix C(6,6,0); 
+  C[0][0] = C[1][1] = 1; // square of the position error 
+  C[2][2] = 0 ; // no error in z since this is the running coordinate 
+  C[3][3] = C[4][4] = 0.1; // square of the slope error 
+  C[5][5] = 0.1; // square of 1/p error 
+  
+  // Create and fill the State it self 
+  State state; 
+  // The State representation 
+  state.set_name(RP::rep, RP::slopes_curv_z); 
+  // The main HyperVector 
+  state.set_hv(HyperVector(v,C)); 
+  // The secondary sense HyperVector with sense=1 and no error 
+  state.set_hv(RP::sense, HyperVector(1)); 
+  */
 
-  // But use a larger covariance matrix
-  // diagonal covariance matrix
-  C[0][0] = C[1][1] = 9.*cm*cm;  // Expected pos res x,y
+
+  C[0][0] = 8.5 * 8.5 * cm * cm;
+  C[1][1] = 1.5 * 1.5 *cm * cm;  // Expected pos res x,y
   C[2][2] = EGeo::zero_cov()/2;  // Expected pos res z
-  C[3][3] = C[4][4] = 1.; // Expected pos dx/dz, dy/dz
-  C[5][5] = pow(v[5],2)*3; // Expected pos dx/dz, dy/dz
-  
-  seedState.set_name(RP::particle_helix);
-  seedState.set_name(RP::representation,RP::slopes_curv_z);
-  
+  //C[3][3] = C[4][4] = 1.; // Expected pos dx/dz, dy/dz
+  C[3][3] = 8.5 * 8.5 * cm * cm;
+  C[4][4] = 1.5 * 1.5 * cm *cm; // Expected pos dx/dz, dy/dz
+  C[5][5] = pow(v[5],2); // Expected pos dx/dz, dy/dz
+
+
   v2[0] = 1;
-  seedState.set_hv(RP::sense,HyperVector(v2,C2,RP::z));
-  seedState.set_hv(HyperVector(v,C,RP::slopes_curv_z));
+
+  seedState.set_name(RP::representation, RP::slopes_curv_z); 
+  // The main HyperVector 
+  seedState.set_hv(HyperVector(v,C)); 
+  // The secondary sense HyperVector with sense=1 and no error 
+  //seedState.set_hv(RP::sense, HyperVector(1)); 
+
+  seedState.set_hv(RP::sense,HyperVector(v2,C2));
+
 
   //std::cout<<"fitter::ComputeSeed 1/v[5]="<<1./v[5]<<std::endl;
 
@@ -1439,6 +1505,10 @@ void fitter::ComputeMomFromRange(const Trajectory& traj, int nplanes, int firsth
     }
 
   meansign = p/fabs(p);
+
+  p = fabs(p);
+
+  cout<<"Momentum used in ComputeMomFromRange in fitter="<<meansign * p<<endl;
 
   
   int pi3=0, pi4=0;

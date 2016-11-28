@@ -790,7 +790,6 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   
 
   EVector newV(7,0);
-  EMatrix newM(7,7,0);
 
   // Create and fill the state vector 
   //EVector v(6,0); 
@@ -807,19 +806,12 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   V[1] = muontraj.nodes()[0]->measurement().vector()[1];
   V[2] = muontraj.nodes()[0]->measurement().position()[2];
 
-  newV[0] = muontraj.nodes()[0]->measurement().vector()[0];
-  newV[1] = muontraj.nodes()[0]->measurement().vector()[1];
-  newV[2] = muontraj.nodes()[0]->measurement().position()[2];
 
-  newV[3] = (muontraj.nodes()[1]->measurement().vector()[0] -muontraj.nodes()[0]->measurement().vector()[0]);
-  newV[4] = (muontraj.nodes()[1]->measurement().vector()[1] -muontraj.nodes()[0]->measurement().vector()[1]);
-  newV[5] = (muontraj.nodes()[1]->measurement().vector()[2] -muontraj.nodes()[0]->measurement().vector()[2]);
-
+  //cout<<"z pos in event_classif_seed: "<<V[2]<<endl; 
+  
 
   //direction
   double dqtot = fit_parabola( V, muontraj);
-  
-  newV[6] = V[5];
 
   //Momentum. Estimate from empirical extent function.
   ///if cluster contains hits then _Xtent is the diff in z b/w 0th and last hit in cluster 
@@ -854,55 +846,25 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
 
   //cout<<"In get_patternRec_seed: "<<V[5]<<" "<<1/V[5]<<endl;
   
-  //Errors
-  M[0][0] = M[1][1] = 15.*cm;//*cm;
+  M[0][0] = M[1][1] = 15. * 15. *cm *cm;
   M[2][2] = EGeo::zero_cov()/2;
-  M[3][3] = M[4][4] = 1.5 *cm;
-  //M[3][3] = M[4][4] = 1;
+  M[3][3] = 8.5 * 8.5 *cm *cm;
+  M[4][4] = 1.5 * 1.5 *cm *cm;
   M[5][5] = pow(V[5],2)*4;
 
 
-  newM[0][0] = newM[1][1] = 15.*cm*cm;
-  newM[2][2] = EGeo::zero_cov()/2;
-  newM[3][3] = newM[4][4] = newM[5][5] = 1.5;
-  newM[6][6] = pow(newV[6],2)*4;
+  V2[0] = 1;
 
-  // Create and fill the state matrix 
-  //EMatrix C(6,6,0); 
-  //C[0][0] = C[1][1] = 1; // square of the position error 
-  //C[2][2] = 0 ; // no error in z since this is the running coordinate 
-  //C[3][3] = C[4][4] = 0.1; // square of the slope error 
-  //C[5][5] = 0.1; // square of 1/p error 
-
-
-  //Sense
-  V2[0] = -1;
-
-  //V2[0] = (muontraj.nodes()[1]->measurement().vector()[2] -muontraj.nodes()[0]->measurement().vector()[2]);
-
-  //cout<<"z pos in patternRec_seed: "<<V[2]<<endl;
-  
-  //Seedstate fit properties
-  seed.set_name(RP::particle_helix);
-  
-  seed.set_name(RP::representation,RP::slopes_curv_z); 
-  //seed.set_name(RP::representation,RP::default_rep); 
-
-  seed.set_hv(RP::sense,HyperVector(V2,M2,RP::z));
-
+  seed.set_name(RP::representation, RP::slopes_curv_z); 
+  // The main HyperVector 
+  seed.set_hv(HyperVector(V,M)); 
+  // The secondary sense HyperVector with sense=1 and no error 
   //seed.set_hv(RP::sense, HyperVector(1)); 
 
-  //seed.set_hv(RP::sense,HyperVector(V2,M2,RP::slopes_curv_z));
-  
-  seed.set_hv(HyperVector(V,M,RP::slopes_curv_z));
-  //seed.set_hv(HyperVector(newV,newM,RP::default_rep));
-  
-  // std::cout<<seed.hv().representation()<<std::endl;
+  seed.set_hv(RP::sense,HyperVector(V2,M2));
 
-  // std::cout<<"Is good here"<<std::endl;
-  //  man().model_svc().model(RP::particle_helix).representation(RP::slopes_curv_z)
-  //     .convert(seed,RP::default_rep);
-  
+
+
   bool ok = perform_kalman_fit( seed, muontraj);
   
   if ( !ok )
@@ -967,6 +929,8 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
     }
 
   int meansign = p/fabs(p);
+
+  p = fabs(p);
 
   //p=MomentumFromCurvature(track,0,p);
 
@@ -1647,6 +1611,8 @@ bool event_classif::reject_high(vector<Trajectory*>& trajs,
 				vector<Trajectory*>& trajs2){
   //***********************************************************************
   
+  _m.message("*******reject_high*******", bhep::VERBOSE);  
+
   bool ok1, ok2 = false;
   double traj_no;
   const dict::Key traj_index = "traj_no";
@@ -1661,7 +1627,7 @@ bool event_classif::reject_high(vector<Trajectory*>& trajs,
     Trajectory& temp_traj = *(*it1);
     traj_no = temp_traj.quality( traj_index );
     
-    temp_traj.sort_nodes(RP::z, -1 );
+    temp_traj.sort_nodes(RP::z, 1 );
     
     ok1 = get_patternRec_seed( temp_seed, temp_traj);//, dummy_hits);
     temp_traj.set_quality( traj_index, traj_no );
@@ -1697,6 +1663,8 @@ bool event_classif::reject_final(vector<Trajectory*>& trajs,
   //***********************************************************************
   //Accept lowest local chi and then any others with few coincidences
   //with this trajectory then choose the longest/lowest error track.
+
+  _m.message("*******reject_final*******", bhep::VERBOSE);  
   
   std::vector<Trajectory*> temp_trajs;
   temp_trajs.push_back( trajs[0] );
@@ -2149,6 +2117,8 @@ bool event_classif::LowMomentumExtraction(vector<cluster*>& hits,
   
   double q = CalculateCharge(muontraj);
 
+  cout<<"For low momentum: "<<p<<" "<<q<<endl;
+
   // Give the momentum a charge.
   p *= q;
 
@@ -2231,9 +2201,9 @@ bool event_classif::LowMomentumMultipleExtraction(vector<cluster*>& hits,
   
   State patternSeed;
 
-  //muontraj.sort_nodes(RP::z, 1 );
+  muontraj.sort_nodes(RP::z, 1 );
 
-  muontraj.sort_nodes(RP::z, -1 );
+  //muontraj.sort_nodes(RP::z, -1 );
   
   ok = get_patternRec_seed( patternSeed, muontraj);//, hits);
 
@@ -2261,9 +2231,9 @@ bool event_classif::LowMomentumMultipleExtraction(vector<cluster*>& hits,
     }
   if(!ok) _m.message("perform_muon_extraction not ok",bhep::DETAILED);
   
-  //muontraj.sort_nodes(RP::z, 1 );
+  muontraj.sort_nodes(RP::z, 1 );
 
-  muontraj.sort_nodes(RP::z, -1 );
+  //muontraj.sort_nodes(RP::z, -1 );
 
 
   if((int)muontraj.size() > 9){ok = muon_extraction( hits, muontraj, hads);} 

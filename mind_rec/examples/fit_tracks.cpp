@@ -61,6 +61,7 @@ int main(int argc, char* argv[]){
   
   // fitter* fit = new fitter(ana_store,bhep::MUTE);
   fitter fit(ana_store,bhep::MUTE);
+  //fitter fit(ana_store,bhep::VERBOSE);
   
   //  MINDplotter* plot = new MINDplotter();
   MINDplotter plot = MINDplotter(ana_store);

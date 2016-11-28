@@ -37,9 +37,9 @@ public:
   double Helix(std::vector<cluster*>& hits);
   
   double LeverArmQuadratic(vector<double>& debug);
-  //double LeverArm(unsigned int i);
-
   vector<double> LeverArm(unsigned int i);
+
+  //double LeverArm(unsigned int i, vector<double>& retVal);
 
   double CalculateChargeMomentum(vector<double>& debug);
 

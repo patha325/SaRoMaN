@@ -316,8 +316,8 @@ std::vector<bhep::hit*> gdml_hit_constructor::FilteringBadHits(const std::vector
 
   for(int counter = 0; counter < hits.size(); counter++)
     {
-      //if(hits[counter]->ddata( "time" ) > 13.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
-	if(hits[counter]->ddata( "EnergyDep" )< 0.1)
+      if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
+	//if(hits[counter]->ddata( "EnergyDep" )< 0.1)
       {
         //cout<<"Removing hit from: "<<hits[inCounter]->mother_particle().name()<<endl;
         continue;

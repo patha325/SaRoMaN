@@ -24,7 +24,7 @@
       <constant name="AlWidth" value="3"/>
       <constant name="Gap0" value="5"/>
       <constant name="Gap1" value="500"/>
-      <constant name="Gap2" value="100"/>
+      <constant name="Gap2" value="500"/>
       <constant name="DetectorLength" value="33 * (FeDepth + 2*AlWidth
 					     + Gap0) + 18*SciDepth +
 					     4*Gap1 + 5*Gap0 + Gap2"/>
@@ -1027,7 +1027,7 @@
 	<physvol name="SF_physi2">
 	  <volumeref ref="SF"/>
 	  <position name="SF_pos2" unit="mm" x="0.0" y="0.0"
-		    z="-((FeDepth + 2*AlWidth + Gap0) +
+		    z="((FeDepth + 2*AlWidth + Gap0) +
 		       4*BarDepth)/2"/>
 	</physvol>
 	<!--

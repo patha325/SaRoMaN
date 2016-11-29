@@ -8,19 +8,19 @@
       <constant name="SciWidth" value="2900"/>
       <constant name="SciHeight" value="2000"/>
       <constant name="SciX1Width" value="2720"/>
-      <constant name="SciX2Width" value="2760"/>
-      <constant name="SciY1Width" value="2880"/>
-      <constant name="SciY2Width" value="2880"/>
-      <constant name="SciX1Height" value="1950"/>
-      <constant name="SciX2Height" value="1950"/>
-      <constant name="SciY1Height" value="1878.72"/>
-      <constant name="SciY2Height" value="1850.01"/>
+      <constant name="SciX2Width" value="2841.0"/>
+      <constant name="SciY1Width" value="2900"/>
+      <constant name="SciY2Width" value="2900"/>
+      <constant name="SciX1Height" value="1972.4"/>
+      <!--<constant name="SciX2Height" value="1972.4"/>-->
+      <constant name="SciY1Height" value="1972.4"/>
+      <constant name="SciY2Height" value="1972.4"/>
       <constant name="BarDepth" value="7.5"/>
       <constant name="SciDepth" value="4*BarDepth"/>
-      <constant name="BarWidthX1" value="210"/>
-      <constant name="BarWidthX2" value="340"/>
-      <constant name="BarWidthY1" value="30"/>
-      <constant name="BarWidthY2" value="39.14"/>
+      <constant name="BarWidthX1" value="210.6"/>
+      <constant name="BarWidthX2" value="350.7"/>
+      <constant name="BarWidthY1" value="31.3"/>
+      <constant name="BarWidthY2" value="41.3"/>
       <constant name="AlWidth" value="3"/>
       <constant name="Gap0" value="5"/>
       <constant name="Gap1" value="500"/>
@@ -154,13 +154,16 @@
       <position name="suboffset"/>
       <rotation name="subrot"/>
     </subtraction>
-    <box lunit="mm" name="SciY2Plane_solid" x="SciY2Width" y="SciY2Height" z="BarDepth"/>
+    <!-- <box lunit="mm" name="SciY2Plane_solid" x="SciY2Width" y="SciY2Height" z="BarDepth"/>-->
     <box lunit="mm" name="BarX1_solid" x="BarWidthX1" y="SciX1Height" z="BarDepth"/>
-    <box lunit="mm" name="BarX2_solid" x="BarWidthX2" y="SciX1Height" z="BarDepth"/>
-    <box lunit="mm" name="BarXPair_solid" x="BarWidthX1+BarWidthX2" y="SciHeight" z="BarDepth"/>
+    <!-- <box lunit="mm" name="BarX2_solid" x="BarWidthX2" y="SciX1Height" z="BarDepth"/>-->
+    <!-- <box lunit="mm" name="BarXPair_solid"
+	 x="BarWidthX1+BarWidthX2" y="SciHeight" z="BarDepth"/> -->
     <box lunit="mm" name="BarY1_solid" x="SciY1Width" y="BarWidthY1" z="BarDepth"/>
-    <box lunit="mm" name="BarY2_solid" x="SciY2Width" y="BarWidthY2" z="BarDepth"/>
-    <box lunit="mm" name="BarYPair_solid" x="SciWidth" y="BarWidthY1+BarWidthY2" z="BarDepth"/>
+    <!-- <box lunit="mm" name="BarY2_solid" x="SciY2Width"
+	 y="BarWidthY2" z="BarDepth"/> -->
+    <!-- <box lunit="mm" name="BarYPair_solid" x="SciWidth"
+	 y="BarWidthY1+BarWidthY2" z="BarDepth"/> -->
     <box lunit="mm" name="AlPlane_solid" x="FeWidth" y="FeHeight" z="AlWidth"/>
     <box lunit="mm" name="SFS_solid" x="FeWidth" y="FeHeight" z="2*SciDepth + FeDepth + 2*AlWidth + 2*Gap0"/>
     <box lunit="mm" name="SFFS_solid" x="FeWidth" y="FeHeight" z="2*SciDepth + 2*FeDepth + 4*AlWidth + 3*Gap0"/>
@@ -1028,7 +1031,7 @@
 	<physvol name="SF_physi2">
 	  <volumeref ref="SF"/>
 	  <position name="SF_pos2" unit="mm" x="0.0" y="0.0"
-		    z="-((FeDepth + 2*AlWidth + Gap0) +
+		    z="((FeDepth + 2*AlWidth + Gap0) +
 		       4*BarDepth)/2"/>
 	</physvol>
 	<!--

@@ -151,6 +151,7 @@ bool event_classif::Execute(const vector<cluster*>& hits,
       output_liklihood_info( hits2 );
     /// CA and PR both
     ok = chargeCurrent_analysis(hits2, *traj, hads);
+    //cout<<"vtrajs.size()="<<vtrajs.size()<<endl;
     //cout<<"ChargeCurrent ok: "<<ok<<endl;
     // ok = muon_extraction_through_PatterRec(hits2, *traj, hads);
     _m.message("nmeas in traj=",traj->size(),"  and hadrons left=",hads.size()," failType=",_failType, bhep::VERBOSE);
@@ -158,6 +159,7 @@ bool event_classif::Execute(const vector<cluster*>& hits,
     //if(_failType != 4 && _failType != 5 && traj->nmeas()>=5 )  {
     if(ok) 
       {
+	//cout<<"In ok"<<endl;
 	///for liklhood
 	if (_outLike)
 	  traj_like( hits2 );
@@ -175,6 +177,7 @@ bool event_classif::Execute(const vector<cluster*>& hits,
 	else break;
 	///clear hadron container
 	hads.clear();
+	//break;
       }
     else {
       hads=hits2;
@@ -183,6 +186,7 @@ bool event_classif::Execute(const vector<cluster*>& hits,
       delete traj;
       break;
     }
+    //cout<<"after if vtrajs.size()="<<vtrajs.size()<<endl;
   }
   _m.message("eventclass::PR, size = ", _vPR_seed.size()," vtraj size =",vtrajs.size(), bhep::VERBOSE);
   //sort the trajectories (not working because length =0 ??)
@@ -548,7 +552,7 @@ bool event_classif::chargeCurrent_analysis(vector<cluster*>& hits,
   //cout<<"inside muon_extraction_through_PatterRec"<<endl;
   
   muontraj.reset();
-  bool ok = true;
+  bool ok = false;
   
   _recChi.push_back(EVector(3,0));
   _recChi.back()[1] = 100000; //SetLarge dummy value for minChiHadron bit.
@@ -629,10 +633,15 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
       else ok = false;
       
     } 
+	
   else 
     {
+     
       if ( (int)muontraj.size() < _min_seed_hits ) {
+	//Removed, caused issues? killed some tracks when failed
+	
 	_intType = 5;
+
 	if (!_isTASD)
 	  {
 	    //cout<<"before cell_auto "<<muontraj.size()<<endl;
@@ -648,6 +657,8 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
 	    
 	  }
 	else ok = false;
+	
+	ok = false;
 	if ( !ok ) _failType = 4;
 	
 	if(!ok)  _m.message(" invoke_cell_auto not ok", bhep::VERBOSE);
@@ -658,8 +669,10 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
 
 	if((int)muontraj.size() > 9)
 	  ok = muon_extraction( hits, muontraj, hads);
-	else
+	else if((int)muontraj.size() > _min_seed_hits) 
 	  ok=LowMomentumMultipleExtraction( hits, muontraj, hads);
+	//else
+	  //ok = false;
 	//ok= false; 
 	// Combine muon_extraction with lowmomentum to handle mult. occ.
 	
@@ -911,7 +924,7 @@ double event_classif::fit_parabola(EVector& vec, Trajectory& track) {
   _angle2.clear();
   vector<double> debug;
 
-  p = RangeMomentum(pathlength,firstNodeZ);
+  //p = RangeMomentum(pathlength,firstNodeZ);
 
   //p=fabs(MomentumFromCurvature(track,0,p));//;-p);
 
@@ -1979,6 +1992,8 @@ void event_classif::reset_traj_info() {
   _vertGuessZ = 0;
   _failType = 0;
 
+  _lowPt = 0;
+
   _nRadPlanes=0;
   _planeEnd.reset();
 
@@ -2113,7 +2128,13 @@ bool event_classif::LowMomentumExtraction(vector<cluster*>& hits,
   double firstNodeZ = muontraj.nodes()[nMeas-1]->measurement().position()[2];
   double pathlength=muontraj.nodes()[0]->measurement().position()[2] - firstNodeZ;
 
-  double p = RangeMomentum(pathlength,firstNodeZ);
+
+  double p;
+  vector<double> debug;
+
+  //double p = RangeMomentum(pathlength,firstNodeZ);
+
+  p = fabs(MomentumFromCurvature(muontraj,0,p,debug));
   
   double q = CalculateCharge(muontraj);
 
@@ -2186,7 +2207,7 @@ bool event_classif::LowMomentumMultipleExtraction(vector<cluster*>& hits,
   
   _m.message("++++ event_classif::muon_extraction +++++++++++++", bhep::VERBOSE);
  
-  bool ok;
+  bool ok = false;
 
   ///if vertex is otherthan 0th hit position, then those hits will be candidate hadron 
   if (_vertGuess != 0)

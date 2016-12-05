@@ -301,6 +301,8 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	
 	/// execute event classification
 	get_classifier().Execute( _meas, _trajs, _hadmeas);
+
+	//cout<<"returned from event_classif.cpp _trajs.size ="<<_trajs.size()<<endl;
 	/*
 	  for(int i=0;i<_trajs.size();i++)
 	  {
@@ -1479,7 +1481,7 @@ void fitter::ComputeMomFromRange(const Trajectory& traj, int nplanes, int firsth
   double meansign = 1;
 
   //meansign = CalculateCharge(traj);
-  p = RangeMomentum(pathlength,traj.node(firsthit).measurement().position()[2]);
+  //p = RangeMomentum(pathlength,traj.node(firsthit).measurement().position()[2]);
   //p=fabs(MomentumFromCurvature(traj,0,p));//-p);
 
 

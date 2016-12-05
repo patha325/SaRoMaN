@@ -92,7 +92,7 @@ JOB ref_phys_list S QGSP_BERT_EMV
 # GEOMETRY TASD I 0
 
 ### Air gaps between layers (in mm) must be half of the airgap!
-GEOMETRY gap1 D %(MIND_thickness_air_mm)s   
+GEOMETRY gap1 D 0   
 GEOMETRY gap2 D 0
 #GEOMETRY gap3 D 2.5
 #GEOMETRY gap4 D 2.5
@@ -142,7 +142,7 @@ GENERATION vertex_location S %(vert_local)s
 GENERATION fvert DV 3
 0.
 0.
--2000
+-4000
  
 GENERATION bspot DV 2
 100.

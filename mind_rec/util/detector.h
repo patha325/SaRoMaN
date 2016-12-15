@@ -41,6 +41,8 @@ public:
 
   //double LeverArm(unsigned int i, vector<double>& retVal);
 
+  double RangeMomentum(SubDetector* subDet);
+
   double CalculateChargeMomentum(vector<double>& debug);
 
   int GetNPlanes();

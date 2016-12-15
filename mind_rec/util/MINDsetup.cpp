@@ -431,7 +431,9 @@ void MINDsetup::addProperties(){
 	  //double length = numScint * AIR_z +numScint * SCINT_z + numFe * IRON_z;
 	  //double length = it_int->second[2]; // Simply taken from the solid reference.
 
-	  double de_dx = (numScint * SCINT_z * de_dx_scint + numFe * IRON_z * de_dx_fe)/length;
+	  double de_dx = (numScint * SCINT_z * de_dx_scint +
+			  numFe * IRON_z * de_dx_fe +
+			  numFe * 2 * Al_z * de_dx_brace)/length;
 
 	  //double de_dx = (numScint * SCINT_z * de_dx_scint + numFe * IRON_z * de_dx_fe)/
 	  //(numScint * SCINT_z + numFe * IRON_z);
@@ -669,6 +671,7 @@ void MINDsetup::readParam(){
 
     de_dx_scint = _pstore.fetch_dstore("de_dx_scint") * MeV/mm;
     de_dx_fe = _pstore.fetch_dstore("de_dx_fe") * MeV/mm;
+    de_dx_brace = _pstore.fetch_dstore("de_dx_brace") * MeV/mm;
 
     _msetup.message("Radiation length:",X0Fe/cm,"cm",c);
 

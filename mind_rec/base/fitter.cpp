@@ -757,8 +757,8 @@ bool fitter::ReseedTrajectory(const int trajno){
 
   State backSeed = _vPR_seed[_pr_count];
   
-  //cout<<"Printing backSeed"<<endl;
-  //cout<<backSeed<<endl;
+  cout<<"Printing backSeed"<<endl;
+  cout<<backSeed<<endl;
 
   /*
   //Want to re-seed with diagonal matrix.
@@ -766,11 +766,13 @@ bool fitter::ReseedTrajectory(const int trajno){
   HV1.keepDiagonalMatrix();
   backSeed.set_hv( HV1 );
   */
-  //cout<<"z pos in fitter_reseed: "<<backSeed.vector()[2]<<endl; 
+  cout<<"z pos in fitter_reseed: "<<backSeed.vector()[2]<<endl; 
     
   ///sort nodes in reverse order
   _traj2.sort_nodes(RP::z, -1);
   //_traj2.sort_nodes(RP::z, 1);
+
+  cout<<"z pos in track:"<< _traj2.nodes()[0]->measurement().vector()[2]<<endl;
 
   //ComputeSeed(_traj2,backSeed);
 

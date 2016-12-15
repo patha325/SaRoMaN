@@ -149,6 +149,7 @@ protected:
   //for de/dx map
   double de_dx_scint;
   double de_dx_fe;
+  double de_dx_brace;
   //double de_dx_min;
   vector<DeDxMap*> de_dx_map_vec;
   //DeDxMap* _de_dx_map;

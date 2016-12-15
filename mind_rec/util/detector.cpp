@@ -98,105 +98,6 @@ int Detector::GetNPlanes() {
 
 
 //*************************************************************
-//double Detector::CalculateCharge() {
-//*************************************************************
-
-/*
-Check if first planes, then leaver-arm.
-Else in main detector or end.
-If in main detector need to find subdetector and next plane in detector.
-
-Sort subdetectors by z position and planes. Have function to find next subdetector and next plane.
-*/
-/*
-  std::vector<cluster*> hits;
-
-
-  sort( _subDetectorVec.begin(), _subDetectorVec.end(), sortDetectorsByZ() );
-
-  
-
-  double retVal = 0;
-  bool checkNext = false;
-  unsigned int detectorNum = 0;
-
-  for(unsigned int i=0;i<_subDetectorVec.size();i++)
-    {
-      cout<<"Detector="<<_subDetectorVec[i]->GetName()<<endl;
-    }
-  
-
-  //for(unsigned int i=0;i<_subDetectorVec.size();i++)
-  for(unsigned int i=3;i<_subDetectorVec.size()-2;i++)
-    {
-      sort( _subDetectorVec[i]->GetPlanes()->begin(), _subDetectorVec[i]->GetPlanes()->end(), sortPlanesByZ() );
-
-      //if(_subDetectorVec[i]->GetNHits()<3) continue;
-      
-      //if(!checkNext && _subDetectorVec[i]->GetNPlanes()<3) continue; 
-
-      if(!checkNext && _subDetectorVec[i]->GetNPlanes()<2) continue; 
-      
-
-      //detectorNum = i -1;
-      
-      //cout<<"Detector="<<_subDetectorVec[i]->GetName()<<endl;
-      //cout<<"Detector="<<_subDetectorVec[i]->GetwSc()<<endl;
-      //cout<<"Detector="<<_subDetectorVec[i]->GetwFe()<<endl;
-      //cout<<"Detector="<<_subDetectorVec[i]->GetX0Eff()<<endl;
-      //cout<<"Detector="<<_subDetectorVec[i]->Getde_dx()<<endl;
-      //cout<<"Detector="<<_subDetectorVec[i]->GetFieldScale()<<endl;
-      //cout<<"Detector="<<_subDetectorVec[i]->GetLength()<<endl;
-      //cout<<_subDetectorVec[i]->GetNHits()<<endl;
-      
-      for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
-	{
-	  for(unsigned int k=0;k<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size();k++)
-	    {
-	      cout<<"Z="<<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]->position()[2]<<" Y="<<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]->position()[1]<<endl;
-	      hits.push_back(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
-	    }
-
-	  //if(checkNext) break;
-	}
-
-      for(unsigned int j=0;j<_subDetectorVec[i+1]->GetPlanes()->size();j++)
-	{
-	  //for(unsigned int k=0;k<_subDetectorVec[i+1]->GetPlanes()->at(j)->GetHits().size();k++)
-	  //{
-	  unsigned int k=0;
-	  cout<<"Z="<<_subDetectorVec[i+1]->GetPlanes()->at(j)->GetHits()[k]->position()[2]<<" Y="<<_subDetectorVec[i+1]->GetPlanes()->at(j)->GetHits()[k]->position()[1]<<endl;
-	  hits.push_back(_subDetectorVec[i+1]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
-	      //}
-	  
-	  //if(checkNext) break;
-	}
-
-      //checkNext = true;
-      //hits.push_back(_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits()[0]);
-      //cout<<"Z="<<_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits()[0]->position()[2]<<" Y="<<_subDetectorVec[i+1]->GetPlanes()->at(0)->GetHits()[0]->position()[1]<<endl;
-	      
-      //cout<<hits.size()<<endl;
- 
-      cout<<"Nhits="<<hits.size()<<endl;
-      retVal = ChargeOne(hits,_subDetectorVec[i]);
-      cout<<retVal <<endl;
-      hits.clear();
-      //checkNext = false;
-      //break;
-
-    }
-  //retVal = ChargeOne(hits,_subDetectorVec[detectorNum]);
-  //cout<<retVal <<endl;
-  //hits.clear();
-
-
-  return retVal;
-
-}
-*/
-
-//*************************************************************
 double Detector::CalculateChargeMomentum(vector<double>& debug) {
 //*************************************************************
 
@@ -231,7 +132,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 					   _subDetectorVec[i-1]->GetPrevde_dx());
 	}
     }
-  /*
+  
     for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
     
@@ -240,14 +141,31 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
     cout<<_subDetectorVec[i]->GetLength()<<endl;
     cout<<_subDetectorVec[i]->GetPrevde_dx()<<endl;
     }
-  */
+  
   std::vector<cluster*> stackHits;
+
+  std::vector<cluster*> hits;
+
   int nPlanes = 0;
 
   int leverArmFirst = 0;
 
   for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
+      for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
+	{
+	  if(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size()) nPlanes++;
+	  for(unsigned int k=0;k<_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size();k++)
+	    {
+	      hits.push_back(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits()[k]); //Fill planes with mult occupancy...
+	    }
+	}
+    }
+
+
+  for(unsigned int i=0;i<_subDetectorVec.size();i++)
+    {
+
       cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
       // Count number of hits in the stack to see if we can use helix.
       if(_subDetectorVec[i]->GetName() == "SFFFS0" ||
@@ -329,20 +247,6 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 
       //return helixVal;
     }
-  /*else if(stackHits.size()>3)
-    {
-      debug.push_back(0);
-      retVal = Quadratic(stackHits)[0];
-      debug.push_back(retVal);
-      temp = LeverArm(1);
-      debug.push_back(temp[0]);
-      debug.push_back(temp[1]);
-      temp.clear();
-      temp = LeverArm(2);
-      debug.push_back(temp[0]);
-      debug.push_back(temp[1]);
-      cout<<"Quadratic used"<<endl;
-      }*/
   else
     {
       double posCharge = 1;
@@ -356,9 +260,10 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       temp.clear();
 
       temp = LeverArm(leverArmFirst+2);
+
       retVal = temp[0];
 
-      if(retVal)
+      if(fabs(retVal)>1)
 	{
 	  posCharge *= temp[2];
 	  negCharge *= temp[3];
@@ -376,10 +281,25 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       debug.push_back(temp[0]);
       debug.push_back(temp[1]);
 
-      if(fabs(retVal) <10 ) retVal = temp[0];
-      cout<<"Lever arm used"<<endl;
+      if(fabs(retVal) <10 || fabs(retVal) >1000 || isnan(retVal) ) retVal = temp[0];
 
-      if(retVal && temp[0])
+      cout<<"hits.size()="<<hits.size()<<endl;
+
+      if((fabs(retVal) <10 || fabs(retVal) >1000 || isnan(retVal) ) && hits.size() > 3)
+	{
+	  retVal = Quadratic(hits)[0];
+	  cout<<"Lever arm does not work"<<endl;
+	  cout<<"Quadratic used"<<endl;
+	}
+      else
+	{
+	  cout<<"Lever arm used"<<endl;
+	}
+
+
+
+
+      if(fabs(retVal)>1 && temp[0])
 	{
 	  posCharge *= temp[2];
 	  negCharge *= temp[3];
@@ -400,11 +320,21 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
   
   cout<<"in detector.cpp="<<retVal<<endl;
 
-  if(fabs(retVal)<10 || fabs(retVal) >8000 || isnan(retVal)) retVal = 1000;
+  if(fabs(retVal)<10 || fabs(retVal) >8000 || isnan(retVal)) retVal = 1;
   
   //retVal = 1000;
 
   cout<<"in detector.cpp="<<retVal<<endl;
+
+  if(hits.size()>0)
+    {
+      cout<<"track length="<<fabs(fabs(hits[hits.size()-1]->vector()[2])-fabs(hits[0]->vector()[2]))<<endl;
+      cout<<"de_dx="<<GetSubDetector(hits[hits.size()-1]->vector()[2])->GetPrevde_dx()<<endl;
+    }
+  else
+    {
+      cout<<"size0_in_detector"<<endl;
+    }
 
   return retVal;
 }
@@ -724,13 +654,28 @@ vector<double> Detector::Quadratic(std::vector<cluster*>& hits) {
   // Negative Particle -> Negative parameters -> Qtilde -
 
 
-  double charge = -1.0;
+  double charge = 1.0;
 
-  if(y[nMeas-1]>y[0]) charge = 1.0;
+  if(y[nMeas-1]>y[0]) charge = -1.0;
  
 
-  double qtilde = charge * 1000* 0.3*prevB[0]*pow(1+pow(fun->GetParameter(1),2),3./2.)/
-    (2*fun->GetParameter(2));
+  //double qtilde = charge * 1000* 0.3*prevB[0]*pow(1+pow(fun->GetParameter(1),2),3./2.)/
+  //(2*fun->GetParameter(2));
+
+  SubDetector* sub = GetSubDetector(hits[nMeas-1]->vector()[2]);  
+
+  double fieldVal = sub->GetBField()->vector(sub->GetPlanes()->at(0)->GetHits()[0]->position())[0];
+
+  charge*=fieldVal/fabs(fieldVal);
+
+
+  //double p = (sub->GetPrevde_dx() + 
+  //(sub->GetMinPlane()->GetHits()[0]->position()[2] - sub->GetZMin())*sub->Getde_dx());
+
+  double p = RangeMomentum(sub);
+  
+  double qtilde = charge * p;
+
 
   //qtilde = fabs(qtilde);
 
@@ -748,12 +693,13 @@ vector<double> Detector::Quadratic(std::vector<cluster*>& hits) {
 
   // sigma^2 = (dp/da)^2 sigma_a^2 + (dp/db)^2 sigma_b^2
 
+  /*
   double qerr = (qtilde / fun->GetParameter(2))* (qtilde / fun->GetParameter(2)) * fun->GetParError(2) * fun->GetParError(2) +
     qtilde * 3* fun->GetParameter(1)/ (1+fun->GetParameter(1)*fun->GetParameter(1)) *  fun->GetParError(1) *
     qtilde * 3* fun->GetParameter(1)/ (1+fun->GetParameter(1)*fun->GetParameter(1)) * fun->GetParError(1);
-    
+  */  
   
-  qerr =sqrt(qerr);
+  //qerr =sqrt(qerr);
   
   //cout<<"errorCalc="<<qerr<<endl;
   
@@ -767,12 +713,12 @@ vector<double> Detector::Quadratic(std::vector<cluster*>& hits) {
 
   //if(qtilde==0 || fabs(qtilde) >8000 || isnan(qtilde)) qtilde = 400;
 
-  if(isnan(qtilde)) qtilde = 0;
+  //if(isnan(qtilde)) qtilde = 0;
 
-  if(qtilde != 0) qtilde = qtilde/fabs(qtilde) * (fabs(qtilde) + GetSubDetector(hits[0]->vector()[2])->Getde_dx());
+  //if(qtilde != 0) qtilde = qtilde/fabs(qtilde) * (fabs(qtilde) + GetSubDetector(hits[0]->vector()[2])->Getde_dx());
 
   retVec.push_back(qtilde);
-  retVec.push_back(qerr);
+  //retVec.push_back(qerr);
 
   return retVec;
 
@@ -1429,12 +1375,15 @@ vector<double> Detector::LeverArm(unsigned int i){
 
   if(delta1)
     {
-      p= fieldVal/fabs(fieldVal) *delta1/fabs(delta1) * (_subDetectorVec[i+1]->GetPrevde_dx() + 
-				(_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i+1]->GetZMin())*_subDetectorVec[i+1]->Getde_dx());
-    }
+      //p= fieldVal/fabs(fieldVal) *delta1/fabs(delta1) * (_subDetectorVec[i+1]->GetPrevde_dx() + 
+      //			(_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i+1]->GetZMin())*_subDetectorVec[i+1]->Getde_dx());
+    
+      p= fieldVal/fabs(fieldVal) *delta1/fabs(delta1) * RangeMomentum(_subDetectorVec[i+1]);
+}
   else
     {
-      p = badGuess * fieldVal/fabs(fieldVal);
+      //p = badGuess * fieldVal/fabs(fieldVal);
+      p=0;
     }
 
   
@@ -1486,7 +1435,9 @@ vector<double> Detector::LeverArm(unsigned int i){
   //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 400;
   if(isnan(retVal)) retVal = 0;
 
-  if(retVal==0) retVal = badGuess;
+  //if(retVal==0) retVal = badGuess;
+
+  //if(retVal==0) retVal = badGuess;
 
   //if(retVal != 0) retVal = retVal/fabs(retVal) * (fabs(retVal) + _subDetectorVec[i]->Getde_dx());
 
@@ -1496,9 +1447,29 @@ vector<double> Detector::LeverArm(unsigned int i){
   retValVec.push_back(negChargeProb);
 
 
+
   cout<<"lever_arm function="<<retVal<<endl;
 
   return retValVec;
 }
 
+//*****************************************************************************
+double Detector::RangeMomentum(SubDetector* subDet){
+//*****************************************************************************
+// Calculates the momentum through a range calculation.
+// Requires the subdetector object for the last (highest Z) hit.
+// Basically using a continuous slowing-down approximation (CSDA)
+
+
+  double ke = subDet->GetPrevde_dx() + 
+    (fabs(subDet->GetMinPlane()->GetHits()[0]->position()[2]) - 
+     fabs(subDet->GetZMin()))*subDet->Getde_dx(); // Kinetic energy in MeV.
+
+  double mass = 105.658; //mev/c^2 // taking muon mass
+
+  double p = 1.5 * sqrt(ke*(ke+2.0*mass));
+  
+    
+  return p;
+}
 

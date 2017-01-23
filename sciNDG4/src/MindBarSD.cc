@@ -80,6 +80,7 @@ G4bool MindBarSD::ProcessHits(G4Step* step, G4TouchableHistory*)
   G4ThreeVector pos = step->GetPostStepPoint()->GetPosition();
   G4ThreeVector copyTrans = theTouchable->GetTranslation();
   G4String volName = theTouchable->GetVolume()->GetName();
+  G4String volNameMother = theTouchable->GetVolume(1)->GetName();
   G4int copyNo = theTouchable->GetCopyNumber();
     
   
@@ -103,8 +104,21 @@ G4bool MindBarSD::ProcessHits(G4Step* step, G4TouchableHistory*)
       hit->SetBarOrientation(0);
   }
   hit->SetBarNumber(copyNo);
+
+  if(volNameMother.contains("TASD_")){
+    // std::cout << volName << std::endl;
+    hit->SetTASD(1);
+  } else {
+    hit->SetTASD(0);
+  }
+
+
   /*
   std::cout << volName;
+  std::cout << theTouchable->GetVolume(1)->GetName(); //TASD_
+  std::cout << theTouchable->GetVolume(2)->GetName(); //AiDA_
+  std::cout << theTouchable->GetVolume(3)->GetName();
+  //std::cout << theTouchable->GetVolume(4)->GetName();
   std::cout<<" hit position = ("<<pos.x()
   	   <<","<<pos.y()<<","<<pos.z()<<"), copyNo = "<<copyNo;
   std::cout<<" Copy Translation = ("<<copyTrans.x()

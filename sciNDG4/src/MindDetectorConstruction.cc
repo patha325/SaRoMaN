@@ -125,6 +125,7 @@ G4VPhysicalVolume* MindDetectorConstruction::Construct()
     _detectormass = world_physi->GetLogicalVolume()->GetMass();
     SetVolumeInformation(world_physi, detectorName);
   }
+  G4int volselect = 0;
 
   //myfile.open ("/data/neutrino05/phallsjo/copy/SaRoMan/example.txt");
   for ( int outerI = 0; outerI < world_physi->GetLogicalVolume()->GetNoDaughters(); outerI++ ) {
@@ -137,14 +138,40 @@ G4VPhysicalVolume* MindDetectorConstruction::Construct()
       G4LogicalVolume* myvol = daughter->GetLogicalVolume();
       G4Box* solidBox = (G4Box*) myvol->GetSolid();
       
-      _myfile<<myvol->GetName()<<" "
-	//<<myvol->GetMass()/solidBox->GetCubicVolume()<<" "
-	     <<daughter->GetFrameTranslation()[0]<<" "
-	     <<daughter->GetFrameTranslation()[1]<<" "
-	     <<daughter->GetFrameTranslation()[2]<<" "
-	     <<solidBox->GetXHalfLength()*2.0<<" "
-	     <<solidBox->GetYHalfLength()*2.0<<" "
-	     <<solidBox->GetZHalfLength()*2.0<<endl;
+      if(myvol->GetName() == "TASD")
+	{// TASD in ND
+	_myfile<<myvol->GetName()<<" "
+	  //<<myvol->GetMass()/solidBox->GetCubicVolume()<<" "
+	       <<daughter->GetFrameTranslation()[0]<<" "
+	       <<daughter->GetFrameTranslation()[1]<<" "
+	       <<regionoffset[myvol->GetName()][volselect][2]<<" "
+	       <<solidBox->GetXHalfLength()*2.0<<" "
+	       <<solidBox->GetYHalfLength()*2.0<<" "
+	       <<solidBox->GetZHalfLength()*2.0<<endl;
+	volselect++;
+	}
+      else
+	{
+	  _myfile<<myvol->GetName()<<" "
+	    //<<myvol->GetMass()/solidBox->GetCubicVolume()<<" "
+		 <<daughter->GetFrameTranslation()[0]<<" "
+		 <<daughter->GetFrameTranslation()[1]<<" "
+	    //<<regionoffset[myvol->GetName()][0][2]<<" "
+	    //<<daughter->GetFrameTranslation()[2]<<" "
+		 <<daughter->GetFrameTranslation()[2]+regionoffset["Detector"][0][2]<<" "
+	    //<<daughter->GetFrameTranslation()[2]<<" "
+	    //<<regionoffset["Detector"][0][2]<< " "
+		 <<solidBox->GetXHalfLength()*2.0<<" "
+		 <<solidBox->GetYHalfLength()*2.0<<" "
+		 <<solidBox->GetZHalfLength()*2.0<<endl;
+	}
+      
+      
+      
+      //<<" "
+      //     <<myvol->GetMaterial()->GetRadlen()<<" "
+      //     <<myvol->GetMaterial()->GetName()<<" "
+      //     <<myvol->GetMaterial()->GetIonisation()->GetMeanExcitationEnergy()<<endl;
     }
   }
   
@@ -159,6 +186,10 @@ void MindDetectorConstruction::SetVolumeInformation(G4VPhysicalVolume* pbase,
   G4int nDaughters = base->GetNoDaughters();
  
   for ( int i = 0; i < nDaughters; i++ ) {
+    //cout<<"DetectorName="<<detectorName<<endl;
+    //cout<<"pbase->GetFrameTranslation()"<<pbase->GetFrameTranslation()<<endl;
+
+
     G4VPhysicalVolume* daughter = base->GetDaughter(i);
     G4LogicalVolume* myvol = daughter->GetLogicalVolume();
     G4String volumename = detectorName;
@@ -166,6 +197,8 @@ void MindDetectorConstruction::SetVolumeInformation(G4VPhysicalVolume* pbase,
     volumename += "/";
     // first check if there are auxiliary objects
     std::cout<<volumename.c_str()<<std::endl;
+    //cout<<myvol->GetName().contains("TASD")<<endl;
+    //cout<<myvol->GetName().contains("Detector")<<endl;
     // If this name corresponds to one of the three regions add them to the map.
     if (myvol->GetName().contains("TASD")){
       regions["TASD"].push_back(daughter);
@@ -179,7 +212,15 @@ void MindDetectorConstruction::SetVolumeInformation(G4VPhysicalVolume* pbase,
       regions["PASSIVE"].push_back(daughter);
       regionmass["PASSIVE"] += myvol->GetMass();
       regionoffset["PASSIVE"].push_back(pbase->GetFrameTranslation());
+      //} else if (myvol->GetName().contains("Detector")){
+      //regionoffset["Detector"].push_back(pbase->GetFrameTranslation());
+      //cout<<"Here="<<pbase->GetFrameTranslation()<<endl;
     } //Ignore otherwise
+  
+    //For ND.
+    if(detectorName == "MIND/Detector/") regionoffset["Detector"].push_back(pbase->GetFrameTranslation());
+
+
     
     const G4GDMLAuxListType auxlist = 
       _gdml.GetVolumeAuxiliaryInformation(myvol);
@@ -307,19 +348,24 @@ void MindDetectorConstruction::SetMagneticField(G4LogicalVolume& vol) {
 G4ThreeVector MindDetectorConstruction::GetVertex(G4String region_name){
   
   G4int nvols = regions[region_name].size();
+
+  std::cout<<"region_name="<<region_name<<endl;
   
   G4Box* solidBox;
   G4ThreeVector offset;
   if ( nvols > 1 ){
     G4int volselect = int(floor(G4UniformRand() * double(nvols)));
     // Get the solid definition
+    std::cout<<"volselect="<<volselect<<endl;
     std::cout<<"Vertex in volume "<<regions[region_name][volselect]->GetName()<<std::endl;
     solidBox = (G4Box*) regions[region_name][volselect]->GetLogicalVolume()->GetSolid();
+    //offset = regionoffset[region_name][volselect];
     offset = regionoffset[region_name][volselect];
     std::cout<<"Detector offset at ("<<offset[0]<<", "<<offset[1]<<", "<<offset[2]<<")"<<std::endl;
   } else if (nvols == 1){
     std::cout<<regions[region_name][0]->GetName()<<std::endl;
     solidBox = (G4Box*) regions[region_name][0]->GetLogicalVolume()->GetSolid();
+    //offset = regionoffset[region_name][0];
     offset = regionoffset[region_name][0];
     std::cout<<"Detector offset at ("<<offset[0]<<", "<<offset[1]<<", "<<offset[2]<<")"<<std::endl;
   } else {

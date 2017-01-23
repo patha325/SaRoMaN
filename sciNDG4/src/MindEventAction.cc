@@ -140,6 +140,9 @@ void MindEventAction::ProcessHits(G4HCofThisEvent* HCE)
     G4int barorientation = (*THC)[i]->GetBarOrientation();
     bhit->add_property("IsYBar", barorientation);
 
+    G4int tasd = (*THC)[i]->GetTASD();
+    bhit->add_property("IsTASD", tasd);
+
     G4int barcopynumber = (*THC)[i]->GetBarNumber();
     bhit->add_property("barNumber", barcopynumber);
 

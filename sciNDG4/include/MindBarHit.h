@@ -57,6 +57,9 @@ public:
   G4int GetBarOrientation() { return _isYbar; }
   void SetBarOrientation(G4int i) { _isYbar = i; }
 
+  G4int GetTASD() { return _isTASD; }
+  void SetTASD(G4int i) { _isTASD = i; }
+
   G4int GetBarNumber() { return _barNumber; } 
   void SetBarNumber(G4int i) { _barNumber = i; }
 private:
@@ -67,6 +70,7 @@ private:
   G4double _time;
   G4String _module;
   G4int _isYbar;
+  G4int _isTASD;
   G4int _barNumber;
 };
 

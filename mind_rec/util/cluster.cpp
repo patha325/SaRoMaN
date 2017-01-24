@@ -29,6 +29,8 @@ void cluster::add_hit(bhep::hit* dep)
 
   _mother_particle = dep->vsdata("mother_particle");
 
+  _IsTASD = dep->idata( "IsTASD" );
+
 
   set_hv("energy", HyperVector(_eng,0));
   //testbeam set_hv("MuonProp", HyperVector(_muProp/_nhit,0));

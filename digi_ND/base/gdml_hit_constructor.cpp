@@ -79,41 +79,64 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   //copy hits so they can be sorted in z.
   std::vector<bhep::hit*> sortedHits = hits;
   sort( sortedHits.begin(), sortedHits.end(), forwardSortZ() );
-  /*
-  cout<<"_testBeam"<<_testBeam<<endl;
   
-  cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
+  //cout<<"_testBeam"<<_testBeam<<endl;
+  
+  //cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
   
   for(int i=0;i<sortedHits.size();i++)
     {
-      cout<<"time\tenergy\tT\tZ\tY"<<endl;
+      cout<<"time\tenergy\tT\tZ\tTASD\tY\tMother"<<endl;
       cout<<sortedHits[i]->ddata("time")<<"\t"
 	  <<sortedHits[i]->ddata("EnergyDep")<<"\t"
 	  <<sortedHits[i]->ddata("barPosT")<<"\t"
 	  <<sortedHits[i]->ddata("barPosZ")<<"\t"
-	  <<sortedHits[i]->idata("IsYBar")<<endl;
+	  <<sortedHits[i]->idata("IsTASD")<<"\t"
+	  <<sortedHits[i]->idata("IsYBar")<<"\t"
+	  <<sortedHits[i]->mother_particle().name()<<endl;
       //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
       //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
     }
-    
-  cout<<"starting ClusteringAida"<<endl;
-  */
+  
+  //cout<<"starting ClusteringAida"<<endl;
+  
 
+  cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
+
+  std::vector<bhep::hit*> mindHits;
+
+  std::vector<bhep::hit*> TASDHits;
+  
+  for(int i=0;i<sortedHits.size();i++)
+    {
+      if(sortedHits[i]->idata("IsTASD"))
+	{
+	  TASDHits.push_back(sortedHits[i]);
+	}
+      else
+	{
+	  mindHits.push_back(sortedHits[i]);
+	}
+    }
+  
+  cout<<"TASDHits.size()="<<TASDHits.size()<<endl;
+  cout<<"mindHits.size()="<<mindHits.size()<<endl;
+
+  if(TASDHits.size()) ClusteringAida(TASDHits);
+  if(mindHits.size()) Clustering2(mindHits);
+
+
+  /*
   if(_testBeam)
     {
       ClusteringAida(sortedHits);
     }
   else
     {
-
-	Clustering2(sortedHits);
-	/*
-      if(_testBeam)
-	Clustering2(sortedHits);
-      else
-	Clustering(sortedHits);
-	*/
+      
+      Clustering2(sortedHits);
     }
+  */
 
   //ClusteringAida(sortedHits);
 
@@ -518,19 +541,31 @@ void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int 
 
   std::vector<bhep::hit*> filteredHits;
 
+  double lastZ = -9999;
+
+  int numUniqueHits = 0;
+
   double z = 0;
   
   for(int inCounter = 0; inCounter < hits.size(); inCounter++)
     {
       filteredHits.push_back(hits[inCounter]);
 
-      z+=hits[inCounter]->ddata( "barPosZ" );
+      if(hits[inCounter]->ddata( "barPosZ" ) != lastZ)
+	{
+	  z+=hits[inCounter]->ddata( "barPosZ" );
+	  numUniqueHits++;
+	  lastZ = hits[inCounter]->ddata( "barPosZ" );
+	}
       
       if( hits[inCounter]->idata( "IsYBar" ) == 0){X.push_back(hits[inCounter]);}
       else {Y.push_back(hits[inCounter]);}
     }
   
-  z= z/filteredHits.size();
+  //z= z/filteredHits.size();
+
+  z = z/numUniqueHits;
+
   int vox_x = -1;
   int vox_y = -1;
 
@@ -674,6 +709,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
 
   vhit->add_property( "voxel", vox );
 
+  int IsTASD = 0;
+
 
   
   // Pushback all the relevant informatiomn to the voxels. 
@@ -757,7 +794,13 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
       
       //std::cout<<(*hIt).second->x()[0]<<"\t"<<(*hIt).second->x()[1]<<"\t"<<(*hIt).second->x()[2]<<"\t"
       //	       <<(*hIt).second->ddata( "EnergyDep" )<<std::endl;
+
+      IsTASD = (*hIt).second->idata( "IsTASD" );
+
     }
+
+  vhit->add_property( "IsTASD", IsTASD);
+
   barX=sumBarPosX/barPosX.size();
   barY=sumBarPosY/barPosY.size();
 

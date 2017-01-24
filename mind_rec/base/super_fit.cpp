@@ -38,7 +38,7 @@ double super_fit::CalculateCharge(const Trajectory& startTrack) {
 
   double meansign = _supergeom.getDetectorModel()->CalculateChargeMomentum(debug);
 
-  cout<<"returned in super_fit::meansign="<<meansign<<endl;
+  //cout<<"returned in super_fit::meansign="<<meansign<<endl;
 
   meansign/=fabs(meansign);
 

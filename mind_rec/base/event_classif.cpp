@@ -118,13 +118,15 @@ bool event_classif::Execute(const vector<cluster*>& hits,
   ///copy hits
   std::vector<cluster*> hits2 = hits;
   
-  cout<<"Num hits: "<<hits2.size()<<endl;
+  //cout<<"Num hits: "<<hits2.size()<<endl;
+  /*
   cout<<"x\ty\tz\ttime"<<endl;
   for(int i=0;i<hits2.size();i++)
     {
       cout<<hits2[i]->position()[0]<<"\t"<<hits2[i]->position()[1]<<"\t"
 	  <<hits2[i]->position()[2]<<"\t"<<hits2[i]->get_time()<<endl;
     }
+  */
   
   ///start looking for trajectories
   bool ok;
@@ -204,6 +206,7 @@ void event_classif::Finalize() {
     _outFileEv->Close();
 
     delete _outFileEv;
+    delete _likeTree;
   }
 }
 
@@ -277,7 +280,15 @@ void event_classif::reset(){
   _vertGuessZ = 0;
   _failType = 0;
 
+  for (unsigned int i=0; i<_planes.size(); i++){ 
+    delete _planes[i];
+  }
   _planes.clear();
+
+  for (unsigned int i=0; i<_radPlanes.size(); i++){ 
+    delete _radPlanes[i];
+  }
+
   _radPlanes.clear();
 
   stc_tools::destroy(_planes);
@@ -667,9 +678,11 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
       else {
 	if ( _badplanes !=0 ) _intType = 3;
 
-	if((int)muontraj.size() > 9)
+	//if((int)muontraj.size() > 9)
+	if((int) _planes.size() >9)
 	  ok = muon_extraction( hits, muontraj, hads);
-	else if((int)muontraj.size() > _min_seed_hits) 
+	//else if((int)muontraj.size() > _min_seed_hits)
+	else if((int)_planes.size() > _min_seed_hits)  
 	  ok=LowMomentumMultipleExtraction( hits, muontraj, hads);
 	//else
 	  //ok = false;
@@ -1961,6 +1974,7 @@ void event_classif::fill_traj_info( Trajectory& muontraj) {
   muontraj.set_quality("xtent",_Xtent);
   muontraj.set_quality("vertZ",_vertGuessZ);
   muontraj.set_quality("lowPt",_lowPt);
+  muontraj.set_quality("usedTASD",0);
   
   /// for CA tracks it is not sure the free section belongs to the same traj or not
   if((int)muontraj.quality("intType")!=5) muontraj.set_quality("lastIso", _lastIso);

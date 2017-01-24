@@ -61,8 +61,11 @@ public:
   double showerXtent(int i) { return _showerXtent[i]; }
 
   cluster* GetMeas(int num){return _meas[num];}
+  cluster* GetMeasTASD(int num){return _measTASD[num];}
+
   std::vector<cluster*> &GetMeasVec(){ return _meas; }
   int GetNMeas(){ return (int)_meas.size();}
+  int GetNMeasTASD(){ return (int)_measTASD.size();}
   
   MINDsetup GetGeom() { return _geom; }
   //
@@ -254,7 +257,7 @@ protected:
   Trajectory _hadTrajs;
   
 
-
+  std::vector<cluster*> _measTASD;
   std::vector<cluster*> _meas;
   std::vector<cluster*> _hadmeas;
 

@@ -38,6 +38,8 @@ class cluster: public Measurement
 
   bhep::vstring get_mother_particle(){return _mother_particle;}
 
+  int IsTASD(){return _IsTASD;}
+
   //Setters.
   void set_VoxX(int n){ _nVoxV[0] = n; }
   void set_VoxY(int n){ _nVoxV[1] = n; }
@@ -59,6 +61,8 @@ class cluster: public Measurement
   double _time;
 
   bhep::vstring _mother_particle;
+
+  int _IsTASD;
 
 };
 

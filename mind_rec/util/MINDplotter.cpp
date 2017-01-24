@@ -1460,6 +1460,16 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
     _MuProp.push_back(Fit.GetMeas(ih)->get_mu_prop());
 
   }
+  // Quick fix to see TASD hits.
+  for(int hit=0; hit<Fit.GetNMeasTASD(); hit++ ){
+    _XMeas.push_back(Fit.GetMeasTASD(hit)->position()[0]);
+    _YMeas.push_back(Fit.GetMeasTASD(hit)->position()[1]);
+    _ZMeas.push_back(Fit.GetMeasTASD(hit)->position()[2]);
+
+  }
+
+
+
   //// First Angles  
   if ( Fit.GetNMeas() > 6 ){
     //_Theta0 = atan (((_YMeas[0]-_tX[0]) / (_ZMeas[0]-_tX[2])))*180/3.14; 
@@ -1549,7 +1559,7 @@ void MINDplotter::patternStats2(fitter& Fit) {
     if(1){
       _nhits[i] = traj[i]->size();
 
-      //cout<<"nodes="<<traj[i]->size()<<" hits="<<_nhits[i]<<endl;
+      cout<<"nodes="<<traj[i]->size()<<" hits="<<_nhits[i]<<endl;
 
       /// Sum of hits of trajectory
       _nallhits += traj[i]->size();

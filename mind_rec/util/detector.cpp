@@ -132,7 +132,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 					   _subDetectorVec[i-1]->GetPrevde_dx());
 	}
     }
-  
+  /*
     for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
     
@@ -141,7 +141,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
     cout<<_subDetectorVec[i]->GetLength()<<endl;
     cout<<_subDetectorVec[i]->GetPrevde_dx()<<endl;
     }
-  
+  */
   std::vector<cluster*> stackHits;
 
   std::vector<cluster*> hits;
@@ -166,7 +166,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
   for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
 
-      cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
+      //cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
       // Count number of hits in the stack to see if we can use helix.
       if(_subDetectorVec[i]->GetName() == "SFFFS0" ||
 	 _subDetectorVec[i]->GetName() == "S0" ||
@@ -283,18 +283,18 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 
       if(fabs(retVal) <10 || fabs(retVal) >1000 || isnan(retVal) ) retVal = temp[0];
 
-      cout<<"hits.size()="<<hits.size()<<endl;
+      //cout<<"hits.size()="<<hits.size()<<endl;
 
       if((fabs(retVal) <10 || fabs(retVal) >1000 || isnan(retVal) ) && hits.size() > 3)
 	{
 	  retVal = Quadratic(hits)[0];
-	  cout<<"Lever arm does not work"<<endl;
-	  cout<<"Quadratic used"<<endl;
+	  //cout<<"Lever arm does not work"<<endl;
+	  //cout<<"Quadratic used"<<endl;
 	}
-      else
-	{
-	  cout<<"Lever arm used"<<endl;
-	}
+      //else
+      //{
+	  //cout<<"Lever arm used"<<endl;
+      //}
 
 
 
@@ -305,8 +305,8 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 	  negCharge *= temp[3];
 	}
 
-      cout<<"posCharge="<<posCharge<<endl;
-      cout<<"negCharge="<<negCharge<<endl;
+      //cout<<"posCharge="<<posCharge<<endl;
+      //cout<<"negCharge="<<negCharge<<endl;
 
       if(posCharge>negCharge) retVal = fabs(retVal);
       else retVal = -1 * fabs(retVal);
@@ -318,14 +318,14 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       //cout<<"Debug size="<<debug2.size()<<endl;
     
   
-  cout<<"in detector.cpp="<<retVal<<endl;
+  //cout<<"in detector.cpp="<<retVal<<endl;
 
   if(fabs(retVal)<10 || fabs(retVal) >8000 || isnan(retVal)) retVal = 1;
   
   //retVal = 1000;
 
-  cout<<"in detector.cpp="<<retVal<<endl;
-
+  //cout<<"in detector.cpp="<<retVal<<endl;
+  /*
   if(hits.size()>0)
     {
       cout<<"track length="<<fabs(fabs(hits[hits.size()-1]->vector()[2])-fabs(hits[0]->vector()[2]))<<endl;
@@ -335,7 +335,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
     {
       cout<<"size0_in_detector"<<endl;
     }
-
+  */
   return retVal;
 }
 
@@ -539,6 +539,10 @@ double Detector::ChargeOne(std::vector<cluster*>& hits,SubDetector* detector) {
 
   if(meansign == 0) meansign = 1;
 
+  delete gr;
+  delete fun;
+
+
   return meansign;
 
 }
@@ -719,6 +723,10 @@ vector<double> Detector::Quadratic(std::vector<cluster*>& hits) {
 
   retVec.push_back(qtilde);
   //retVec.push_back(qerr);
+
+  delete gr;
+
+  delete fun;
 
   return retVec;
 
@@ -1283,11 +1291,11 @@ vector<double> Detector::LeverArm(unsigned int i){
   double chargeProb = 0;
   double badGuess = 1000;
   vector<double> retValVec;
-
+  /*
   cout<<_subDetectorVec[i-1]->GetName()<<endl;
   cout<<_subDetectorVec[i]->GetName()<<endl;
   cout<<_subDetectorVec[i+1]->GetName()<<endl;
-
+  */
  
   //cout<<_subDetectorVec[i-1]->GetMaxPlane()<<endl;
   //cout<<_subDetectorVec[i]->GetMinPlane()<<endl;

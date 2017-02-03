@@ -295,7 +295,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
     } //end if(_testBeam)
   else
     {
-  
+      
       ///if pattern recognition and recTrajectory is ok
       if (_patternRec){
 	
@@ -323,20 +323,17 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	
       }
     }
-
+  
   //return true;
-
+  
   /// for non PR track need to set tracks infos separately
   /*else if(ok) _trajs.push_back(_traj);*/
   double maxlength = -99999;
   double maxPlanes = -99999;
-
-
+  
+  
   /// loop over trajectories 
   for (unsigned int i=0; i<_trajs.size(); i++){ 
-
-
-
     
     _m.message("inside traj loop::if classifier ok, traj no =",i,"*********",bhep::DETAILED); 
     /*
@@ -372,9 +369,21 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	_traj.set_quality("fitted",_fitted);
 	_traj.set_quality("lowPt",1);
 	_traj.set_quality("reseed",0);
+	_traj.set_quality("hadron",0);
+
+	cout<<"In low momentum"<<endl;
+
 	//_traj.set_quality("initialqP",1);
-	//cout<<"initialqP: "<<(double)(_traj.quality("initialqP"))<<endl;
-	//cout<<"Momentum: "<<_traj.node(_traj.first_fitted_node()).state().vector()[5]<<endl;
+	cout<<"initialqP: "<<(double)(_traj.quality("initialqP"))<<endl;
+	cout<<"Momentum: "<<_traj.node(_traj.first_fitted_node()).state().vector()[5]<<endl;
+	cout<<"First fitted: "<<_traj.first_fitted_node()<<endl;
+	cout<<"First fitted z: "<<_traj.nodes()[_traj.first_fitted_node()]->measurement().position()[2]<<endl;
+
+	//for(unsigned int cnt = 0; cnt<_traj.size(); cnt++)
+	//{
+	//  _traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
+	//}
+
 
 	*(_trajs[i]) = _traj;
       }
@@ -438,16 +447,16 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	  // if (ok)cout<<"if classifier3="<<endl; 
 
 	  cout<<"before fitTrajectory"<<endl;
-	  for(int j = 0; j<_traj.size();j++)
-	    {
-	      if(_traj.nodes()[j]->status("fitted"))
-		{
-		  cout<<"momentum: "<<1.0/_traj.nodes()[j]->state().hv().vector()[5]<<endl;
-		  cout<<_traj.nodes()[j]->measurement().position()[2]<<endl;
-		  cout<<_geom.getBField(_traj.nodes()[j]->measurement().position())[0]<<endl;
-		}
-	      else break;
-	    }
+	  //for(int j = 0; j<_traj.size();j++)
+	  //{
+	  //  if(_traj.nodes()[j]->status("fitted"))
+	  //{
+	  //  cout<<"momentum: "<<1.0/_traj.nodes()[j]->state().hv().vector()[5]<<endl;
+	  //  cout<<_traj.nodes()[j]->measurement().position()[2]<<endl;
+	  //  cout<<_geom.getBField(_traj.nodes()[j]->measurement().position())[0]<<endl;
+	  //}
+	  //  else break;
+	  //}
 
 	  _fitted = FitTrajectory(seedState,i);
 	  
@@ -466,61 +475,12 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	    _muonindex[1] = i;
 	  }
 	}
-
+	
 	cout<<"End of fitter.cpp Fitted: "<<_fitted<<endl;
 	cout<<"End of fitter.cpp forwardFitcheck: "<<_forwardFitCheck<<endl;
 	cout<<"End of fitter.cpp reseedFitcheck: "<<_reseedFitCheck<<endl;
 	cout<<"End of fitter.cpp initialqP: "<<_initialqP<<endl;
-	/*
-    for(unsigned int cnt=0;cnt<_trajs.size();cnt++)
-      {
-	cout<<"end trajs[i]->size() "<<_trajs[cnt]->size()<<endl;
-	cout<<"lowpt "<<_trajs[cnt]->quality("lowPt")<<endl;
-      }
 
-	//cout<<"End of fitter.cpp momentum: "<<_traj.state().hv().vector()[5]<<endl;
-	if(_fitted && _fitCheck){
-
-	  for(int j = 0; j<_traj.size();j++)
-	    {
-	      if(_traj.nodes()[j]->status("fitted"))
-		{
-		  cout<<"momentum: "<<1.0/_traj.nodes()[j]->state().hv().vector()[5]<<endl;
-		  cout<<_traj.nodes()[j]->measurement().position()[2]<<endl;
-		  cout<<_geom.getBField(_traj.nodes()[j]->measurement().position())[0]<<endl;
-		}
-	      else break;
-	    }
-	*/
-
-
-	  /*
-	cout<<"trajs z pos"<<endl;
-	for(unsigned int cnt=0;cnt<_trajs.size();cnt++)
-	  {
-	    for(int j = 0; j<_trajs[cnt]->size();j++)
-	      {
-		cout<<_trajs[cnt]->nodes()[j]->measurement().position()[2]<<endl;
-		if(_supergeom.getDetectorModel()->GetSubDetector(_trajs[cnt]->nodes()[j]->measurement().position()[2]))
-		  {
-		    cout<<_supergeom.getDetectorModel()->GetSubDetector(_trajs[cnt]->nodes()[j]->measurement().position()[2])->GetName()<<endl;
-		  }
-		else
-		  {
-		    cout<<"Could not find subdetector for that hit??? Should not happen"<<endl;
-		  }	      
-	      }
-	  }
-	  */
-
-	  
-	  cout<<"End of fitter.cpp momentum: "<<1.0/_traj.node(_traj.first_fitted_node()).state().hv().vector()[5]<<endl;
-	  /*
-	  cout<<_geom.getBField(_traj.node(_traj.first_fitted_node()).measurement().position())[0]<<endl;
-	  cout<<"End of fitter.cpp momentum: "<<1.0/_traj.node(_traj.last_fitted_node()).state().hv().vector()[5]<<endl;
-	  cout<<_geom.getBField(_traj.node(_traj.last_fitted_node()).measurement().position())[0]<<endl;
-	  */
-	  //}
 	///assign quality for each trajectory
 	_traj.set_quality("failType",_failType);
 	_traj.set_quality("intType",_intType);
@@ -533,24 +493,42 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	_traj.set_quality("vertZ", vertZ);
 	_traj.set_quality("fitcheck", _fitCheck);
 	_traj.set_quality("lowPt",0);
+
+	_traj.set_quality("hadron",0);
 	
 	*(_trajs[i]) = _traj;
-	// cout<<"traj ="<<i<<" failType ="<<_failType<<" fitted ="<<(int)traj.quality("fitted")<<endl;;  
-	
-	// std::cout<<"*********************************************"<<std::endl;
-	//std::cout<<" ++++++ Trajectory "<<i<<"  fitted+++++++++++"<<std::endl;
-	//std::cout<<"*********************************************\n"<<std::endl;
-      } // End loop over trajectories.
-    
-    /*
-    for(int i=0;i<_trajs.size();i++)
-      {
-	cout<<"final trajs[i]->size() "<<_trajs[i]->size()<<endl;
-	cout<<"lowpt "<<_trajs[i]->quality("lowPt")<<endl;
-      }
-    */
-  }
+      } // End else
+  }  // End loop over trajectories.
 
+
+  //  cout<<"Testing fix"<<endl;
+  //for (unsigned int i=0; i<_trajs.size(); i++){ 
+
+  //_traj = *(_trajs[i]);
+
+    //_traj.sort_nodes(RP::z, -1);
+    
+    //for(int counter = 0; counter<_traj.size(); counter++)
+  //{
+  //cout<< _traj.nodes()[counter]->measurement().position()[2]<<"\t"
+  //    <<_traj.nodes()[counter]->status("fitted")<<endl;
+	
+  //cout<<"First fitted: "<<_traj.first_fitted_node()<<endl;
+  //cout<<"First fitted z: "<<_traj.nodes()[_traj.first_fitted_node()]->measurement().position()[2]<<endl;
+	
+  //cout<<"Momentum: "<<_traj.node(_traj.first_fitted_node()).state().vector()[5]<<endl;
+	//cout<<"State: "<<_traj.node(_traj.first_fitted_node()).state()<<endl;
+	//cout<<"First fitted: "<<_traj.first_fitted_node()<<endl;
+	//cout<<"First fitted z: "<<_traj.nodes()[_traj.first_fitted_node()]->measurement().position()[2]<<endl;
+	
+  //  }
+
+  //cout<<"End testing fix"<<endl;
+
+
+
+  //*(_trajs[i]) = _traj;
+  //}
 
 
   size_t hits_used = 0;
@@ -567,13 +545,8 @@ bool fitter::Execute(bhep::particle& part,int evNo){
   
   cout<<"_trajs.size()="<<_trajs.size()<<endl;
   
-  // Extrapolate these hits into the TASD, is there a hit there?
-  
-  // How many tracks in TASD? check mult. occ.
-  // 1 vs 1, very easy. n+m vs n and n vs n+m are the more interesting cases.
-  // Currently in MINDtrack i
-  
-  // Add hits to planes. (Also create planes)
+
+  // Add MIND hits to planes. (Also create planes)
   while (hits_used != nHits)
     {
       //double testX = _meas[]->position()[0];
@@ -603,321 +576,601 @@ bool fitter::Execute(bhep::particle& part,int evNo){
     }
   meanOcc /= (double) planes.size();
   
-
-  cout<<"Before all trajs how many hits are in TASD?"<<endl;
   
+  cout<<"Before all trajs how many hits are in TASD?"<<endl;
+  /*
   for(int pl=planes.size()-1; pl >= 0; pl-- ){
     cout<<"Planes z: "<<planes[pl]->GetZ()<<endl;   
     cout<<"Nhits for z: "<<planes[pl]->GetNHits()<<endl;
   }
+  */
 
+  // Create hadron tracks.
 
+ // Find occ planes for hadron hits in MIND.
+  
+  size_t had_hits_used = 0;
+  size_t had_nHits = _hadmeas.size();
+  
+  std::vector<plane_info*> had_planes;
+  double had_meanOcc=0;
+  int had_planeIndex=0;
+  double had_tolerance = _store.fetch_dstore("pos_resZ") * cm;
+  int had_imeas = 0;
+  
+  sort( _hadmeas.begin(), _hadmeas.end(), forwardSorter() );
+  // Add hits to planes. (Also create planes)
+  // Sorted backwards!
+  while (had_hits_used != had_nHits)
+    {
+      //double testX = _meas[]->position()[0];
+      //double testY = _meas[imeas]->position()[1];
+      double testZ = _hadmeas[had_imeas]->position()[2];
+      had_hits_used++;
+      ///create plane info
+      plane_info* plane = new plane_info(had_planeIndex, testZ, _store);
+      plane->AddHit(_hadmeas[had_imeas]);
+      ///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
+      for (size_t i = had_hits_used;i <had_nHits;i++) {
+	double curZ = _hadmeas[i]->position()[2];
+	//cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" tolerance: "<<tolerance<<endl;
+	had_imeas = i;
+	if (curZ <= testZ + had_tolerance) {
+	  // add the hit to the same plane
+	  plane->AddHit(_hadmeas[i]);
+	  //cout<<"Added hit"<<endl;
+	  testZ = _hadmeas[i]->position()[2];
+	  had_hits_used++;
+	} else break; 
+      }
+      had_planes.push_back(plane);
+      ///increase the plane index
+      had_planeIndex++;
+      had_meanOcc += (double) plane->GetNHits();
+    }
+  cout<<_hadmeas.size()<<endl;
+  cout<<had_meanOcc<<endl;
+  if( had_planes.size())
+    {
+      had_meanOcc /= (double) had_planes.size();
+    }
+  
+  cout<<had_planes.size()<<endl;
+  cout<<"had_meanOcc="<<had_meanOcc<<endl;
+  
+  sort( _hadmeas.begin(), _hadmeas.end(), reverseSorter() );
+  
+  
+  Trajectory* had_traj = new Trajectory();
+  std::vector<plane_info*> had_mult_planes;
+  
+  
+  //for(int pl=had_planes.size()-1; pl >= 0; pl-- ){
+  for(unsigned int pl = 0; pl<had_planes.size(); pl++)
+    {
+      cout<<"Planes z: "
+	  <<had_planes[pl]->GetZ()<<"\t"
+	  <<had_planes[pl]->GetNHits()<<endl;
+      
+      if(had_planes[pl]->GetNHits()==1)
+	{
+	  
+	  RecObject* ro = dynamic_cast<RecObject*>(&(*(had_planes[pl]->GetHits()[0])));
+	  //muontraj.add_node(Node(*ro));
+	  //ro->set_status(RP::fitted);
+	  had_traj->add_node(Node(*ro));
+	}
+      else
+	{
+	  had_mult_planes.push_back(had_planes[pl]);
+	}
+      
+    }
+  cout<<"had_traj->size()="<<had_traj->size()<<endl;
+  
+  // find single occ plane and fit best hit.
+  
+  bool okfit;
+  long ChiMin;
+  
+  //Trajectory& testtraj = *(had_traj);
+  
+  
+  ///The hit corresponds to min Chi2 will be added to the Trajectory & assigns as muon candidate, else considered as Hadron
+  for (int pl = 0; pl< had_mult_planes.size(); pl++){
+    
+    double Chi2[(const int)( had_mult_planes[pl]->GetNHits())];
+    
+    for (int ht=0; ht< had_mult_planes[pl]->GetNHits(); ht++){
+      try {
+	//cout<<testtraj.size()<<endl;
+	cout<<had_mult_planes[pl]->GetNHits()<<endl;
+	cout<<Chi2[ht]<<endl;
+	okfit = man().matching_svc().match_trajectory_measurement(*(had_traj), *( had_mult_planes[pl]->GetHits()[ht]), Chi2[ht]);
+      } catch (const char* msg){
+	okfit = false;
+	//std::cout<<msg<<std::endl;
+      }
+      // _m.message("meas.dim() = ",(_planes[pl]->GetHits()[ht])->dim(),bhep::VERBOSE);
+      if ( !okfit ) Chi2[ht] = 9999999;
+    }
+    
+    ChiMin = TMath::LocMin((const int)(had_mult_planes[pl]->GetNHits()), Chi2);
+    
+    for (int iht = 0; iht <  had_mult_planes[pl]->GetNHits();iht++){
+      
+      if (iht==(int)ChiMin && abs(Chi2[ChiMin])<10) {
+	
+	RecObject* ro = dynamic_cast<RecObject*>(&(*( had_mult_planes[pl]->GetHits()[iht])));
+	had_traj->add_node(Node(*ro));
+	
+      }
+    }
+  }
+
+  
+  cout<<"had_traj->size()="<<had_traj->size()<<endl;
+  
+  if(had_traj->size() > 1)
+    {
+      had_traj->set_quality("failType",_failType);
+      had_traj->set_quality("intType",_intType);
+      had_traj->set_quality("nplanes",0);
+      had_traj->set_quality("freeplanes",0);
+      had_traj->set_quality("reseed",_reseed_ok);
+      had_traj->set_quality("xtent",0);
+      had_traj->set_quality("initialqP",_initialqP);
+      //had_traj->set_quality("fitted",_fitted);
+      had_traj->set_quality("fitted",0);
+      had_traj->set_quality("vertZ", 0);
+      had_traj->set_quality("fitcheck", _fitCheck);
+      had_traj->set_quality("lowPt",1);
+
+      had_traj->set_quality("hadron",1);
+	
+      
+      for(unsigned int cnt = 0; cnt<had_traj->size(); cnt++)
+      {
+        had_traj->nodes()[cnt]->set_status(RP::fitted);
+      }
+
+      State seedState;
+      //EVector v = seedState.vector();
+      EVector V(6,0);
+      EMatrix M(6,6,0);
+      
+      V[5] = 1/1;
+      //EMatrix C0 = seedState.matrix();
+      seedState.set_name(RP::particle_helix);
+      seedState.set_name(RP::representation,RP::slopes_curv_z);
+      seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
+      seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
+      
+      //had_traj->nodes()[had_traj->first_fitted_node()]->set_state(seedState);
+
+      for(unsigned int cnt = 0; cnt<had_traj->size(); cnt++)
+	{
+	  had_traj->nodes()[cnt]->set_state(seedState);
+	}
+      
+      
+      _trajs.push_back(had_traj);
+    }
+  
+  cout<<"_trajs.size()="<<_trajs.size()<<endl;
+
+  // Should not be done if not fitted or no hits in tasd.
   for (unsigned int i=0; i<_trajs.size(); i++){ 
     
     _traj = *(_trajs[i]);
-	// Handle TASD hits
 
-	// use hit 0 and 1, the tow first in the trajectory to calculate dy/dz and dx/dz
-	// using this can extrapolate what hits to use in TASD, they should be on that line (more or less).
+    int fittedNodes = 0;
+    
+    for(int counter = 0; counter<_traj.size(); counter++)
+      {
+	fittedNodes += _traj.nodes()[counter]->status("fitted");
+      }
 
-	//check if the expected hits are there.
+    if(!_traj.status(RP::fitted)) continue;
 
-	// Find single occupancy planes. Fit straight line using these.
-	// See what hits to add and which not to add.
+    if(!fittedNodes) continue;
 
-	/*
-	size_t hits_used = 0;
-	size_t nHits = _measTASD.size();
+    _traj.sort_nodes(RP::z, 1);
+    
+    // Handle TASD hitw
+    // use hit 0 and 1, the tow first in the trajectory to calculate dy/dz and dx/dz
+    // using this can extrapolate what hits to use in TASD, they should be on that line (more or less).
+    //check if the expected hits are there.
+    // Find single occupancy planes. Fit straight line using these.
+    // See what hits to add and which not to add.
 
-	std::vector<plane_info*> planes;
-	double meanOcc=0;
-	int planeIndex=0;
-	double tolerance = _store.fetch_dstore("pos_resZ") * cm;
-	int imeas = 0;
-
-
-	// How many tracks are there in the babyMIND?
+    
+    //cout<<"meanOcc="<<meanOcc<<endl;
+    //meanOcc /= (double) planes.size();
+    cout<<"planes.size()="<<planes.size()<<endl;
+    cout<<"meanOcc="<<meanOcc<<endl;
+    cout<<" _trajs[i]->size()="<< _trajs[i]->size()<<endl;
+        
+    // Check single occ planes, create tracks.
+    
+    // Add to _trajs. Then configure that algorithm.
+    
+    
+    // How many tracks in TASD? (mean occ) or actually find tracks?
+    //if((int)(_trajs[i]->quality("usedTASD")))
+    //{
+    //  cout<<"not here yet"<<endl;
+    //}
+    if(meanOcc > 4 || _trajs.size() > 4)
+      {
+	cout<<"too large mean occ or too many trajs!"<<meanOcc<<" "<<_trajs.size()<<endl;
 	
-	cout<<"_trajs.size()="<<_trajs.size()<<endl;
-
-	// Extrapolate these hits into the TASD, is there a hit there?
-
-	// How many tracks in TASD? check mult. occ.
-	// 1 vs 1, very easy. n+m vs n and n vs n+m are the more interesting cases.
-	// Currently in MINDtrack i
-
-	// Add hits to planes. (Also create planes)
-	while (hits_used != nHits)
+	// Need to do something else (smarter for showers), start checking length of traj in MIND, energy dep in TASD?
+      }	
+    else if (meanOcc ==0 || _trajs.size() == 0)
+      {
+	cout<<"no mean occ, no trajs"<<endl;
+	
+      }
+    else if(meanOcc == 1 && _trajs.size() == 1)
+      {
+	cout<< "one of each"<<endl;
+	for(int pl=planes.size()-1; pl >= 0; pl-- ){
+	  //cout<<"Planes z: "<<planes[pl]->GetZ()<<endl;   
+	  //if(_planes[pl]->GetNHits()!=1) break;
+	  //if(planes[pl]->GetNHits()!=1) continue;
+	  
+	  RecObject* ro = dynamic_cast<RecObject*>(&(*(planes[pl]->GetHits()[0])));
+	  //_trajs[0]->add_node(Node(*ro));
+	  //ro->set_status(RP::fitted);
+	  _traj.add_node(Node(*ro));
+	  //(planes[pl]->GetHits()[0])->set_name("inMu", "True");
+	  
+	  planes.clear();
+	  
+	} 
+      }
+    //else if(meanOcc == 1)
+    //{
+    //cout<< "meanocc 1"<<endl;
+	// Match tracks in MIND with TASD track.
+	// Special case of else.
+	// Rare.
+	// Perhaps done outside with al the tracks?
+	
+    //}
+    //else if( _trajs.size() == 1)
+    else
+      {
+	
+	cout<<"in _trajs.size() == 1"<<endl;
+	
+	// use dx/dz and dy/dz from MIND track to find TASD track.
+	
+	vector<cluster*> usedHits;
+	vector<cluster*> remainingHits;
+	double error = 25; //mm accepted error in x and y from extrapolation.
+	
+	
+	double mindZ0 = _traj.nodes()[0]->measurement().position()[2];
+	double mindZ1 = _traj.nodes()[1]->measurement().position()[2];
+	
+	cout<<(_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName() == "S0" &&
+	       _supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName() == "SFFFS0")<<endl;
+	
+	cout<<_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName()<<endl;
+	cout<<_supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName()<<endl;
+	
+	if(_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName() == "S0" &&
+	   _supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName() == "SFFFS0")
 	  {
-	    //double testX = _meas[]->position()[0];
-	    //double testY = _meas[imeas]->position()[1];
-	    double testZ = _measTASD[imeas]->position()[2];
-	    hits_used++;
-	    ///create plane info
-	    plane_info* plane = new plane_info(planeIndex, testZ, _store);
-	    plane->AddHit(_measTASD[imeas]);
-	    ///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
-	    for (size_t i = hits_used;i <nHits;i++) {
-	      double curZ = _measTASD[i]->position()[2];
-	      //cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" tolerance: "<<tolerance<<endl;
-	      imeas = i;
-	      if (curZ <= testZ + tolerance) {
-		// add the hit to the same plane
-		plane->AddHit(_measTASD[i]);
-		//cout<<"Added hit"<<endl;
-		testZ = _measTASD[i]->position()[2];
-		hits_used++;
-	      } else break; 
-	    }
-	    planes.push_back(plane);
-	    ///increase the plane index
-	    planeIndex++;
-	    meanOcc += (double) plane->GetNHits();
-	  }
-	*/
-
-	//cout<<"meanOcc="<<meanOcc<<endl;
-	//meanOcc /= (double) planes.size();
-	cout<<"planes.size()="<<planes.size()<<endl;
-	cout<<"meanOcc="<<meanOcc<<endl;
-	cout<<" _trajs[0]->size()="<< _trajs[0]->size()<<endl;
-
-
-	// How many tracks in TASD? (mean occ) or actually find tracks?
-	//if((int)(_trajs[i]->quality("usedTASD")))
-	//{
-	//  cout<<"not here yet"<<endl;
-	//}
-	if(meanOcc > 4 || _trajs.size() > 4)
-	  {
-	    // Need to do something else (smarter for showers), start checking length of traj in MIND, energy dep in TASD?
-	  }	
-	else if (meanOcc ==0 || _trajs.size() == 0)
-	  {
-
-	  }
-	else if(meanOcc == 1 && _trajs.size() == 1)
-	  {
-	    for(int pl=planes.size()-1; pl >= 0; pl-- ){
-	      //cout<<"Planes z: "<<planes[pl]->GetZ()<<endl;   
-	      //if(_planes[pl]->GetNHits()!=1) break;
-	      //if(planes[pl]->GetNHits()!=1) continue;
-	      
-	      RecObject* ro = dynamic_cast<RecObject*>(&(*(planes[pl]->GetHits()[0])));
-	      //_trajs[0]->add_node(Node(*ro));
-	      _traj.add_node(Node(*ro));
-	      //(planes[pl]->GetHits()[0])->set_name("inMu", "True");
-
-	      planes.clear();
-	      	      
-	    } 
-	  }
-	else if(meanOcc == 1)
-	  {
-	    // Match tracks in MIND with TASD track.
-	    // Special case of else.
-	    // Rare.
-	    // Perhaps done outside with al the tracks?
-
-	  }
-	else if( _trajs.size() == 1)
-	  {
-
-	    cout<<"in _trajs.size() == 1"<<endl;
-	 
-	    // use dx/dz and dy/dz from MIND track to find TASD track.
 	    
-	    vector<cluster*> usedHits;
-	    vector<cluster*> remainingHits;
-	    double error = 25; //mm accepted error in x and y from extrapolation.
+	    vector<cluster*> tempHits;
 	    
-
-	    double mindZ0 = _traj.nodes()[0]->measurement().position()[2];
-	    double mindZ1 = _traj.nodes()[1]->measurement().position()[2];
-
-	    cout<<(_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName() == "S0" &&
-		   _supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName() == "SFFFS0")<<endl;
-
-	    cout<<_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName()<<endl;
-	    cout<<_supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName()<<endl;
-
-	    if(_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName() == "S0" &&
-	       _supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName() == "SFFFS0")
+	    tempHits.push_back((cluster*)&_traj.nodes()[1]->measurement());
+	    tempHits.push_back((cluster*)&_traj.nodes()[0]->measurement());
+	    int iner = 0;
+	    
+	    for(int cnt = planes.size()-1; cnt >=0; cnt--)
 	      {
+		usedHits.clear();
+		if(iner+1 >tempHits.size()) break;
 		
-		vector<cluster*> tempHits;
+		double dz = tempHits[iner]->position()[2] - tempHits[iner+1]->position()[2];
 		
-		tempHits.push_back((cluster*)&_traj.nodes()[1]->measurement());
-		tempHits.push_back((cluster*)&_traj.nodes()[0]->measurement());
-		int i = 0;
+		double dx = tempHits[iner]->position()[0] - tempHits[iner+1]->position()[0];
+		double dxdz = dx/dz;
+		double edxdz = error;
 
-		for(int cnt = planes.size()-1; cnt >=0; cnt--)
+		if( cnt > planes.size()-4)
 		  {
-		    if(i+1 >tempHits.size()) break;
-
-		    double dz = tempHits[i]->position()[2] - tempHits[i+1]->position()[2];
-
-		    double dx = tempHits[i]->position()[0] - tempHits[i+1]->position()[0];
-		    double dxdz = dx/dz;
-		    double edxdz = error;
-
-		    double dy = tempHits[i]->position()[1] - tempHits[i+1]->position()[1];
-		    double dydz = dy/dz;
-		    double edydz = error;
-
-		    cout<<"extraZ "<<cnt<<" "<<planes.size()-1<<endl;
-		    double extraZ = planes[cnt]->GetZ();
-		    cout<<"tempHits "<<tempHits.size()<<" "<<i+1<<endl;
-
-		    double extraX = tempHits[i+1]->position()[0] - 
-		      dxdz *(tempHits[i+1]->position()[2]-extraZ);
-		    double extraY = tempHits[i+1]->position()[1] - 
-		      dydz *(tempHits[i+1]->position()[2]-extraZ);
+		    edxdz = 85*3;
+		  }
 		
-		    // Is there a TASD hit in extrapolated area?
+		double dy = tempHits[iner]->position()[1] - tempHits[iner+1]->position()[1];
+		double dydz = dy/dz;
+		double edydz = error;
+		
+		//cout<<"extraZ "<<cnt<<" "<<planes.size()-1<<endl;
+		double extraZ = planes[cnt]->GetZ();
+		//cout<<"tempHits "<<tempHits.size()<<" "<<iner+1<<endl;
+		
+		double extraX = tempHits[iner+1]->position()[0] - 
+		  dxdz *(tempHits[iner+1]->position()[2]-extraZ);
+		double extraY = tempHits[iner+1]->position()[1] - 
+		  dydz *(tempHits[iner+1]->position()[2]-extraZ);
+		
+		// Is there a TASD hit in extrapolated area?
+		
+		for(int hit = 0; hit < planes[cnt]->GetNHits(); hit++)
+		  {
+		    cluster* currHit = planes[cnt]->GetHits()[hit];
+		    double hitX = currHit->position()[0];
+		    double hitY =  currHit->position()[1];
 		    
-		    for(int hit = 0; hit < planes[cnt]->GetNHits(); hit++)
+		    //cout<<hitX<<" "<<hitY<<endl;
+		    //cout<<extraX<<" "<<extraY<<endl;
+		    //cout<<edxdz<<" "<<edydz<<endl;
+		    
+		    
+		    if(abs(hitX-extraX) <edxdz && abs(hitY-extraY) <edydz)
 		      {
-			cluster* currHit = planes[cnt]->GetHits()[hit];
-			double hitX = currHit->position()[0];
-			double hitY =  currHit->position()[1];
-			
-			cout<<hitX<<" "<<hitY<<endl;
-			cout<<extraX<<" "<<extraY<<endl;
-			//cout<<edxdz<<" "<<edydz<<endl;
-			
-			
-			if(abs(hitX-extraX) <edxdz && abs(hitY-extraY) <edydz)
-			  {
-			    usedHits.push_back(currHit);
-			    tempHits.push_back(currHit);
-			    planes[cnt]->GetHits().erase(planes[cnt]->GetHits().begin()+hit);
-			    i++;
-			    break;
-			  }
-			else remainingHits.push_back(currHit);
-		      
+			usedHits.push_back(currHit);
+			tempHits.push_back(currHit);
+			planes[cnt]->GetHits().erase(planes[cnt]->GetHits().begin()+hit);
+			iner++;
+			//break;
 		      }
-		    cout<<"usedHits="<<usedHits.size()<<endl;
-		    cout<<"remainingHits="<<remainingHits.size()<<endl;
-
-		    // Generalize for case with multiple tracks in MIND.
-		    // handle remainingHits? How... refil planes, using remaininghits, find single occ.
-		     
+		    else remainingHits.push_back(currHit);
+		    
 		  }
+		
+		// Trying to use chi2 to choose what hits to use.
+		
+		double Chi2[(const int)( usedHits.size())];
+		
+		for (int ht=0; ht< usedHits.size(); ht++){
+		  try {
+		    ok = man().matching_svc().match_trajectory_measurement(_traj, *(usedHits[ht]), Chi2[ht]);
 
-		for(int hit = 0; hit < usedHits.size(); hit++)
-		  {
-		    //vector<cluster*> remainingHits;
-		    RecObject* ro = dynamic_cast<RecObject*>(&(*(usedHits[hit])));
+		  } catch (const char* msg){
+		    ok = false;
+		    //std::cout<<msg<<std::endl;
+		  }
+		  // _m.message("meas.dim() = ",(_planes[pl]->GetHits()[ht])->dim(),bhep::VERBOSE);
+		  if ( !ok ) Chi2[ht] = 9999999;
+		}
+		
+		ChiMin = TMath::LocMin((const int)(usedHits.size()), Chi2);
+		
+		for (int iht = 0; iht <  usedHits.size();iht++){
+		  //cout<<"iht="<<iht<<endl;
+		  //cout<<"ChiMin="<<ChiMin<<endl;
+		  
+		  //if (iht==(int)ChiMin && abs(Chi2[ChiMin])<14) {
+		  if (iht==(int)ChiMin) {
+		    
+		    RecObject* ro = dynamic_cast<RecObject*>(&(*( usedHits[iht])));
+		    //ro->set_status(RP::fitted);
 		    _traj.add_node(Node(*ro));
+		    
 		  }
+		}
+		
+		// End Trying to use chi2 to choose what hits to use.
+
+		//cout<<"usedHits="<<usedHits.size()<<endl;
+		//cout<<"remainingHits="<<remainingHits.size()<<endl;		
+		
+		// Generalize for case with multiple tracks in MIND.
+		// handle remainingHits? How... refil planes, using remaininghits, find single occ.
 		
 	      }
-
-	  }
-	else
-	  {
-	    // use dx/dz and dy/dz from MIND track to find TASD track.
-	    // when that is done, find the rest of the tracks.
+	    /*
+	    if(usedHits.size() > 0)
+	      {
+		cluster* vertexHit = usedHits[usedHits.size()-1];
+		
+		cout<<"vertex guess="
+		    <<vertexHit->position()[0]<<"\t"
+		    <<vertexHit->position()[1]<<"\t"
+		    <<vertexHit->position()[2]<<endl;
+	      }	
 	    
+	    for(int hit = 0; hit < usedHits.size(); hit++)
+	      {
+		//vector<cluster*> remainingHits;
+		RecObject* ro = dynamic_cast<RecObject*>(&(*(usedHits[hit])));
+		_traj.add_node(Node(*ro));
+	      }
+	    */
 	  }
 	
-
-	// Combine the two.
-
-
-	*(_trajs[i]) = _traj;
-  }
-
-
-
-
-
-
-    /// for hadron shower
-    if((int)_trajs.size() != 0)
-      for(int j=0; j<=(int)_trajs.size(); j++)
-	rec_had_edep(j);
-    else 
-      rec_had_edep(0);
-    // rec_had_energy();
-
+      }// end else if( _trajs.size() == 1)
     /*
-    for(int i=0;i<_trajs.size();i++)
+    else
       {
-	cout<<"after rec_had_edep trajs[i]->size() "<<_trajs[i]->size()<<endl;
-	cout<<"lowpt "<<_trajs[i]->quality("lowPt")<<endl;
-      }
+	// use dx/dz and dy/dz from MIND track to find TASD track.
+	// when that is done, find the rest of the tracks.
+	
+	_traj.sort_nodes(RP::z, 1);
+	
+	cout<<"in else"<<endl;
+	cout<<"traj_z"<<_traj.nodes()[0]->measurement().position()[2]<<endl;
+	
+	
+	// check first what hits could possibly be relevant ( check using k value as above)
+	// Is there some way of assuming/knowing which track fits the hits better?
+	
+	
+	// Fill temp planes with the possible hits.
+	
+	//double mindZ0 = _traj.nodes()[0]->measurement().position()[2];
+	//double mindZ1 = _traj.nodes()[1]->measurement().position()[2]
+	
+	for(int pl=planes.size()-1; pl >= 0; pl-- ){
+	  //for (int pl = 0; pl<planes.size(); pl++){
+	  
+	  double Chi2[(const int)( planes[pl]->GetNHits())];
+	  
+	  for (int ht=0; ht< planes[pl]->GetNHits(); ht++){
+	    try {
+	      ok = man().matching_svc().match_trajectory_measurement(_traj, *( planes[pl]->GetHits()[ht]), Chi2[ht]);
+	      cout<<planes[pl]->GetHits()[ht]->position()[0]<<"\t"
+		  <<planes[pl]->GetHits()[ht]->position()[1]<<"\t"
+		  <<planes[pl]->GetHits()[ht]->position()[2]<<endl;
+	      cout<<"Chi2 is what="<<Chi2[ht]<<endl;
+	    } catch (const char* msg){
+	      ok = false;
+	      //std::cout<<msg<<std::endl;
+	    }
+	    // _m.message("meas.dim() = ",(_planes[pl]->GetHits()[ht])->dim(),bhep::VERBOSE);
+	    if ( !ok ) Chi2[ht] = 9999999;
+	  }
+	  
+	  ChiMin = TMath::LocMin((const int)(planes[pl]->GetNHits()), Chi2);
+	  
+	  for (int iht = 0; iht <  planes[pl]->GetNHits();iht++){
+	    cout<<"iht="<<iht<<endl;
+	    cout<<"ChiMin="<<ChiMin<<endl;
+	    
+	    //if (iht==(int)ChiMin && abs(Chi2[ChiMin])<14) {
+	    if (iht==(int)ChiMin) {
+	      int error = 25;
+
+	      cout<<"trying to match, with y and z"<<endl;
+	      // need to extrapolate! not just check coordinates!
+	      cout<<_traj.nodes()[0]->measurement().position()[0]<<"\t"
+		  <<_traj.nodes()[0]->measurement().position()[1]<<"\t"
+		  <<_traj.nodes()[0]->measurement().position()[2]<<endl;
+	      
+	      cout<<planes[pl]->GetHits()[iht]->position()[0]<<"\t"
+		  <<planes[pl]->GetHits()[iht]->position()[1]<<"\t"
+		  <<planes[pl]->GetHits()[iht]->position()[2]<<endl;
+		
+	      if(abs(_traj.nodes()[0]->measurement().position()[0] - 
+		     planes[pl]->GetHits()[iht]->position()[0])< error &&
+		 abs(_traj.nodes()[0]->measurement().position()[1] - 
+		     planes[pl]->GetHits()[iht]->position()[1])< error)
+		{
+		  
+		  cout<<"Added hit"<<endl;
+		  cout<<planes[pl]->GetHits()[iht]->position()[0]<<"\t"
+		      <<planes[pl]->GetHits()[iht]->position()[1]<<"\t"
+		      <<planes[pl]->GetHits()[iht]->position()[2]<<endl;
+		  
+		  RecObject* ro = dynamic_cast<RecObject*>(&(*( planes[pl]->GetHits()[iht])));
+		  _traj.add_node(Node(*ro));
+		}
+	    }
+	  }
+	}
+	
+	//_traj.sort_nodes(RP::z, 1);
+	
+	cout<<"else done"<<endl;
+	
+      }//end else
     */
 
-    //}  
+    cout<<"after all _traj.size()="<<_traj.size()<<endl;
+
+    //for(int counter = 0; counter<_traj.size(); counter++)
+    //{
+    //cout<<*(_traj.nodes()[counter])<<endl;
+    //}
+
+
+    cout<<"_traj.nodes().size()="<<_traj.nodes().size()<<endl;
+    _traj.sort_nodes(RP::z, -1);
+    _traj.set_quality("vertZ", _traj.nodes()[_traj.nodes().size()-1]->measurement().position()[2]);
+
+    //for(int counter = 0; counter<_traj.size(); counter++)
+    //{
+    //cout<< _traj.nodes()[counter]->measurement().position()[2]<<"\t"
+    //    <<_traj.nodes()[counter]->status("fitted")<<endl;
+
+    //cout<<"First fitted: "<<_traj.first_fitted_node()<<endl;
+    //cout<<"First fitted z: "<<_traj.nodes()[_traj.first_fitted_node()]->measurement().position()[2]<<endl;
+	
+    //cout<<"Momentum: "<<_traj.node(_traj.first_fitted_node()).state().vector()[5]<<endl;
+	//cout<<"State: "<<_traj.node(_traj.first_fitted_node()).state()<<endl;
+	//cout<<"First fitted: "<<_traj.first_fitted_node()<<endl;
+	//cout<<"First fitted z: "<<_traj.nodes()[_traj.first_fitted_node()]->measurement().position()[2]<<endl;
+	
+    //}
+
+    //_traj.sort_nodes(RP::z, -1);
+
+    //_traj.sort_nodes(RP::z, 1);
+
+    //if(_traj.quality("lowPt") == 1)
+    //_traj.sort_nodes(RP::z, -1);
+
+    //if(_trajs[i]->quality("lowPt") == 1 &&  _trajs[i]->quality("hadron") ==0) _traj.sort_nodes(RP::z, -1);
+
+    cout<<"lowPt="<<_traj.quality("lowPt")<<endl;
+    cout<<"hadron="<< _traj.quality("hadron")<<endl;
+
+
+    if(_traj.quality("lowPt") == 1 &&  _traj.quality("hadron") ==0) _traj.sort_nodes(RP::z, -1);
+    else _traj.sort_nodes(RP::z, 1);
+    
+    *(_trajs[i]) = _traj;
+    
+  }  // End loop over trajectories. (For TASD hits
   
-    //std::cout<<"Final trajectory =" << _traj<<std::endl;
+  
+  /*  
+  cout<<"Why breaking"<<endl;
+  cout<<_trajs.size()<<endl;
+  cout<<_trajs[0]->size()<<endl;
+  cout<<_trajs[0]->quality("hadron")<<endl;
+
+  if(_trajs.size() !=0)
+    {
+      cout<<_trajs[0]->first_fitted_node()<<endl;
+      cout<<_trajs[0]->nodes()[_trajs[0]->first_fitted_node()]->measurement().position()[2]<<endl;
+      cout<<_trajs[0]->state(_trajs[0]->first_fitted_node()).vector()[5]<<endl;
+    }
+  */
+  
+  //had_traj.set_quality("hadron",1);  
+
+  /// for hadron shower
+  if((int)_trajs.size() != 0)
+    {
+      for(int j=0; j<=(int)_trajs.size(); j++)
+	rec_had_edep(j); 
+    }
+  else 
+    rec_had_edep(0);
+  // rec_had_energy();
+
+  
+  
+  /*
+    for(int i=0;i<_trajs.size();i++)
+    {
+    cout<<"after rec_had_edep trajs[i]->size() "<<_trajs[i]->size()<<endl;
+    cout<<"lowpt "<<_trajs[i]->quality("lowPt")<<endl;
+    }
+  */
+  
+  //}  
+  
+  //std::cout<<"Final trajectory =" << _traj<<std::endl;
   
   _m.message(" I am ******************fitter end",bhep::VERBOSE); 
   
-
-  // Start looking for tracks that were missed/to short in MIND.
-
-  // When this is done look for tracks in TASD.
-
-
-
-
-  //_meas.insert(_meas.end(), _measTASD.begin(),_measTASD.end());
-
-
-  //  if((int)_trajs.size() != 0)
-  //{
-      // TASD fitter, are there any hits left in the planes?
-
-
-  // Check mult. occ. try to create track in MIND, if several hits, 
-  //check closest hits and create tracks from this. working back to front.
-
-  // Use these extra tracks with normal algo in TASD.
-
-  // After this, check number of tracks in TASD.
-      
-      cout<<"after all trajs how many hits still in TASD?"<<endl;
-
-      cout<<"_hadmeas.size()="<<_hadmeas.size()<<endl;
-      for(int i = 0; i<_hadmeas.size(); i++)
-	{
-	  cout<<_hadmeas[i]->position()[2]<<endl;
-	}
-	
-      meanOcc = 0;
-      
-      for(int pl=planes.size()-1; pl >= 0; pl-- ){
-	cout<<"Planes z: "<<planes[pl]->GetZ()<<endl;   
-	cout<<"Nhits for z: "<<planes[pl]->GetNHits()<<endl;
-	meanOcc += (double) planes[pl]->GetNHits();
-      }
-      
-      meanOcc /= (double) planes.size();
-      cout<<"meanOccAfter="<<meanOcc<<endl;
-      
-      for(int cnt = planes.size()-1; cnt >=0; cnt--)
-	{
-	  for(int hit = 0; hit < planes[cnt]->GetNHits(); hit++)
-	    {
-	      cluster* currHit = planes[cnt]->GetHits()[hit];
-	      
-	      cout<<currHit->position()[0]<<"\t"
-		  <<currHit->position()[1]<<"\t"
-		  <<currHit->position()[2]<<endl;
-	      
-	    }
-	}
-      // }
-
-
-
+  
+  
+  cout<<"_trajs.size()="<<_trajs.size()<<endl;
+  
   //return _fitted;
   return true;///signifies fitter executed
 }
+
 
 //*************************************************************
 void fitter::Reset() {
@@ -1139,8 +1392,8 @@ bool fitter::ReseedTrajectory(const int trajno){
 
   State backSeed = _vPR_seed[_pr_count];
   
-  cout<<"Printing backSeed"<<endl;
-  cout<<backSeed<<endl;
+  //cout<<"Printing backSeed"<<endl;
+  //cout<<backSeed<<endl;
 
   /*
   //Want to re-seed with diagonal matrix.
@@ -1438,6 +1691,18 @@ void fitter::rec_had_edep(int j){
   else _showerDir[j] = EVector(3,0);
   
   _showerVertZ[j]   = minZ;
+  //_showerVertZ[j]   = vertex[2];
+  //minZ = _trajs[0]->nodes()[0]->measurement().position()[2];
+  //_showerVertZ[j] = minZ;
+  //cout<<"_showerVertZ[j]="<< minZ<<endl;
+
+  //_trajs[0]->set_quality("vertZ", minZ);
+
+  //cout<<"_showerVertZ[j]="<<vertex[2]<<endl;
+  //cout<<_meas[0]->vector()[2]<<endl;
+  //cout<<_meas[0]->vector()[2];<<endl;
+  //cout<<_trajs[0]->nodes()[0]->measurement().position()[2]<<endl;
+  //cout<<_trajs[0]->nodes()[_trajs[0]->nodes().size()-1]->measurement().position()[2]<<endl;
   _showerNplanes[j] = int((maxZ - minZ)/(_geom.getPieceWidth()));
   _showerXtent[j]   = maxZ - minZ;
 
@@ -1518,25 +1783,25 @@ bool fitter::CreateMeasurements(const bhep::particle& p) {
     if(mindHits.size()) _clusters->execute(mindHits, _meas ); 
     if(TASDHits.size()) _clusters->execute( TASDHits, _measTASD ); 
     
-    cout<<"_measTASD.size()="<<_measTASD.size()<<endl;
-    cout<<"x\ty\tz"<<endl;
-    for(int i=0;i<_measTASD.size();i++)
-      {
-	cout<<_measTASD[i]->position()[0]<<"\t"
-	    <<_measTASD[i]->position()[1]<<"\t"
-	    <<_measTASD[i]->position()[2]<<"\t"
-	    <<endl;
-      }
-    cout<<"_meas.size()="<<_meas.size()<<endl;
-    cout<<"x\ty\tz"<<endl;
-    for(int i=0;i<_meas.size();i++)
-      {
-	cout<<_meas[i]->position()[0]<<"\t"
-	    <<_meas[i]->position()[1]<<"\t"
-	    <<_meas[i]->position()[2]<<"\t"
-	    <<_supergeom.getDetectorModel()->GetSubDetector(_meas[i]->position()[2])->GetName()
-	    <<endl;
-      }
+    //cout<<"_measTASD.size()="<<_measTASD.size()<<endl;
+    //cout<<"x\ty\tz"<<endl;
+    //for(int i=0;i<_measTASD.size();i++)
+    //{
+    //cout<<_measTASD[i]->position()[0]<<"\t"
+    //    <<_measTASD[i]->position()[1]<<"\t"
+    //    <<_measTASD[i]->position()[2]<<"\t"
+    //    <<endl;
+    //}
+    //cout<<"_meas.size()="<<_meas.size()<<endl;
+    //cout<<"x\ty\tz"<<endl;
+    //for(int i=0;i<_meas.size();i++)
+    //{
+    //cout<<_meas[i]->position()[0]<<"\t"
+    //    <<_meas[i]->position()[1]<<"\t"
+    //    <<_meas[i]->position()[2]<<"\t"
+    //    <<_supergeom.getDetectorModel()->GetSubDetector(_meas[i]->position()[2])->GetName()
+    //    <<endl;
+    //}
    
     //_clusters->execute( hits, _meas ); 
 

@@ -2180,11 +2180,20 @@ bool event_classif::LowMomentumExtraction(vector<cluster*>& hits,
   seedState.set_name(RP::representation,RP::slopes_curv_z);
   seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
   seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
+  //seed.set_hv(HyperVector(V,M)); 
   
   //State currstate = traj.state(traj.first_fitted_node());
   //muontraj.nodes()[0]->set_state(seedState);
 
   muontraj.nodes()[muontraj.first_fitted_node()]->set_state(seedState);
+
+  for(unsigned int cnt = 0; cnt < muontraj.nodes().size(); cnt++)
+    {
+      muontraj.nodes()[cnt]->set_state(seedState);
+      
+    }
+
+
   muontraj.set_quality("initialqP",p);
 
 

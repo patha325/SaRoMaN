@@ -103,6 +103,10 @@ private:
   bhep::particle* _truPart;
   int _evNo;
   int _Fit[10];
+  int _hadron[10];
+  int _lowPt[10];
+  int _TASDextrapolation[10];
+  int _TASDadded[10];
   int _reFit[10];
   int _fail[10];
   int _ndf[10];
@@ -127,9 +131,11 @@ private:
   double _haddot[2];
   double _tX[2][10];
   double _X[2][2][10];
-  double _recUnitDir[10][3];
+  //double _recUnitDir[10][3];
+  double _recUnitDir[3][10];
   double _tTh[2][10];
-  double _tUnitDir[10][3];
+  //double _tUnitDir[10][3];
+  double _tUnitDir[3][10];
   double _Th[2][2][10];
 
   double _tqP[10];

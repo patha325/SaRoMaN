@@ -132,6 +132,10 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   for (int i = 0;i<10;i++){
     _engTraj[i] = 0;
     _Fit[i]     = 0;
+    _hadron[i]     = 0;
+    _lowPt[i]     = 0;
+    _TASDextrapolation[i] = 0;
+    _TASDadded[i] = 0;
     _reFit[i]   = 0;
     _fail[i]    = 0;
     _vertZ[i]   = 0;
@@ -145,9 +149,11 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
     _tQ[i] = 0; _tPDG[i] = 0;
     _tX[0][i]  = 0; _tX[1][i]  = 0;
     _tTh[0][i] = 0; _tTh[1][i] = 0;
-    _tUnitDir[i][0] = 0; _tUnitDir[i][1] = 0; _tUnitDir[i][2] = 0;
-    _recUnitDir[i][0] = 0; _recUnitDir[i][1] = 0; _recUnitDir[i][2] = 0;
+    _tUnitDir[0][i] = 0; _tUnitDir[1][i] = 0; _tUnitDir[2][i] = 0;
+    //_recUnitDir[i][0] = 0; _recUnitDir[i][1] = 0; _recUnitDir[i][2] = 0;
    
+    _recUnitDir[0][i] = 0; _recUnitDir[1][i] = 0; _recUnitDir[2][i] = 0;
+
     ///_hadE[1] = 0;
     
     _Xtent[i]=0;///
@@ -303,6 +309,10 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
       (int)trajs[i]->quality("fitcheck") > 0;
 
     _Fit[i]       = (int)success;
+    _hadron[i]     = (int)(trajs[i]->quality("hadron"));
+    _lowPt[i]     = (int)(trajs[i]->quality("lowPt"));
+    _TASDextrapolation[i] = (int)(trajs[i]->quality("TASDextrapolation"));
+    _TASDadded[i] = (int)(trajs[i]->quality("TASDadded"));
     _fail[i]      = (int)(trajs[i]->quality("failType"));
     _reFit[i]     = (int)trajs[i]->quality("reseed");
     _vertZ[i]     = trajs[i]->quality("vertZ");
@@ -510,6 +520,10 @@ void MINDplotter::define_tree_branches() {
 
   statTree->Branch("traj_TrajVertex", &_vertZ, "traj_trajVert[trajNo]/D");
   statTree->Branch("traj_Fitted", &_Fit, "traj_success[trajNo]/I");
+  statTree->Branch("traj_Fitted", &_lowPt, "traj_lowPt[trajNo]/I");
+  statTree->Branch("traj_Fitted", &_hadron, "traj_hadron[trajNo]/I");
+  statTree->Branch("traj_TASDextrap", &_TASDextrapolation, "traj_TASDextrap[trajNo]/I");
+  statTree->Branch("traj_TASDadded", &_TASDadded, "traj_TASDadded[trajNo]/I");
   statTree->Branch("traj_backFit",&_reFit,"traj_backFit[trajNo]/I");
   statTree->Branch("traj_Fail", &_fail, "traj_FailType[trajNo]/I");
   statTree->Branch("traj_interaction",&_intType,"traj_Inter[trajNo]/I");
@@ -542,12 +556,18 @@ void MINDplotter::define_tree_branches() {
   //statTree->Branch("YPull", &_X[5][1], "pull_y[trajNo]/D");
 
   ///Directions
-  statTree->Branch("MCtr_XDirection", &_tTh[0], "MCtr_XTh[trajNo]/D");
-  statTree->Branch("MCtr_YDirection", &_tTh[1], "MCtr_YTh[trajNo]/D");
+  //statTree->Branch("MCtr_DxDzDirection", &_tTh[0], "MCtr_XTh[trajNo]/D");
+  //statTree->Branch("MCtr_DyDzDirection", &_tTh[1], "MCtr_YTh[trajNo]/D");
+  statTree->Branch("MCtr_XDirection", &_tUnitDir[0], "MCtr_XTh[trajNo]/D");
+  statTree->Branch("MCtr_YDirection", &_tUnitDir[1], "MCtr_YTh[trajNo]/D");
+  statTree->Branch("MCtr_ZDirection", &_tUnitDir[2], "MCtr_ZTh[trajNo]/D");
   statTree->Branch("MCtr_Direction", _tUnitDir, "MCtr_Dir[trajNo][3]/D");
   statTree->Branch("traj_Direction", _recUnitDir, "traj_Dir[trajNo][3]/D");
-  statTree->Branch("traj_XDirection", &_Th[0][0], "traj_XTh[trajNo]/D");
-  statTree->Branch("traj_YDirection", &_Th[0][1], "traj_YTh[trajNo]/D");
+  statTree->Branch("traj_XDirection", &_recUnitDir[0], "traj_XTh[trajNo]/D");
+  statTree->Branch("traj_YDirection", &_recUnitDir[1], "traj_YTh[trajNo]/D");
+  statTree->Branch("traj_ZDirection", &_recUnitDir[2], "traj_ZTh[trajNo]/D");
+  //statTree->Branch("traj_XDirection", &_Th[0][0], "traj_XTh[trajNo]/D");
+  //statTree->Branch("traj_YDirection", &_Th[0][1], "traj_YTh[trajNo]/D");
   statTree->Branch("traj_ErrXDirection", &_Th[1][0], "traj_ErrXTh[trajNo]/D");
   statTree->Branch("traj_ErrYDirection", &_Th[1][1], "traj_ErrYTh[trajNo]/D");
   // statTree->Branch("RecXDirection_WVE", &_Th[3][0], "recXTh_WVE[trajNo]/D");
@@ -766,9 +786,27 @@ bool MINDplotter::extrap_to_vertex(const Trajectory& traj,
   
 
   ///
-  _fittedVert = EVector(3,0);
+  _fittedVert = EVector(5,0);
   _vertMat = EMatrix(3,3,0);
   // ste.clear();
+
+  //vector<Node*>::iterator nDIt;
+  State tempstate;
+  //for (nDIt = traj.nodes().begin();nDIt!=traj.nodes().end();nDIt++)
+  for (int i = 0; i< traj.nodes().size(); i++)
+    {
+      //if ( (*nDIt)->status("fitted") )
+      if ( traj.nodes()[i]->status("fitted") )
+	{
+	  tempstate = traj.nodes()[i]->state();
+	}
+    }
+
+
+  //State tempstate = traj.nodes()[traj.nodes().size()-1]->state();
+
+  cout<<"Last Momentum"<<1./tempstate.hv().vector()[5]<<endl;
+  
 
   ///set the 1st fitted node state
   ste = traj.node(traj.first_fitted_node()).state();
@@ -789,10 +827,26 @@ bool MINDplotter::extrap_to_vertex(const Trajectory& traj,
 
   Ring surf(pos, axis, R1, R2);
 
-  //cout<<"1st fitted node Z="<<ste.vector()[2]<<"  ;tru vextexZ="<<pos[2]<<endl;
+  cout<<"1st fitted node Z="<<ste.vector()[2]<<"  ;tru vextexZ="<<pos[2]<<endl;
+  cout<<"Momentum"<<1./ste.hv().vector()[5]<<endl;
+  //cout<<"slopes_z"<<endl;
+  //cout<<"DirX"<<ste.hv().vector()[3]<<endl;
+  //cout<<"DirY"<<ste.hv().vector()[4]<<endl;
+
+  double vecAbs = 1*1 + ste.hv().vector()[3] * ste.hv().vector()[3] + ste.hv().vector()[4]*ste.hv().vector()[4];
+  vecAbs = sqrt(vecAbs);  
+
+  cout<<"Momentum dir = ("
+      << ste.hv().vector()[3]/vecAbs 
+      <<","
+      <<ste.hv().vector()[4]/vecAbs 
+      <<","
+      <<1/vecAbs
+      <<")"
+      <<endl;
 
   bool ok;
-
+  /* Comment out extrapolation.
   if(traj.quality("lowPt") != 1) // Get around not having a vertex.
     {
       /// Add the surfaceof vertex and prpagate to that surface
@@ -803,11 +857,13 @@ bool MINDplotter::extrap_to_vertex(const Trajectory& traj,
       //Convert to slopes representation.
       // fitObj.man().model_svc().conversion_svc().representation().convert(ste, RP::slopes_curv_z);
     }
-  
+  */
   //Grab fitted vertex information.
   _fittedVert = ste.hv().vector();
   _vertMat = ste.hv().matrix();
   _m.message("extrapolated vertex =",_fittedVert[2],"\n",bhep::DETAILED);
+
+  ok = true;
 
   return ok;
 }
@@ -879,9 +935,14 @@ void MINDplotter::direction_pulls(const int trajno) {
 
   //Reconstructed unit direction
   double mag = sqrt(1 + pow(_fittedVert[3],2) + pow(_fittedVert[4],2));
-  _recUnitDir[trajno][0] = _fittedVert[3]/mag;
-  _recUnitDir[trajno][1] = _fittedVert[4]/mag;
-  _recUnitDir[trajno][2] = 1./mag;
+  //_recUnitDir[trajno][0] = _fittedVert[3]/mag;
+  //_recUnitDir[trajno][1] = _fittedVert[4]/mag;
+  //_recUnitDir[trajno][2] = 1./mag;
+
+  _recUnitDir[0][trajno] = _fittedVert[3]/mag;
+  _recUnitDir[1][trajno] = _fittedVert[4]/mag;
+  _recUnitDir[2][trajno] = 1./mag;
+  
   
 
   //Corresponding error.
@@ -1072,9 +1133,12 @@ bool MINDplotter::extract_true_particle2(const bhep::event& evt) {
       
       //True Unit direction.
       double norm = sqrt(1 + pow( _tTh[0][trajNo],2) + pow(_tTh[1][trajNo],2));
-      _tUnitDir[trajNo][0]=  _tTh[0][trajNo]/norm;
-      _tUnitDir[trajNo][1]=  _tTh[1][trajNo]/norm;
-      _tUnitDir[trajNo][2]=  1./norm;
+      //_tUnitDir[trajNo][0]=  _tTh[0][trajNo]/norm;
+      //_tUnitDir[trajNo][1]=  _tTh[1][trajNo]/norm;
+      //_tUnitDir[trajNo][2]=  1./norm;
+      _tUnitDir[0][trajNo]=  _tTh[0][trajNo]/norm;
+      _tUnitDir[1][trajNo]=  _tTh[1][trajNo]/norm;
+      _tUnitDir[2][trajNo]=  1./norm;
       
       //True x,y position.
       _tX[0][trajNo] = evt.vertex().x(); 
@@ -1636,9 +1700,9 @@ void MINDplotter::patternStats2(fitter& Fit) {
       
       ///pattern Recognition Chi2
       if (_failEvent != 7){
-	_pChi[i][0] = Fit.get_classifier().get_PatRec_Chis()[i][0];
-	_pChi[i][1] = Fit.get_classifier().get_PatRec_Chis()[i][1];
-	_pChi[i][2] = Fit.get_classifier().get_PatRec_Chis()[i][2];
+	//_pChi[i][0] = Fit.get_classifier().get_PatRec_Chis()[i][0];
+	//_pChi[i][1] = Fit.get_classifier().get_PatRec_Chis()[i][1];
+	//_pChi[i][2] = Fit.get_classifier().get_PatRec_Chis()[i][2];
 	
 	_engvar[1][i] = 0;
 	

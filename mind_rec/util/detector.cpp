@@ -318,9 +318,11 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       //cout<<"Debug size="<<debug2.size()<<endl;
     
   
-  //cout<<"in detector.cpp="<<retVal<<endl;
+  cout<<"in detector.cpp="<<retVal<<endl;
 
-  if(fabs(retVal)<10 || fabs(retVal) >8000 || isnan(retVal)) retVal = 1;
+  //if(fabs(retVal)<10 || fabs(retVal) >8000 || isnan(retVal)) retVal = 2000;
+
+  if(isnan(retVal)) retVal = -2000;
   
   //retVal = 1000;
 
@@ -1007,6 +1009,10 @@ double Detector::Helix(std::vector<cluster*>& hits){
   //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 400;
 
   if(isnan(retVal)) retVal = 0;
+
+  if(retVal > 8000) retVal = 8000;
+  
+  if(retVal < -8000) retVal = -8000;
 
   if(retVal != 0) retVal = retVal/fabs(retVal) * (fabs(retVal) + GetSubDetector(hits[0]->vector()[2])->Getde_dx());
   

@@ -833,7 +833,7 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   V[2] = muontraj.nodes()[0]->measurement().position()[2];
 
 
-  //cout<<"z pos in event_classif_seed: "<<V[2]<<endl; 
+  cout<<"z pos in event_classif_seed: "<<V[2]<<endl; 
   
 
   //direction
@@ -872,14 +872,28 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
 
   //cout<<"In get_patternRec_seed: "<<V[5]<<" "<<1/V[5]<<endl;
   
+
+  // Fitting from behind.
+
+  M[0][0] = 8.5 * 8.5 * cm * cm;
+  M[1][1] = 1.5 * 1.5 *cm * cm;  // Expected pos res x,y
+  //M[2][2] =  M[1][1] = 1.5 * 1.5 *cm * cm;
+  M[3][3] = 0.01;
+  M[4][4] = 0.01; 
+  M[5][5] = 1./4. * V[5]*V[5];
+
+
+  /*
   M[0][0] = M[1][1] = 15. * 15. *cm *cm;
-  M[2][2] = EGeo::zero_cov()/2;
-  M[3][3] = 8.5 * 8.5 *cm *cm;
-  M[4][4] = 1.5 * 1.5 *cm *cm;
+  M[2][2] = 4.*4.*cm*cm;
+  //M[2][2] = EGeo::zero_cov()/2;
+  M[3][3] = 9*8.5 * 8.5 *cm *cm;
+  M[4][4] = 9*1.5 * 1.5 *cm *cm;
   M[5][5] = pow(V[5],2)*4;
+  */
 
 
-  V2[0] = 1;
+  V2[0] = -1;
 
   seed.set_name(RP::representation, RP::slopes_curv_z); 
   // The main HyperVector 

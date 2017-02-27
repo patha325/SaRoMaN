@@ -74,6 +74,7 @@ int main(int argc, char* argv[]){
   
   //catchOk = plot->initialize(run_store.fetch_sstore("out_file"),bhep::MUTE);
   plot.Initialize(ana_store.fetch_sstore("out_file"), patR, clusts, bhep::MUTE);
+  //plot.Initialize(ana_store.fetch_sstore("out_file"), patR, clusts, bhep::VERBOSE);
 
   /// changed to get CA output
   //  plot.initialize(ana_store.fetch_sstore("out_file"), ana_store.fetch_sstore("CA_file"), patR, clusts, bhep::MUTE);

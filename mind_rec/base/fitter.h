@@ -6,6 +6,7 @@
 #include <recpack/RecPackManager.h>
 #include <recpack/RayTool.h>
 #include <recpack/KalmanFitter.h>
+#include <recpack/HelixEquation.h>
 #include <recpack/LsqFitter.h>
 #include <recpack/ParticleState.h>
 
@@ -15,6 +16,8 @@
 #include <mind/cluster.h>
 #include <mind/event_classif.h>
 #include <mind/hit_clusterer.h>
+
+#include <mind/line.h>
 
 //#include <mind/super_fit.h>
 
@@ -132,6 +135,19 @@ protected:
 
   //read parameters from store
   void ReadParam();
+
+  void TASDtracker();
+
+  void TASDtracker2();
+
+  double CreatePlanesWithHits(const std::vector<cluster*>&  meas, std::vector<plane_info*>& planes);
+
+  void AddHitsToTrack(const std::vector<plane_info*>& planes, Trajectory* traj);
+
+  void AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory* traj);
+
+
+  //void CreateTrackFromHits(const std::vector<plane_info*>& planes, Trajectory* traj);
     
   //seed for fit
   void ComputeSeed(const Trajectory& traj,State& seed, int firsthit=0);

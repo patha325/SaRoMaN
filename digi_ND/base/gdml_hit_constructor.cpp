@@ -83,7 +83,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   //cout<<"_testBeam"<<_testBeam<<endl;
   
   //cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
-  
+  /*
   for(int i=0;i<sortedHits.size();i++)
     {
       cout<<"time\tenergy\tT\tZ\tTASD\tY\tMother"<<endl;
@@ -97,7 +97,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
       //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
       //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
     }
-  
+  */
   //cout<<"starting ClusteringAida"<<endl;
   
 
@@ -339,7 +339,9 @@ std::vector<bhep::hit*> gdml_hit_constructor::FilteringBadHits(const std::vector
 
   for(int counter = 0; counter < hits.size(); counter++)
     {
-      if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
+      //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
+      //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 1.0)
+      if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< _minEng)
 	//if(hits[counter]->ddata( "EnergyDep" )< 0.1)
       {
         //cout<<"Removing hit from: "<<hits[inCounter]->mother_particle().name()<<endl;
@@ -831,6 +833,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
   yE1 = yE1 * exp(-(yedge - fabs(barY))/_attLength);
   yE2 = yE2 * exp(-(yedge + fabs(barY))/_attLength);
 
+  
+
 
   //xeAttTH1F->Fill(xE1+xE2);
   //yeAttTH1F->Fill(yE1+yE2);
@@ -859,6 +863,10 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
 
   //xeSmearTH1F->Fill(xE);
   //yeSmearTH1F->Fill(yE);
+
+  //cout<<"xE="<<xE<<endl;
+  //cout<<"yE="<<yE<<endl;
+  //cout<<"_minEng="<<_minEng<<endl;
 
   //if ( fabs(z) > (_detectorLength + _vertexDetdepth)/2. && 
   //     xE < _minEng && yE < _minEng )

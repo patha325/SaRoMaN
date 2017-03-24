@@ -48,17 +48,19 @@ class saroman:
     '''
 
     def __init__(self, generation_mode='SINGLE_PARTICLE'):
+    #def __init__(self, generation_mode='GENIE'): #neutrino
         #Set up paths #
         self.home = os.getcwd()
         self.exec_base = self.home
-        self.out_base  = os.path.join(self.home, 'out')
+        #self.out_base  = os.path.join(self.home, 'out')
+        self.out_base = '/data/neutrino06/phallsjo/out'
         #self.out_base  = os.path.join(self.home, 'batch')
         self.scripts_dir = os.path.join(self.exec_base, 'saroman')
         self.third_party_support = os.path.join(self.home, 'third_party') 
         #self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
-        self.geom_root_file = os.path.join(self.out_base,'MIND.gdml')
+        self.geom_root_file = os.path.join(self.out_base,'MIND_v3a.gdml')
         #self.xml_file_path = os.path.join(self.exec_base,'patMIND.gdml')
-        self.parsed_file_path  = os.path.join(self.exec_base,'parsedGdml.log')
+        self.parsed_file_path  = os.path.join(self.exec_base,'parsed.log')
 
         #General flags
         self.need_third_party_install = False
@@ -69,15 +71,15 @@ class saroman:
 
         #Should be implemented as input values#
         self.train_sample = 0
-        # self.part = 'mu-'#'14'
-        # self.pid = 13
-        self.part = 'mu+'#'14'
-        self.pid = -13
+        self.part = 'mu-' #'14'
+        self.pid = 14 #14 for neutrino!
+        #self.part = 'mu+'#'14'
+        #self.pid = -13
         
         #self.seed = 5000 * random.random()
         self.seed = 1000
         self.Nevts = 1000
-        self.inttype = 'CC'
+        self.inttype = 'CC' #'CCQE'#Neutrino
         #self.Bfield = 1.5 #Tesla
         self.BfieldScaling = 1.0
 
@@ -88,6 +90,9 @@ class saroman:
             self.MIND_ydim = 1#0.96#6.0 # m
             self.MIND_zdim = 1#3.261# 2.0#13.0 # m
             self.config_rec_pos_resZ = 1.0 #cm
+            self.config_rec_pos_resX = 1.0 #cm new
+            self.config_rec_pos_resY = 1.0 #cm new
+            self.config_rec_boxX = 1.0 #cm new
             self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
         else:
             #self.MIND_xdim = 1#0.96#7.0 # m
@@ -96,15 +101,20 @@ class saroman:
             #self.config_rec_pos_resZ = 1.0 #cm
             #self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
             
-            self.MIND_xdim = 2.9#1#0.96#7.0 # m
-            self.MIND_ydim = 2#1#0.96#6.0 # m
+            self.MIND_xdim = 3.5#2.9#1#0.96#7.0 # m
+            self.MIND_ydim = 2.1#2#1#0.96#6.0 # m
             self.MIND_zdim = 8#1#3.261# 2.0#13.0 # m
-            self.config_rec_pos_resZ = 1.5#1.0 #cm
+            self.config_rec_pos_resZ = 1.5#1.0 #cm #from gdml, 4*0.75 /2 ?
+            self.config_rec_pos_resX = 8.5#8.5 #cm #from gdml, 35 /2 ?
+            self.config_rec_pos_resY = 1.5 #cm #from gdml, 3.1 /2 ?
+            self.config_rec_boxX = 17#8.5 #cm #when used?
             #self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
-            self.xml_file_path = os.path.join(self.exec_base,'MIND_v3.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'MIND_v3b.gdml')
+            self.xml_file_path = os.path.join(self.exec_base,'MIND_v3corrected.gdml')
 
             #self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
-            #self.xml_file_path = os.path.join(self.exec_base,'ND_v1.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'ND_v3.gdml') #neutrino
+            #self.gdml_root_file = os.path.join(self.out_base,'ND_v3.gdml') #neutrino
             #self.xml_file_path = os.path.join(self.exec_base,'MIND_v4.gdml')
 
 
@@ -126,26 +136,26 @@ class saroman:
         #de_dx found at pdg.lbl.gov/2015/AtomicNuclearProperties
         self.MIND_active_mat = 'G4_POLYSTYRENE'
         self.MIND_active_de_dx = 0.2052 #MeV/mm
-        self.MIND_thickness_active = 3.0#1.5 # cm
+        self.MIND_thickness_active = 3.0#3.0#1.5 # cm
         self.MIND_thickness_sigma = self.MIND_thickness_active / math.sqrt(12)
-        self.MIND_width_activeX = 8.5 #cm
+        self.MIND_width_activeX = 8.5 #cm  #cm #from gdml, 35 /2 ?
         self.MIND_width_sigmaX = self.MIND_width_activeX / math.sqrt(12)
-        self.MIND_width_activeY = 1.5 #cm
+        self.MIND_width_activeY = 1.5 #cm #cm #from gdml, 3.1 /2 ?
         self.MIND_width_sigmaY = self.MIND_width_activeY / math.sqrt(12)
         self.MIND_rad_length_active = 413.1 #mm
         self.MIND_npanels = 3 #Describe howmany 'parts' the magnetic field has.
         self.MIND_active_layers = 1 #1
         self.MIND_passive_mat = 'G4_Fe'
         self.MIND_passive_de_dx = 1.143 #MeV/mm
-        self.MIND_thickness_passive = 3.0#1.5 # cm
+        self.MIND_thickness_passive = 3.0#0.3*2+3.0 #0.3*2+0.5+3.0#3.0 #1.5 # cm
         self.MIND_rad_length_passive = 17.58 #mm
         self.MIND_bracing_mat = 'G4_Al'
         self.MIND_bracing_de_dx = 0.4358 #MeV/mm
-        self.MIND_thickness_bracing = 0.1 # cm
+        self.MIND_thickness_bracing = 0.3 # cm
         self.MIND_thickness_air = 0.5 # cm
         self.MIND_thickness_air_mm = 10*self.MIND_thickness_air
         self.MIND_rad_length_air = 303.9 #mm
-        self.MIND_min_eng_at_plane = 0#0.000016 #MeV
+        self.MIND_min_eng_at_plane = 0.5#0.5#1#1.6#0#0.000016 #MeV
         self.MIND_module_length = (self.MIND_thickness_active*self.MIND_active_layers +
                                    self.MIND_thickness_passive+self.MIND_thickness_bracing +
                                    self.MIND_thickness_air_mm)
@@ -156,7 +166,8 @@ class saroman:
 
         #Print config object, used to generate config files correctly
         #Set to either single_particle generation or generation through genie.
-        self.vert_local = 'GAUSS'
+        self.vert_local = 'GAUSS' #FIXED
+        #self.vert_local = 'TASD' #Neutrino!
         self.GenerationMode = generation_mode # 'SINGLE_PARTICLE' #GENIE
         self.print_config=print_config(self.GenerationMode)
 
@@ -191,7 +202,7 @@ class saroman:
         self.config_digi_eng_res = 0.11 #(%%)
         self.config_digi_gaus_sigma = 1.0 #(cm)
 
-        self.config_rec_likelihood = 1 #1 if we require output of likelihood info
+        self.config_rec_likelihood = 0 #1 if we require output of likelihood info
         self.config_rec_max_multOcc_plane = 10
         self.config_rec_plane_occupancy = 10
         self.config_rec_min_iso_prop = 0.8
@@ -212,31 +223,31 @@ class saroman:
         self.config_rec_max_coincidence = 0.5
         self.config_rec_accept_chi = 20
         self.config_rec_max_traj = 40
-        self.config_rec_max_sep = 7 #cm
+        self.config_rec_max_sep = 40 #7 #cm
         self.config_rec_min_blobOcc = 2
         self.config_rec_max_blobSkip = 0.2
-        self.config_rec_min_use_prop = 0.7
+        self.config_rec_min_use_prop = 0.9
         self.config_rec_max_consec_missed_planes = 3
         self.config_rec_pat_rec_max_outliners = 4
-        self.config_rec_pat_rec_max_chi = 20
-        self.config_rec_chi2node_max = 20
+        self.config_rec_pat_rec_max_chi = 30
+        self.config_rec_chi2node_max = 30
         self.config_rec_max_outliners = 2
-        self.config_rec_chi2fit_max = 50
+        self.config_rec_chi2fit_max = 20
         # verbosities for recpack services
         self.config_rec_vfit = 0#0#3
         self.config_rec_vmat = 0#0
         self.config_rec_vnav = 0#0
         self.config_rec_vmod = 0#0
         self.config_rec_vsim = 0#0
-        self.config_rec_model = 'particle/helix'
+        self.config_rec_model ='particle/helix' # 'particle/sline' #
         self.config_rec_kfitter = 'kalman'
         self.config_rec_gen_seed = 373940592
-        self.config_rec_boxX = 8.5 #cm
+        #self.config_rec_boxX = 8.5 #cm
         self.config_rec_do_clust = 1
         self.config_rec_detect = 'tracking'
-        self.config_rec_step_size = 5 #cm
-        self.config_rec_pos_resX = 8.5 #cm
-        self.config_rec_pos_resY = 1.5 #cm
+        self.config_rec_step_size = 3 #cm
+        #self.config_rec_pos_resX = 8.5 #cm
+        #self.config_rec_pos_resY = 1.5 #cm
         #self.config_rec_pos_resZ = 1.5 #cm
         self.config_rec_meas_type = 'xyz'
         self.config_rec_WLSatten = 5000
@@ -271,13 +282,13 @@ class saroman:
         Clean up our own software, use before building and before committing to git.
         '''
         #sciNDG4
-        command = [self.third_party_support+'/bin/scons','-c']
-        subprocess.call(command, cwd = self.exec_base+'/sciNDG4')
+        #command = [self.third_party_support+'/bin/scons','-c']
+        #subprocess.call(command, cwd = self.exec_base+'/sciNDG4')
 
         #digi_ND
-        subprocess.call('make clean', shell=True, cwd = self.exec_base+'/digi_ND') 
-        command = self.exec_base+'/digi_ND/cleanup.sh'
-        subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
+        #subprocess.call('make clean', shell=True, cwd = self.exec_base+'/digi_ND') 
+        #command = self.exec_base+'/digi_ND/cleanup.sh'
+        #subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
 
         #mind_rec
         subprocess.call('make clean', shell=True, cwd = self.exec_base+'/mind_rec') 
@@ -289,16 +300,22 @@ class saroman:
         '''
         Build all the own libraries that are used for SaRoMaN
         '''
+        #sciNDG4
+        #command = [self.third_party_support+'/bin/scons']
+        #print subprocess.list2cmdline(command)
+        #subprocess.call(command, cwd = self.exec_base+'/sciNDG4', env=os.environ)
+
+        
         #digi_ND
         #run configure and autogen in that context.
-        command = self.exec_base+'/digi_ND/autogen.sh'
-        print command
-        subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
-        subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
-        command = self.exec_base+'/digi_ND/configure'
-        print command
-        subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
-        subprocess.call('make', shell=True, cwd = self.exec_base+'/digi_ND')
+        #command = self.exec_base+'/digi_ND/autogen.sh'
+        #print command
+        #subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
+        #subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
+        #command = self.exec_base+'/digi_ND/configure'
+        #print command
+        #subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
+        #subprocess.call('make', shell=True, cwd = self.exec_base+'/digi_ND')
 
         #mind_rec
         #run configure and autogen in that context.
@@ -312,10 +329,7 @@ class saroman:
         subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/mind_rec')
         subprocess.call('make', shell=True, cwd = self.exec_base+'/mind_rec')    
         
-        #sciNDG4
-        command = [self.third_party_support+'/bin/scons']
-        print subprocess.list2cmdline(command)
-        subprocess.call(command, cwd = self.exec_base+'/sciNDG4', env=os.environ)
+       
     '''        
     def Create_folder_structure(self,name,ending):
         OutBase = os.path.join(self.out_base, name+'_out')
@@ -460,6 +474,8 @@ class saroman:
         Set up the environment required to run.
         '''
         genie_support_ext = self.third_party_support + "/genie_source/src/scripts/build/ext"
+
+	os.environ['LD_LIBRARY_PATH']= os.pathsep +"/usr/lib" + os.pathsep + "/usr/lib64"
         
         #os.environ['GENIE_SUPPORT_EXT'] = genie_support_ext
         os.environ['THIRD_PARTY_SUPPORT'] = self.third_party_support
@@ -572,6 +588,9 @@ class saroman:
     def Run_genie(self):
 
         if(self.GenerationMode != 'SINGLE_PARTICLE'):
+
+            self.nu_file = '/data/neutrino05/phallsjo/copy/SaRoMan/data/nu_mu_decay_ND.root'
+            self.spec_hists = 'numu_energy_n'
             
             genieOutBase = os.path.join(self.out_base, 'genie_samples')
             genieOutDir = os.path.join(genieOutBase,'nd_'+self.part+self.inttype)

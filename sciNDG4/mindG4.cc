@@ -158,8 +158,8 @@ int main(int argc, char** argv)
 	  ("/process/inactivate "+MindConfigService::Instance().Job().GetSParam("UI_inactivate2"));
       }
 
-    //UI->ApplyCommand("/process/inactivate muMsc"); // Turn of muon multiple scattering
-    //UI->ApplyCommand("/process/inactivate msc"); // Turn of multiple scattering
+    //UI->ApplyCommand("/process/inactivate muMsc"); // Turn off muon multiple scattering
+    //UI->ApplyCommand("/process/inactivate msc"); // Turn off multiple scattering
     //UI->ApplyCommand("/process/inactivate muDecay");
     //UI->ApplyCommand("/process/inactivate muMinusCaptureAtRest");
     //UI->ApplyCommand("/process/list"); // List all of the active processes

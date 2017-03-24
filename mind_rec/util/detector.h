@@ -9,6 +9,7 @@
 #include <mind/subDetector.h>
 
 #include <TH1F.h>
+#include <TFile.h>
 #include <TGraphErrors.h>
 #include <TF1.h>
 #include <TCanvas.h>

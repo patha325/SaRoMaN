@@ -43,6 +43,12 @@ void MINDfitman::fit_mode()
   _man.fitting_svc().retrieve_fitter<KalmanFitter>(_fitter,_model)
     .set_number_allowed_outliers( _store.fetch_istore("max_outliers") );
   
+ _man.fitting_svc().retrieve_fitter<KalmanFitter>(_fitter,_model)
+    .set_max_consecutive_extrap_failures(10); 
+
+ //_man.fitting_svc().retrieve_fitter<KalmanFitter>(_fitter,_model)
+ // .set_use_back_filtering(true); 
+
   _inRecMode = false;
 
 }
@@ -56,6 +62,12 @@ void MINDfitman::rec_mode()
   _man.fitting_svc().retrieve_fitter<KalmanFitter>(_fitter,_model)
     .set_number_allowed_outliers( _store.fetch_istore("pat_rec_max_outliers") );
   
+  _man.fitting_svc().retrieve_fitter<KalmanFitter>(_fitter,_model)
+    .set_max_consecutive_extrap_failures(10); 
+  
+  //_man.fitting_svc().retrieve_fitter<KalmanFitter>(_fitter,_model)
+  //.set_use_back_filtering(true); 
+
   _inRecMode = true;
   
 }
@@ -89,6 +101,10 @@ void MINDfitman::config_geometry(Setup& det)
 {
 
   _man.geometry_svc().set_zero_length( 0.1 * mm );
+
+  //_man.geometry_svc().set_zero_transverse_component(1e-12); 
+  _man.geometry_svc().set_zero_BField(1e-12);
+
   _man.geometry_svc().set_infinite_length( 1e12 * mm );
 
   _man.geometry_svc().add_setup( "main", det );
@@ -133,11 +149,11 @@ void MINDfitman::config_navigator()
   _man.navigation_svc().inspector("eloss")
     .set_verbosity(l1);
   
-  _man.navigation_svc().navigator(_model).set_max_number_steps(100);
+  _man.navigation_svc().navigator(_model).set_max_number_steps(1000);
 
   _man.navigation_svc().navigator(_model).set_allow_extrap_outside_volume(true);
 
-  //_man.navigation_svc().navigator(_model).set_max_prop_distance_outside_finalvolume(150);
+  _man.navigation_svc().navigator(_model).set_max_prop_distance_outside_finalvolume(150);
 
 
 }
@@ -145,6 +161,8 @@ void MINDfitman::config_navigator()
 void MINDfitman::config_model()
 {
   _man.model_svc().select_model(_model);
+
+  _man.model_svc().enable_correction(RP::particle_helix, RP::eloss, true);
 
   _man.model_svc().model(_model)
     .equation().set_verbosity(l2);

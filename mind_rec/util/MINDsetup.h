@@ -63,6 +63,7 @@ public:
 
   Volume* mother;
   Volume* detector;
+  Volume* detector2;
   Volume* det;
   vector<Volume*> detVector;
   Volume* vdet;
@@ -82,6 +83,7 @@ protected:
     
   void readParam();
   void createGeom();
+  void createGeom2();
   void add_slab(int plane, const dict::Key det_vol);
   // void add_slab(int plane, Volume& det_vol);
   void setResolution();
@@ -124,12 +126,17 @@ protected:
     
   double B_int;
   EVector BField;
+  EVector BField_Sci;
+  EVector BField_Fe;
+
   double _fieldScale;
   //MINDfieldMapReader BFieldMap;
   vector<MINDfieldMapReader*> BFieldMapVec;
   MINDfieldMapReader _generalBFieldMap;
 
   DeDxMap* zeroMap;
+
+  vector<double*> dedxVec;
 
   Detector detectorModel;
 
@@ -149,6 +156,8 @@ protected:
   //for de/dx map
   double de_dx_scint;
   double de_dx_fe;
+  double de_dx_scint_MeV;
+  double de_dx_fe_MeV;
   double de_dx_brace;
   //double de_dx_min;
   vector<DeDxMap*> de_dx_map_vec;

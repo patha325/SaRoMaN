@@ -42,6 +42,8 @@ void MINDsetup::init(bhep::gstore pstore, bhep::prlevel level) {
   // create volumes and surfaces
   
   createGeom();
+
+  //createGeom2();
   
   // define detector resolutions
 
@@ -50,6 +52,10 @@ void MINDsetup::init(bhep::gstore pstore, bhep::prlevel level) {
   // add properties to volumes and surfaces
   
   addProperties();
+  //cout<<"_gsetup"<<endl;
+  cout<<_gsetup<<endl;
+
+  //cout<<_gsetup.check_overlaps()<<endl;
 
   // std::cout << _gsetup.volume("Detector").parameter("BField") << std::endl;
   // dict::mixdictionary smell = _gsetup.volume_properties("IRON_plane0");
@@ -109,8 +115,11 @@ void MINDsetup::createGeom(){
 
   else if(OctGeom==3)
     {
-      mother = new Box(pos, zaxis, xaxis, MOTHER_z/2., MOTHER_x/2, MOTHER_y/2);
-      detector = new Box(pos, zaxis, xaxis, MOTHER_z/2., MOTHER_x/2, MOTHER_y/2);
+      //mother = new Box(pos, zaxis, xaxis, MOTHER_z/2., MOTHER_x/2, MOTHER_y/2);
+      //detector = new Box(pos, zaxis, xaxis, MOTHER_z/2., MOTHER_x/2, MOTHER_y/2);
+      mother = new Box(pos, xaxis, yaxis, MOTHER_x/2., MOTHER_y/2, MOTHER_z/2);
+      detector = new Box(pos, xaxis, yaxis, MOTHER_x/2., MOTHER_y/2, MOTHER_z/2);
+
     }
  
   else
@@ -127,6 +136,8 @@ void MINDsetup::createGeom(){
   _msetup.message("Mother added to setup",bhep::VERBOSE);
 
   // Create detector volume
+
+  
 
   //dict::Key vol_name = "Detector";
   //const dict::Key vol_name = "Detector";
@@ -157,9 +168,9 @@ void MINDsetup::createGeom(){
       
       if(it_int!= _gdml_solid_map.end())
 	{
-	  //cout << it_int->first<<endl;
-	  //det = new Box(pos, zaxis, xaxis, it_int->second[2]/2.,
-	  //		it_int->second[0]/2, it_int->second[1]/2);
+	  cout << it_int->first<<endl;
+	  det = new Box(pos, zaxis, xaxis, it_int->second[2]/2.,
+	  		it_int->second[0]/2, it_int->second[1]/2);
 
 	  if((pos[2] + it_int->second[2]/2 > _detector_z_max)) 
 	    _detector_z_max = (pos[2] + it_int->second[2]/2);
@@ -168,22 +179,457 @@ void MINDsetup::createGeom(){
 	    _detector_z_min = (pos[2] - it_int->second[2]/2);
 	  
 	  // Create the box with the position and the dimentions of the module
-	  detVector.push_back(new Box(pos, zaxis, xaxis, it_int->second[2]/2.,
-	  		      it_int->second[0]/2, it_int->second[1]/2));
+	  //detVector.push_back(new Box(pos, zaxis, xaxis, it_int->second[2]/2.,
+	  //		      it_int->second[0]/2, it_int->second[1]/2));
+
+	  detVector.push_back(new Box(pos, xaxis, yaxis, it_int->second[0]/2.,
+				      it_int->second[1]/2, it_int->second[2]/2));
 
 	  detectorModel.GetSubDetectorVec()->push_back(new SubDetector(vol_name,pos,it_int->second));
 
 	  //_gsetup.add_volume("mother",vol_name,det);
 	  _gsetup.add_volume("mother",vol_name,detVector.back());
 
-	  vector<double> tempVector;
-	  tempVector.push_back(pos[2]);
-	  tempVector.push_back(it_int->second[2]/2);
+	  //vector<double> tempVector;
+	  //tempVector.push_back(pos[2]);
+	  //tempVector.push_back(it_int->second[2]/2);
 
-	  _moduleDataMap[vol_name] = tempVector;
+	  //  _moduleDataMap[vol_name] = tempVector;
 	}
-      //std::cout << it->first << " " << it->second[0] << " " << it->second[1] << " "  <<it->second[2]<< "\n";
+      std::cout << it->first << " " << it->second[0] << " " << it->second[1] << " "  <<it->second[2]<< "\n";
     }
+
+  
+}
+
+//*************************************************************
+void MINDsetup::createGeom2(){
+//*************************************************************    
+    
+// Add each iron or scintilator block as its own instead of adding an SFF block etc.
+
+  string current_string;
+  dict::Key vol_name;
+  bhep::vdouble field = _pstore.fetch_vstore("mag_field");
+  double earth = 5e-5;
+  BField = EVector(3,0);
+
+  BField_Sci = EVector(3,0);
+  BField_Fe = EVector(3,0);
+
+  BField_Sci[0] = tesla * earth;
+  BField_Sci[1] = 0.0;
+  BField_Sci[2] = 0.0;
+
+  BField_Fe[0] = tesla * -1.5;
+  BField_Fe[1] = 0.0;
+  BField_Fe[2] = 0.0;
+
+
+  //BField[0] = tesla * earth;
+  BField[0] = earth * tesla;  
+  BField[1] = 0.0; // field[1] * tesla * earth;
+  BField[2] = 0.0; //field[2] * tesla * earth;
+
+  _msetup.message("+++ CreatGeom function +++",bhep::VERBOSE);
+  
+  //----- axes for definition of volumes and surfaces ----//
+  _detector_z_max = 0;
+  _detector_z_min = 0;
+
+  xaxis=EVector(3,0); xaxis[0] = 1.; 
+  yaxis=EVector(3,0); yaxis[1] = 1.; 
+  zaxis=EVector(3,0); zaxis[2] = 1.;
+  
+  //----------- Create a mandatory mother volume ---------//
+  
+  EVector pos(3,0); pos[2]= VERT_z/2.;
+  EVector vpos(3,0); vpos[2] = -MIND_z/2.;
+
+  mother = new Box(pos, zaxis, xaxis, MOTHER_z/2., MOTHER_x/2, MOTHER_y/2);
+  detector = new Box(pos, zaxis, xaxis, MOTHER_z/2., MOTHER_x/2, MOTHER_y/2);
+  detector2 = new Box(pos, zaxis, xaxis, MOTHER_z/2., MOTHER_x/2, MOTHER_y/2);
+ 
+  _msetup.message("Mother volume generated",bhep::VERBOSE);
+
+  // add mother volume
+  
+  _gsetup.set_mother(mother);
+
+  //_gsetup.set_volume_property("mother",RP::BField,BField_Fe);
+  _gsetup.set_volume_property("mother","X0",X0AIR);
+  //_gsetup.set_volume_property("mother","X0",X0Fe);
+
+  BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,1.0));
+  //_gsetup.set_volume_property("mother",RP::BFieldMap,*BFieldMapVec.back());
+
+ //zeroMap = new DeDxMap(2.398e-4 *MeV/mm);
+  
+ //_gsetup.set_volume_property("mother",RP::de_dx_map,*zeroMap);
+  _gsetup.set_volume_property("mother",RP::de_dx,de_dx_scint_MeV);
+  //_gsetup.set_volume_property("mother",RP::de_dx,de_dx_fe_MeV);
+
+  //_gsetup.add_volume("mother","detector",detector);
+  //_setup.set_volume_property("detector",RP::SurfNormal,zaxis);
+
+  //_gsetup.set_volume_property("detector",RP::BField,BField);
+  //_gsetup.set_volume_property("detector","X0",X0Fe);
+  //_gsetup.set_volume_property("detector",RP::de_dx,de_dx_fe_MeV);
+
+  //_gsetup.add_volume("detector","detector2",detector2);
+
+  //_gsetup.set_volume_property("detector2",RP::BField,BField_Fe);
+  //_gsetup.set_volume_property("detector2","X0",X0Fe);
+  //_gsetup.set_volume_property("detector2",RP::de_dx,de_dx_fe_MeV);
+
+
+
+
+  /*
+ if(StepSize){
+    _gsetup.set_volume_property_to_sons("mother","StepSize",StepSize);
+    
+    _gsetup.set_volume_property_to_sons("mother",RP::SurfNormal,_zaxis);
+
+  } 
+  */
+  _msetup.message("Mother added to setup",bhep::VERBOSE);
+  /*
+  // Create detector volume
+  const dict::Key vert_name = "VertDetector";   
+  //  dict::Key vol_name;
+
+  string name; //= it->first;
+
+  for(map<string, std::vector<double> >::const_iterator it = _gdml_pos_map.begin();
+      it != _gdml_pos_map.end(); ++it)
+    {
+      name = it->first;
+      //cout<<"name of module="<<name<<endl;
+      std::map<string,std::vector<double> >::iterator it_int;
+      // Get the middle position of the module
+      vol_name = it->first;
+      int numScint=0;
+      int numFe=0;
+      bool module = false;
+
+      // From the name, count the number of S and F.
+      for(unsigned int len= 0; len < name.length(); len++)
+	{
+	  current_string = name.at(len);
+	  if("S" == current_string)
+	    {
+	      numScint++;
+	    }
+	  else if("F" == current_string)
+	    {
+	      numFe++;
+	    }
+	  else if("M" == current_string)
+	    {
+	      module = true;
+	      if(numFe ==4)
+		{
+		  numFe *= 3;
+		  numScint *= 3;
+		}
+	      else
+		{
+		  numFe *=2;
+		  numScint *=2;
+		}
+	      //_gsetup.set_volume_property(vol_name,"StepSize",minStepSize);
+	      break;
+	    }
+	  else
+	    {
+	      break;
+	    }
+	}
+
+      // build the detectors. Scintilator and iron.
+
+      // std::map<string,std::vector<double> >::iterator it_int;
+      //it_int =_gdml_solid_map.find(it->first);
+
+      if(!module)
+	{
+	  //cout<<"Non module"<<endl;
+	  // starts with s, ends with s and iron inbetween.
+	  // Start adding from the begining. 
+
+	  // Compensate for where it aught to be. it-> given as submodule size.
+	  pos[0]= it->second[0];
+	  pos[1]= it->second[1];
+	  pos[2]= it->second[2];
+
+	  it_int =_gdml_solid_map.find(it->first);
+
+	  if(numScint == 1 && numFe == 0)
+	    {
+	      //cout<<"vol_name="<<vol_name<<endl;
+	      //cout<<"Single s"<<endl;
+	      //cout<<pos[0]<<"\t"<<pos[1]<<"\t"<<pos[2]<<endl;
+	      detVector.push_back(new Box(pos, zaxis, xaxis,
+					  it_int->second[2]/2.,
+					  it_int->second[0]/2., 
+					  it_int->second[1]/2.));
+	      _gsetup.add_volume("mother",vol_name,detVector.back());
+	      _gsetup.set_volume_property(vol_name,RP::SurfNormal,_zaxis);
+
+	      //Surface* surf = new Rectangle(pos,zaxis,xaxis, it_int->second[0]/2.,it_int->second[1]/2.); 
+	      //_gsetup.add_surface(vol_name, "surf_1", surf);	
+
+	      X0EffVec.push_back(new double(X0Sc));
+	      _moduleDataMap[vol_name].push_back(de_dx_scint);
+	      double length = it_int->second[2];
+	      BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,earth));
+	      double copy = earth;
+	      _moduleDataMap[vol_name].push_back(copy);
+	      de_dx_map_vec.push_back(new DeDxMap(de_dx_scint*MeV/mm));
+	      //_gsetup.set_volume_property(vol_name,RP::de_dx_map,*de_dx_map_vec.back());
+	      //double tempde = de_dx_scint*MeV/mm;
+	      _gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_scint_MeV);
+	      _gsetup.set_volume_property(vol_name,"X0",*X0EffVec.back());
+	      //_gsetup.set_volume_property(vol_name,RP::BFieldMap,*BFieldMapVec.back());
+
+
+	      _gsetup.set_volume_property(vol_name,RP::BField,BField_Sci);
+	      //detectorModel.GetSubDetectorVec()->push_back(new SubDetector(vol_name,pos,it_int->second));	
+	      //SubDetector* subDetector = detectorModel.GetSubDetector(vol_name);
+	      //if(subDetector)
+	      //{
+	      //  subDetector->SetProperties(BFieldMapVec.back(),de_dx_map_vec.back());
+	      //  subDetector->SetSecondaryProperties(SCINT_z,0,X0Sc,de_dx_scint,earth,length);
+	      //}
+	    }
+	  else //not simply an s module.
+	    {
+	      pos[2] = it->second[2]-it_int->second[2]/2+SCINT_z/2;
+
+	      //cout<<"vol_name="<<vol_name<<endl;
+	      //cout<<"First s"<<endl;
+	      //cout<<pos[0]<<"\t"<<pos[1]<<"\t"<<pos[2]<<endl;
+	      it_int->second[2] = SCINT_z;
+	      detVector.push_back(new Box(pos, zaxis, xaxis,
+					  SCINT_z/2.,
+					  it_int->second[0]/2., 
+					  it_int->second[1]/2.));
+	      _gsetup.add_volume("mother",vol_name,detVector.back());
+	      _gsetup.set_volume_property(vol_name,RP::SurfNormal,_zaxis);
+	      //Surface* surf = new Rectangle(pos,zaxis,xaxis, it_int->second[0]/2.,it_int->second[1]/2.); 
+	      //_gsetup.add_surface(vol_name, "surf_1", surf);
+	      X0EffVec.push_back(new double(X0Sc));
+	      _moduleDataMap[vol_name].push_back(de_dx_scint);
+	      double length = SCINT_z/2.;//it_int->second[2];
+	      BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,earth));
+	      double copy = earth;
+	      _moduleDataMap[vol_name].push_back(copy);
+	      de_dx_map_vec.push_back(new DeDxMap(de_dx_scint*MeV/mm));
+	      //double tempde = de_dx_scint*MeV/mm;
+	      _gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_scint_MeV);
+	      //_gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_scint*MeV/mm);
+	      //_gsetup.set_volume_property(vol_name,RP::de_dx_map,*de_dx_map_vec.back());
+	      _gsetup.set_volume_property(vol_name,"X0",*X0EffVec.back());
+	      //_gsetup.set_volume_property(vol_name,RP::BFieldMap,*BFieldMapVec.back());
+	       _gsetup.set_volume_property(vol_name,RP::BField,BField_Sci);
+	      //detectorModel.GetSubDetectorVec()->push_back(new SubDetector(vol_name,pos,it_int->second));	
+	      // SubDetector* subDetector = detectorModel.GetSubDetector(vol_name);
+	      //if(subDetector)
+	      //{
+	      //  subDetector->SetProperties(BFieldMapVec.back(),de_dx_map_vec.back());
+	      //  subDetector->SetSecondaryProperties(SCINT_z,0,X0Sc,de_dx_scint,earth,length);
+	      //}
+
+	      pos[2]+=SCINT_z/2+IRON_z/2;
+	      
+	      for(unsigned int iron = 0; iron<numFe; iron++)
+		{
+		  vol_name += "Fe";
+		  //cout<<"vol_name="<<vol_name<<endl;
+		  //cout<<"Iron"<<endl;
+		  //cout<<pos[0]<<"\t"<<pos[1]<<"\t"<<pos[2]<<endl;
+		  it_int->second[2]=IRON_z;
+		  detVector.push_back(new Box(pos, zaxis, xaxis,
+					      IRON_z/2.,
+					      it_int->second[0]/2., 
+					      it_int->second[1]/2.));
+		  _gsetup.add_volume("mother",vol_name,detVector.back());
+		  _gsetup.set_volume_property(vol_name,RP::SurfNormal,_zaxis);
+		  //Surface* surf = new Rectangle(pos,zaxis,xaxis, it_int->second[0]/2.,it_int->second[1]/2.); 
+		  //_gsetup.add_surface(vol_name, "surf_1", surf);
+		  X0EffVec.push_back(new double(X0Fe));
+		  _moduleDataMap[vol_name].push_back(de_dx_fe);
+		  double length = IRON_z;// it_int->second[2];
+		  BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,1.0));
+		  double copy = 1;
+		  _moduleDataMap[vol_name].push_back(copy);
+		  de_dx_map_vec.push_back(new DeDxMap(de_dx_fe*MeV/mm));
+		  //double tempde = de_dx_fe*MeV/mm;
+		  _gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_fe_MeV);
+		  //_gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_fe*MeV/mm);
+		  //_gsetup.set_volume_property(vol_name,RP::de_dx_map,*de_dx_map_vec.back());
+		  _gsetup.set_volume_property(vol_name,"X0",*X0EffVec.back());
+		  //_gsetup.set_volume_property(vol_name,RP::BFieldMap,*BFieldMapVec.back());
+		  _gsetup.set_volume_property(vol_name,RP::BField,BField_Fe);
+		  //detectorModel.GetSubDetectorVec()->push_back(new SubDetector(vol_name,pos,it_int->second));	
+		  //SubDetector* subDetector = detectorModel.GetSubDetector(vol_name);
+		  //if(subDetector)
+		  //{
+		  //  subDetector->SetProperties(BFieldMapVec.back(),de_dx_map_vec.back());
+		  //  subDetector->SetSecondaryProperties(IRON_z,0,X0Fe,de_dx_scint,1,length);
+		  //}
+		  
+
+		  pos[2]+=IRON_z;
+		}
+	      // final s plane.
+	      //pos[2]-=IRON_z/2+SCINT_z/2;
+	      pos[2]=it->second[2]+it_int->second[2]/2 -SCINT_z/2;
+	      vol_name += "Sci";
+	      //cout<<"vol_name="<<vol_name<<endl;
+	      //cout<<"Final s"<<endl;
+	      //cout<<pos[0]<<"\t"<<pos[1]<<"\t"<<pos[2]<<endl;
+	      it_int->second[2]=SCINT_z;
+	      detVector.push_back(new Box(pos, zaxis, xaxis,
+					  SCINT_z/2.,
+					  it_int->second[0]/2., 
+					  it_int->second[1]/2.));
+	      _gsetup.add_volume("mother",vol_name,detVector.back());
+	      _gsetup.set_volume_property(vol_name,RP::SurfNormal,_zaxis);
+	      //surf = new Rectangle(pos,zaxis,xaxis, it_int->second[0]/2.,it_int->second[1]/2.); 
+	      //_gsetup.add_surface(vol_name, "surf_1", surf);
+	      X0EffVec.push_back(new double(X0Sc));
+	      _moduleDataMap[vol_name].push_back(de_dx_scint);
+	      length = SCINT_z/2.;//it_int->second[2];
+	      BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,earth));
+	      copy = earth;
+	      _moduleDataMap[vol_name].push_back(copy);
+	      de_dx_map_vec.push_back(new DeDxMap(de_dx_scint*MeV/mm));
+	      //tempde = de_dx_scint*MeV/mm;
+	      _gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_scint_MeV);
+	      //_gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_scint*MeV/mm);
+	      //_gsetup.set_volume_property(vol_name,RP::de_dx_map,*de_dx_map_vec.back());
+	      _gsetup.set_volume_property(vol_name,"X0",*X0EffVec.back());
+	      //_gsetup.set_volume_property(vol_name,RP::BFieldMap,*BFieldMapVec.back());
+	      _gsetup.set_volume_property(vol_name,RP::BField,BField_Sci);
+	      //detectorModel.GetSubDetectorVec()->push_back(new SubDetector(vol_name,pos,it_int->second));	
+	      //subDetector = detectorModel.GetSubDetector(vol_name);
+	      //if(subDetector)
+	      //{
+	      //  subDetector->SetProperties(BFieldMapVec.back(),de_dx_map_vec.back());
+	      //  subDetector->SetSecondaryProperties(SCINT_z,0,X0Sc,de_dx_scint,earth,length);
+	      //}
+	    }
+	}
+      else // Module s and x f repeating structure.
+	{
+	  //cout<<"Module"<<endl;
+	  // what is the structure.
+	  int rep = numFe/numScint;
+
+	  // build s, then build some f and repeat.
+	  it_int =_gdml_solid_map.find(it->first);
+	  pos[2] = it->second[2]-it_int->second[2]/2+SCINT_z/2;
+
+	  for(unsigned int sci = 0; sci<numScint; sci++)
+	    {
+	      
+	      vol_name += "Sci";
+	      //cout<<"vol_name="<<vol_name<<endl;
+	      //cout<<"first s"<<endl;
+	      //cout<<pos[0]<<"\t"<<pos[1]<<"\t"<<pos[2]<<endl;
+	      it_int->second[2]=SCINT_z;
+	      detVector.push_back(new Box(pos, zaxis, xaxis,
+					  SCINT_z/2.,
+					  it_int->second[0]/2., 
+					  it_int->second[1]/2.));
+	      _gsetup.add_volume("mother",vol_name,detVector.back());
+	      _gsetup.set_volume_property(vol_name,RP::SurfNormal,_zaxis);
+	      //Surface* surf = new Rectangle(pos,zaxis,xaxis, it_int->second[0]/2.,it_int->second[1]/2.); 
+	      //_gsetup.add_surface(vol_name, "surf_1", surf);
+	      X0EffVec.push_back(new double(X0Sc));
+	      _moduleDataMap[vol_name].push_back(de_dx_scint);
+	      double length = SCINT_z/2.;//it_int->second[2];
+	      BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,earth));
+	      double copy = earth;
+	      _moduleDataMap[vol_name].push_back(copy);
+	      de_dx_map_vec.push_back(new DeDxMap(de_dx_scint*MeV/mm));
+	      //double tempde = de_dx_scint*MeV/mm;
+	      _gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_scint_MeV);
+	      //_gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_scint*MeV/mm);
+	      // _gsetup.set_volume_property(vol_name,RP::de_dx_map,*de_dx_map_vec.back());
+	      _gsetup.set_volume_property(vol_name,"X0",*X0EffVec.back());
+	      //_gsetup.set_volume_property(vol_name,RP::BFieldMap,*BFieldMapVec.back());
+	      _gsetup.set_volume_property(vol_name,RP::BField,BField_Sci);
+	      //detectorModel.GetSubDetectorVec()->push_back(new SubDetector(vol_name,pos,it_int->second));	
+	      //SubDetector* subDetector = detectorModel.GetSubDetector(vol_name);
+	      //if(subDetector)
+	      //{
+	      //  subDetector->SetProperties(BFieldMapVec.back(),de_dx_map_vec.back());
+	      //  subDetector->SetSecondaryProperties(SCINT_z,0,X0Sc,de_dx_scint,earth,length);
+	      //}
+	      
+	      pos[2]+=SCINT_z/2+IRON_z/2;
+	      
+	      for(unsigned int iron = 0; iron<rep; iron++)
+		{
+		  vol_name += "Fe";
+		  //cout<<"vol_name="<<vol_name<<endl;
+		  //cout<<"iron"<<endl;
+		  //cout<<pos[0]<<"\t"<<pos[1]<<"\t"<<pos[2]<<endl;
+		  it_int->second[2]=IRON_z;
+		  detVector.push_back(new Box(pos, zaxis, xaxis,
+					      IRON_z/2.,
+					      it_int->second[0]/2., 
+					      it_int->second[1]/2.));
+		  _gsetup.add_volume("mother",vol_name,detVector.back());
+		  _gsetup.set_volume_property(vol_name,RP::SurfNormal,_zaxis);
+		  //Surface* surf = new Rectangle(pos,zaxis,xaxis, it_int->second[0]/2.,it_int->second[1]/2.); 
+		  //_gsetup.add_surface(vol_name, "surf_1", surf);
+		  X0EffVec.push_back(new double(X0Fe));
+		  _moduleDataMap[vol_name].push_back(de_dx_fe);
+		  double length = IRON_z;// it_int->second[2];
+		  BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,1.0));
+		  double copy = 1;
+		  _moduleDataMap[vol_name].push_back(copy);
+		  de_dx_map_vec.push_back(new DeDxMap(de_dx_fe*MeV/mm));
+		  //double tempde = de_dx_fe*MeV/mm;
+		  _gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_fe_MeV);
+		  //_gsetup.set_volume_property(vol_name,RP::de_dx*MeV/mm,de_dx_fe);
+		  //_gsetup.set_volume_property(vol_name,RP::de_dx_map,*de_dx_map_vec.back());
+		  _gsetup.set_volume_property(vol_name,"X0",*X0EffVec.back());
+		  //_gsetup.set_volume_property(vol_name,RP::BFieldMap,*BFieldMapVec.back());
+		  _gsetup.set_volume_property(vol_name,RP::BField,BField_Fe);
+		  //detectorModel.GetSubDetectorVec()->push_back(new SubDetector(vol_name,pos,it_int->second));	
+		  //SubDetector* subDetector = detectorModel.GetSubDetector(vol_name);
+		  //if(subDetector)
+		  //{
+		  //  subDetector->SetProperties(BFieldMapVec.back(),de_dx_map_vec.back());
+		  //  subDetector->SetSecondaryProperties(IRON_z,0,X0Fe,de_dx_scint,1,length);
+		  //}
+		  
+		  
+		  pos[2]+=IRON_z;
+		}
+	      pos[2]-=IRON_z/2+SCINT_z/2;
+	      
+	    }
+	      
+	}
+    }
+  */ 
+  // all filled
+
+  // end of createGeom2();
+  
+  //if(StepSize){
+  //_gsetup.set_volume_property_to_sons("mother","StepSize",StepSize);
+  //
+    //_gsetup.set_volume_property_to_sons("mother",RP::SurfNormal,_zaxis);
+
+  //} 
+
 }
 
 //*************************************************************
@@ -302,7 +748,7 @@ void MINDsetup::addProperties(){
 
   _generalBFieldMap = MINDfieldMapReader(Bmap,_fieldScale);
   //_generalBFieldMap = MINDfieldMapReader(Bmap,1.0);
-  _gsetup.set_volume_property("mother","X0",X0AIR);
+  //_gsetup.set_volume_property("mother","X0",X0AIR);
   //_gsetup.set_volume_property("detector","X0",X0AIR);
 
   //_gsetup.set_volume_property("mother","BField",EVector(3,0));
@@ -314,9 +760,16 @@ void MINDsetup::addProperties(){
   BField[0] = tesla * earth; 
   BField[1] = 0.0; // field[1] * tesla * earth;
   BField[2] = 0.0; //field[2] * tesla * earth;
+
+  BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,tesla*earth));
+  de_dx_map_vec.push_back(new DeDxMap(de_dx_scint));
+
   //_gsetup.set_volume_property_to_sons("mother",RP::BField,BField);
 
-  _gsetup.set_volume_property("mother",RP::BField,BField);
+  _gsetup.set_volume_property("mother",RP::BFieldMap,*BFieldMapVec.back());
+  //_gsetup.set_volume_property("mother",RP::de_dx_map,*de_dx_map_vec.back());
+
+  //_gsetup.set_volume_property("mother",RP::BField,BField);
   //_gsetup.set_volume_property("detector",RP::BField,BField);
 
 
@@ -325,19 +778,19 @@ void MINDsetup::addProperties(){
 
   zeroMap = new DeDxMap(2.398e-4 *MeV/mm);
 
-  _gsetup.set_volume_property("mother",RP::de_dx_map,*zeroMap);
+  //_gsetup.set_volume_property("mother",RP::de_dx_map,*zeroMap);
   //_gsetup.set_volume_property("detector",RP::de_dx_map,*zeroMap);
   
   //_gsetup.set_volume_property_to_sons("mother",RP::de_dx_map,*zeroMap);
 
   // _gsetup.set_volume_property_to_sons("mother","X0",X0AIR);
 
-  if(StepSize){
-    _gsetup.set_volume_property_to_sons("mother","StepSize",StepSize);
+  //if(StepSize){
+    //_gsetup.set_volume_property_to_sons("mother","StepSize",StepSize);
     
-    _gsetup.set_volume_property_to_sons("mother",RP::SurfNormal,_zaxis);
+  _gsetup.set_volume_property_to_sons("mother",RP::SurfNormal,_zaxis);
 
-  }  
+  //}  
 
 
 /*
@@ -373,12 +826,12 @@ void MINDsetup::addProperties(){
 	    }
 	  else if("M" == current_string)
 	    {
-	      if(numFe ==4)
+	      if(numFe ==4) // Module sffff is special (used 3times)
 		{
 		  numFe *= 3;
 		  numScint *= 3;
 		}
-	      else
+	      else if(numFe!=3)  // Module sfff is only used once.
 		{
 		  numFe *=2;
 		  numScint *=2;
@@ -405,7 +858,7 @@ void MINDsetup::addProperties(){
 	  it_int =_gdml_solid_map.find(it->first);
 	  //}
   
-	if ((numScint != 0 || numFe != 0) & it_int!= _gdml_solid_map.end())
+	if ((numScint != 0 || numFe != 0) && it_int!= _gdml_solid_map.end())
 	{
 	  // Calculate the appropriate properties and add them to the boxes
 	  //cout<<"YES"<<endl;
@@ -414,6 +867,8 @@ void MINDsetup::addProperties(){
 	  //double wSc = SCINT_z / (SCINT_z + AIR_z*(numScint+1)*rel_denAS);
 	  //double X01 = (X0Sc*X0AIR) / (wSc*(X0AIR-X0Sc) + X0Sc);
 	  //double wFe = IRON_z/(IRON_z + ((SCINT_z+AIR_z)*numScint+AIR_z)*rel_denSI*(wSc*(1-rel_denAS)+rel_denAS));
+
+	  cout<<"vol_name="<<vol_name<<endl;
 	  
 	  double length = it_int->second[2]; // Simply taken from the solid reference.
 
@@ -435,12 +890,24 @@ void MINDsetup::addProperties(){
 			  numFe * IRON_z * de_dx_fe +
 			  numFe * 2 * Al_z * de_dx_brace)/length;
 
+	  cout<<"de_dx_sci prop="<<numScint * SCINT_z/length<<endl;
+
+	  cout<<"de_dx_fe prop="<< numFe * IRON_z/length<<endl;
+
+	  cout<<"de_dx_al prop="<<numFe * 2 * Al_z/length<<endl;
+
+
+	  dedxVec.push_back(new double(de_dx));
+
+
 	  //double de_dx = (numScint * SCINT_z * de_dx_scint + numFe * IRON_z * de_dx_fe)/
 	  //(numScint * SCINT_z + numFe * IRON_z);
 
-	  _moduleDataMap[vol_name].push_back(de_dx);
+	  //_moduleDataMap[vol_name].push_back(de_dx);
 
-	  std::cout<<"Local de_dx is "<<de_dx<<std::endl;
+	  
+
+	  //std::cout<<"Local de_dx is "<<de_dx<<std::endl;
 
 	  std::cout<<"modulelength "<<length<<" numFe "<<numFe<<" numScint "<<numScint<<std::endl;
 	  std::cout<<"iron_z "<<IRON_z<<" scint_z "<<SCINT_z<<std::endl;
@@ -449,6 +916,13 @@ void MINDsetup::addProperties(){
 	  //fieldScale *= 2 *1.2;
 	  //fieldScale *= IRON_z *numFe;
 
+
+	  //BField[0] = tesla * earth; 
+
+	  //BField[0] = tesla * 1.5 * fieldScale;
+
+	  //_gsetup.set_volume_property(vol_name,RP::BField,_BField); 
+
 	  _detector_Bscale_avr += fieldScale *length;
 	  
 	  //if (fieldScale == 0)
@@ -456,8 +930,10 @@ void MINDsetup::addProperties(){
 	  //  fieldScale = 5e-5 * tesla;
 	  //}
 	  
-	  cout<<"tesla="<<tesla<<endl;
+	  //cout<<"tesla="<<tesla<<endl;
 	  
+	  //fieldScale *=0.5;
+	
 	  std::cout<<"Local Field Scaling is "<<fieldScale<<std::endl;
 	  //BFieldMap = MINDfieldMapReader(Bmap,fieldScale);
 	  //BFieldMapVec.push_back(new MINDfieldMapReader(Bmap,1));
@@ -470,16 +946,30 @@ void MINDsetup::addProperties(){
 	  _moduleDataMap[vol_name].push_back(copy);
 
 	  //_de_dx_map = new DeDxMap(de_dx*MeV/mm);
-	  de_dx_map_vec.push_back(new DeDxMap(de_dx*MeV/mm));
+	  //de_dx_map_vec.push_back(new DeDxMap(de_dx*MeV/mm));
+	  de_dx_map_vec.push_back(new DeDxMap(de_dx));
 	  //_de_dx_map_scint = new DeDxMap(de_dx_scint*MeV/mm);
+	  //_gsetup.set_volume_property(vol_name,RP::de_dx,de_dx);
+
+	  //_gsetup.set_volume_property(vol_name,RP::de_dx,de_dx_fe);
+
+
+	  //_gsetup.set_volume_property(vol_name,RP::de_dx,*dedxVec.back());
+	  //_gsetup.set_volume_property_to_sons(vol_name,RP::de_dx,*dedxVec.back());
 
 	  //_gsetup.set_volume_property(vol_name,RP::de_dx_map,*_de_dx_map);
 	  _gsetup.set_volume_property(vol_name,RP::de_dx_map,*de_dx_map_vec.back());
+	  //_gsetup.set_volume_property_to_sons(vol_name,RP::de_dx_map,*de_dx_map_vec.back());
+
+
 	  //_gsetup.set_volume_property(vol_name,"X0",X0AIR);
+	  //_gsetup.set_volume_property(vol_name,"X0",X0Fe);
+
 	  _gsetup.set_volume_property(vol_name,"X0",*X0EffVec.back());
+	  //_gsetup.set_volume_property_to_sons(vol_name,"X0",*X0EffVec.back());
 
 	  //_gsetup.set_volume_property(vol_name,"X0",X0EffVec[i]);
-	  cout<<vol_name<<" X0="<<*X0EffVec[i]<<endl;
+	  //cout<<vol_name<<" X0="<<*X0EffVec[i]<<endl;
 	  i++;
 
 	  //_gsetup.set_volume_property(vol_name,"X0",X0Eff);
@@ -487,6 +977,18 @@ void MINDsetup::addProperties(){
 	  //_gsetup.set_volume_property_to_sons("mother",RP::BFieldMap,BFieldMap);
 	  //_gsetup.set_volume_property(vol_name,RP::BFieldMap,BFieldMap);
 	  _gsetup.set_volume_property(vol_name,RP::BFieldMap,*BFieldMapVec.back());
+	  
+	  EVector Test = EVector(3,0);
+	  cout<<tesla<<"\t"<<1.0/tesla<<endl;
+
+	  cout<<BFieldMapVec.back()->vector(Test)<<endl;
+	  Test[1] = 800;
+	  cout<<BFieldMapVec.back()->vector(Test)<<endl;
+
+	  Test[1] = -800;
+	  cout<<BFieldMapVec.back()->vector(Test)<<endl;
+
+	  //_gsetup.set_volume_property_to_sons(vol_name,RP::BFieldMap,*BFieldMapVec.back());
 
 	  SubDetector* subDetector = detectorModel.GetSubDetector(vol_name);
 	  
@@ -497,6 +999,8 @@ void MINDsetup::addProperties(){
 	      subDetector->SetSecondaryProperties(wSc,wFe,X0Eff,de_dx,fieldScale,length);
 	      //cerr<<"Set up correctly"<<endl;
 	    }
+
+	  //cout<<_gsetup.volume(vol_name).parameters()<<endl;
 
 	}
     }
@@ -610,11 +1114,16 @@ void MINDsetup::readParam(){
 
     //--------------------------- VOLUMES ------------------------//
     
-    MOTHER_x = MIND_x + 10 * cm; // always assume that the vertex 
-    MOTHER_y = MIND_y + 10 * cm; // detector width is smaller than the MIND
-    MOTHER_z = MIND_z + VERT_z + 10 * cm;  
-    MOTHER_earh = EAR_height - 10 * cm;
-    MOTHER_earw = EAR_width  + 10 * cm;
+    //MOTHER_x = MIND_x + 10 * cm; // always assume that the vertex 
+    //MOTHER_y = MIND_y + 10 * cm; // detector width is smaller than the MIND
+    //MOTHER_z = MIND_z + VERT_z + 10 * cm;  
+
+    MOTHER_x = MIND_x;
+    MOTHER_y = MIND_y;
+    MOTHER_z = MIND_z;
+
+    //MOTHER_earh = EAR_height - 10 * cm;
+    //MOTHER_earw = EAR_width  + 10 * cm;
 
     // -------------------------------------------------------------//
     //                       |  MAGNETIC FIELD |                    //
@@ -671,6 +1180,10 @@ void MINDsetup::readParam(){
 
     de_dx_scint = _pstore.fetch_dstore("de_dx_scint") * MeV/mm;
     de_dx_fe = _pstore.fetch_dstore("de_dx_fe") * MeV/mm;
+
+    //de_dx_scint_MeV = de_dx_scint*MeV/mm;
+    //de_dx_fe_MeV = de_dx_fe*MeV/mm;
+
     de_dx_brace = _pstore.fetch_dstore("de_dx_brace") * MeV/mm;
 
     _msetup.message("Radiation length:",X0Fe/cm,"cm",c);

@@ -159,6 +159,9 @@ private:
   std::vector< vector<double> > _XPos;
   std::vector< vector<double> > _YPos;
   std::vector< vector<double> > _ZPos;
+  std::vector< vector<double> > _XPosS;
+  std::vector< vector<double> > _YPosS;
+  std::vector< vector<double> > _ZPosS;
   std::vector< vector<double> > _Edep;
   std::vector< vector<double> > _HTime;
   std::vector< vector<double> > _NodeFitted;

@@ -593,6 +593,7 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
   //cout<<"_planeEnd: "<<_planeEnd.GetPlaneNo()<<" size: "<<_planes.size()<<endl;
   //for(int pl=_planeEnd.GetPlaneNo(); pl >= _min_check; pl-- ){
   for(int pl=_planes.size()-1; pl >= 0; pl-- ){
+  //for(int pl=_planes.size()-2; pl >= 1; pl-- ){
     //cout<<"Planes z: "<<_planes[pl]->GetZ()<<endl;
     
     //if(_planes[pl]->GetNHits()!=1) break;
@@ -832,12 +833,20 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   V[1] = muontraj.nodes()[0]->measurement().vector()[1];
   V[2] = muontraj.nodes()[0]->measurement().position()[2];
 
-
   cout<<"z pos in event_classif_seed: "<<V[2]<<endl; 
   
+  //V[3] = -0.5;
+  //V[4] = -0.5;
 
   //direction
   double dqtot = fit_parabola( V, muontraj);
+
+
+  //V[5]=1.0/(-2600+1000);
+
+  //V[5]=1.0/-2600;
+
+  V[5] = -1.0/10000;
 
   //Momentum. Estimate from empirical extent function.
   ///if cluster contains hits then _Xtent is the diff in z b/w 0th and last hit in cluster 
@@ -870,30 +879,37 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   
   //V[5] = 1./pSeed;
 
-  //cout<<"In get_patternRec_seed: "<<V[5]<<" "<<1/V[5]<<endl;
+  //V[3]=-1;
+  //V[4]=-1;
+
+  cout<<"In get_patternRec_seed: "<<V[5]<<" "<<1/V[5]<<endl;
   
 
   // Fitting from behind.
-
+  
   M[0][0] = 8.5 * 8.5 * cm * cm;
   M[1][1] = 1.5 * 1.5 *cm * cm;  // Expected pos res x,y
-  //M[2][2] =  M[1][1] = 1.5 * 1.5 *cm * cm;
-  M[3][3] = 0.01;
-  M[4][4] = 0.01; 
-  M[5][5] = 1./4. * V[5]*V[5];
-
+  //M[2][2] = EGeo::zero_cov()/2.;
+    M[2][2] = 0;// M[1][1] = 0;//1.5 * 1.5 *cm * cm;
+  //M[2][2] = 15/(muontraj.nodes()[0]->measurement().vector()[2]* muontraj.nodes()[0]->measurement().vector()[2]);//1.5 * 1.5 *cm * cm;
+    M[3][3] = 1;//0.1;//0.01;
+    M[4][4] = 1;//0.1;//0.001; 
+    M[5][5] = 0.001;//1.0/2600.0;//400.0/2600.0/2600.0;//1.0/100.0 * 1.0/100.0; //0.000004;//100*V[5]*V[5];//1.0/100;//1./4. * V[5]*V[5]; error in p 500;
+ 
+    //M[5][5]*=M[5][5];
+  //M[5][5] = 0; 
 
   /*
   M[0][0] = M[1][1] = 15. * 15. *cm *cm;
   M[2][2] = 4.*4.*cm*cm;
   //M[2][2] = EGeo::zero_cov()/2;
-  M[3][3] = 9*8.5 * 8.5 *cm *cm;
-  M[4][4] = 9*1.5 * 1.5 *cm *cm;
+  M[3][3] = 8.5 * 8.5 *cm *cm;
+  M[4][4] = 1.5 * 1.5 *cm *cm;
   M[5][5] = pow(V[5],2)*4;
   */
 
 
-  V2[0] = -1;
+  V2[0] = 1;
 
   seed.set_name(RP::representation, RP::slopes_curv_z); 
   // The main HyperVector 
@@ -901,7 +917,9 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   // The secondary sense HyperVector with sense=1 and no error 
   //seed.set_hv(RP::sense, HyperVector(1)); 
 
-  seed.set_hv(RP::sense,HyperVector(V2,M2));
+  double sense=1;
+  //_state.set_hv(RP::sense,HyperVector(sense,0));
+  seed.set_hv(RP::sense,HyperVector(sense,0));
 
 
 
@@ -1030,9 +1048,50 @@ bool event_classif::perform_kalman_fit(State& seed, Trajectory& track) {
   _m.message(" event_classif :: perform_kalman_fit", bhep::VERBOSE);    
   
 
+  cout<<"Event_classif before All nodes:"<<endl;
+  for(unsigned int cnt = 0; cnt<track.nodes().size(); cnt++)
+    {
+      //cout<<track.nodes()[cnt]->state().vector().size()<<endl;
+      if(track.nodes()[cnt]->status("fitted"))
+	{
+	  //cout<<track.nodes()[cnt]->state().vector()<<endl;
+	  //cout<<"Size: "<<track.nodes()[cnt]->state().vector().size()<<endl;
+	  cout<<"X: "<<track.nodes()[cnt]->state().vector()[0]
+	      <<" Y: "<<track.nodes()[cnt]->state().vector()[1]
+	      <<" Z: "<<track.nodes()[cnt]->state().vector()[2]<<endl;
+	  cout<<"Momentum: "<<1.0/track.nodes()[cnt]->state().vector()[5]<<endl;
+	  //cout<<"Momentum Xdir: "<<track.nodes()[cnt]->state().vector()[3]
+	  //  <<" Momentum Ydir: "<<track.nodes()[cnt]->state().vector()[4]<<endl;
+	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
+	}
+    }
+
 
   ///fit the track using the seed state                             
   bool ok = man().fitting_svc().fit(seed, track);
+
+
+  cout<<"Event_classif after All nodes:"<<endl;
+  for(unsigned int cnt = 0; cnt<track.nodes().size(); cnt++)
+    {
+      //cout<<track.nodes()[cnt]->state().vector().size()<<endl;
+      if(track.nodes()[cnt]->status("fitted"))
+	{
+	  //cout<<track.nodes()[cnt]->state()<<endl;
+	  //cout<<track.nodes()[cnt]->state().hv()<<endl;
+	  //cout<<track.nodes()[cnt]->state().pull()<<endl;
+	  //cout<<track.nodes()[cnt]->state().vector().pull()<<endl;
+	  //cout<<track.nodes()[cnt]->state().vector()<<endl;
+	  //cout<<"Size: "<<track.nodes()[cnt]->state().vector().size()<<endl;
+	  cout<<"X: "<<track.nodes()[cnt]->state().vector()[0]
+	      <<" Y: "<<track.nodes()[cnt]->state().vector()[1]
+	      <<" Z: "<<track.nodes()[cnt]->state().vector()[2]<<endl;
+	  cout<<"Momentum: "<<1.0/track.nodes()[cnt]->state().vector()[5]<<endl;
+	  //cout<<"Momentum Xdir: "<<track.nodes()[cnt]->state().vector()[3]
+	  //  <<" Momentum Ydir: "<<track.nodes()[cnt]->state().vector()[4]<<endl;
+	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
+	}
+    }
 
   std::cout<<seed.hv()<<std::endl;
 
@@ -1199,12 +1258,12 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
   bool ok;
   long ChiMin;
   int nConsecHole = 0;
-  //cout<<"size0:"<<muontraj.size()<<endl;
+  cout<<"size0:"<<muontraj.size()<<endl;
   /// start adding mulp. occupancy planes hits from the LAST PLANE of "free section" muontraj
   //int plane_start = _nplanes -  muontraj.size() -1;
   int plane_start = _nplanes - 1;
   for (int pl = plane_start; pl>=0; pl--){
-    //cout<<"size1:"<<muontraj.size()<<endl;
+    cout<<"size1:"<<muontraj.size()<<endl;
     _m.message("plane no=",pl,"  & hits = ",_planes[pl]->GetNHits()," & intType = ",_intType, bhep::DETAILED);
     /// if hit corresponds to vertex position
     if (_planes[pl]->GetZ() < hits[_vertGuess]->position()[2]){
@@ -1218,28 +1277,42 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
     double Chi2[(const int)(_planes[pl]->GetNHits())] ;
     ///loop over hits on a plane
     for (int ht=0; ht<_planes[pl]->GetNHits(); ht++){
-      // _m.message("meas ==> ",(_planes[pl]->GetHits()[ht]->vector()),bhep::VERBOSE); 
+      //_m.message("meas ==> ",*(_planes[pl]->GetHits()[ht]),bhep::VERBOSE); 
+
+      //meas.name(RP::setup_volume);
+      //const HyperVector& pos_hv = meas.position_hv(); 
+
+      //cout<<_planes[pl]->GetHits()[ht]->name(RP::setup_volume)<<endl;
+      //cout<<_planes[pl]->GetHits()[ht]->position_hv()<<endl;
+
       try {
 	ok = man().matching_svc().match_trajectory_measurement(muontraj,
 							       *(_planes[pl]->GetHits()[ht]), Chi2[ht]);
       } catch (const char* msg){
 	ok = false;
-	//std::cout<<msg<<std::endl;
+	std::cout<<msg<<std::endl;
       }
+      cout<<"ok="<<ok<<endl;
       // _m.message("meas.dim() = ",(_planes[pl]->GetHits()[ht])->dim(),bhep::VERBOSE);
       if ( !ok ) Chi2[ht] = 9999999;
+
+      cout<<"Chi2[ht]="<<Chi2[ht]<<endl;
     }
-    //cout<<"size2:"<<muontraj.size()<<endl;
+    cout<<"size2:"<<muontraj.size()<<endl;
     /// Return hit index having min chi2
     ChiMin = TMath::LocMin((const int)(_planes[pl]->GetNHits()), Chi2);
     ///The hit corresponds to min Chi2 will be added to the Trajectory & assigns as muon candidate, else considered as Hadron
     for (int iht = 0; iht < _planes[pl]->GetNHits();iht++){
       if (iht==(int)ChiMin) {
+	cout<<"ChiMin="<<ChiMin<<endl;
+	cout<<Chi2[iht]<<endl;
 	ok = man().fitting_svc().filter(*(_planes[pl]->GetHits()[iht]), seed, muontraj);
+	cout<<"ok="<<ok<<endl;
 	_m.message("plane No =",_planes[pl]->GetPlaneNo()," & the hit with Z=",
 		   _planes[pl]->GetHits()[iht]->position()[2], bhep::DETAILED);
 	///assign as muon candidate	    
 	if ( ok ) {
+	  cout<<"ok"<<endl;
 	  const dict::Key candHit = "inMu";
 	  const dict::Key hit_in = "True";
 	  (_planes[pl]->GetHits()[iht])->set_name(candHit, hit_in);
@@ -1254,6 +1327,7 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
 	  nConsecHole = 0;
 	} else nConsecHole++;
       } else {
+	cout<<"hadron"<<endl;
 	///assign as hadron
 	    const dict::Key hadHit = "inhad";
 	    const dict::Key had_in = "True";
@@ -1261,22 +1335,22 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
 	    hads.push_back(_planes[pl]->GetHits()[iht]);    
       }
     }
-    //cout<<"size3:"<<muontraj.size()<<endl;
+    cout<<"size3:"<<muontraj.size()<<endl;
   }//plane
-  //cout<<"size01:"<<muontraj.size()<<endl;  
+  cout<<"size01:"<<muontraj.size()<<endl;  
   if ( nConsecHole > _max_consec_missed_planes ) {
-    //cout<<"size02:"<<muontraj.size()<<endl;  
+    cout<<"size02:"<<muontraj.size()<<endl;  
     if ( _endProj ) check_forwards( seed, hits, muontraj );
     if ( muontraj.size() < _min_plane_prop*(double)(_nplanes-_badplanes) ){
       _failType = 6;
       return false;
     } else {
-      //cout<<"size03:"<<muontraj.size()<<endl;  
+      cout<<"size03:"<<muontraj.size()<<endl;  
       sort_hits( hits, muontraj, hads );
       return true;
     }
   }
-  //cout<<"size04:"<<muontraj.size()<<endl;  
+  cout<<"size04:"<<muontraj.size()<<endl;  
   if ( _endProj ) check_forwards( seed, hits, muontraj );
   _m.message("At the end of muon_extraction size in traj =",muontraj.size(), bhep::VERBOSE);
   
@@ -1288,6 +1362,8 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
 
     for(int hit =_planes[pl]->GetHits().size()-1;hit>=0; hit--)
       {
+	//cout<<"_planes[pl]->GetHits().size()="<<_planes[pl]->GetHits().size()<<endl;
+
 	if ( !_planes[pl]->GetHits()[hit]->names().has_key(candHit) ) continue;
 	else if( _geom.getDetectorModel()->
 		 GetSubDetector((_planes[pl]->GetHits()[hit])->position()[2]))

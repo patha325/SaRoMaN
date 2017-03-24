@@ -104,7 +104,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 // fill prev de_dx for all subdetectors.
 // combine all of the guessess.
 
-  //cout<<"hits in detector="<<GetNHits()<<endl;
+  cout<<"hits in detector="<<GetNHits()<<endl;
 
 
   double retVal = 0;
@@ -133,15 +133,18 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 	}
     }
   /*
-    for(unsigned int i=0;i<_subDetectorVec.size();i++)
+  for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
-    
-    cout<<_subDetectorVec[i]->GetName()<<endl;
-    cout<<_subDetectorVec[i]->Getde_dx()<<endl;
-    cout<<_subDetectorVec[i]->GetLength()<<endl;
-    cout<<_subDetectorVec[i]->GetPrevde_dx()<<endl;
+      //cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
+    //cout<<_subDetectorVec[i]->Getde_dx()<<endl;
+    //cout<<"Z="<<_subDetectorVec[i]->GetZ()<<endl;
+    //cout<<"Length="<<_subDetectorVec[i]->GetLength()<<endl;
+    //cout<<_subDetectorVec[i]->GetPrevde_dx()<<endl;
+    //cout<<i<<endl;
+    //cout<<_subDetectorVec.size()<<endl;
     }
   */
+  //cout<<"done for loop"<<endl;
   std::vector<cluster*> stackHits;
 
   std::vector<cluster*> hits;
@@ -161,27 +164,30 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 	    }
 	}
     }
-
+  //cout<<"Planes filled"<<endl;
 
   for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
 
       //cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
+      //cout<<_subDetectorVec[i]->GetName().substr(0,6)<<endl;
+      //cout<<_subDetectorVec[i]->GetName().substr(0,2)<<endl;
       // Count number of hits in the stack to see if we can use helix.
-      if(_subDetectorVec[i]->GetName() == "SFFFS0" ||
-	 _subDetectorVec[i]->GetName() == "S0" ||
-	 _subDetectorVec[i]->GetName() == "S1" ||
-	 _subDetectorVec[i]->GetName() == "SFS" ||
-	 _subDetectorVec[i]->GetName() == "SFFS" ||
-	 _subDetectorVec[i]->GetName() == "SFFFS" ||
-	 _subDetectorVec[i]->GetName() == "SFS0" ||
-	 _subDetectorVec[i]->GetName() == "SFFS0" ||
+      if(_subDetectorVec[i]->GetName().substr(0,6) == "SFFFS0" ||
+	 _subDetectorVec[i]->GetName().substr(0,2) == "S0" ||
+	 _subDetectorVec[i]->GetName().substr(0,2) == "S1" ||
+	 _subDetectorVec[i]->GetName().substr(0,3) == "SFS" ||
+	 _subDetectorVec[i]->GetName().substr(0,4) == "SFFS" ||
+	 _subDetectorVec[i]->GetName().substr(0,5) == "SFFFS" ||
+	 _subDetectorVec[i]->GetName().substr(0,4) == "SFS0" ||
+	 _subDetectorVec[i]->GetName().substr(0,5) == "SFFS0" ||
 	 //_subDetectorVec[i]->GetName() == "SFFFFS0" ||
-	 _subDetectorVec[i]->GetName() == "SFFFFS1" ||
-	 _subDetectorVec[i]->GetName() == "SFFS1" ||
-	 _subDetectorVec[i]->GetName() == "SFFFS1"
+	 _subDetectorVec[i]->GetName().substr(0,7) == "SFFFFS1" ||
+	 _subDetectorVec[i]->GetName().substr(0,5) == "SFFS1" ||
+	 _subDetectorVec[i]->GetName().substr(0,6) == "SFFFS1"
 	 )
 	{
+	  //cout<<"if true"<<endl;
 	  if(i+1 < _subDetectorVec.size() && i == 0)
 	    {
 	      leverArmFirst = i;
@@ -189,20 +195,21 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 
 	  continue;
 	}
-      else if(_subDetectorVec[i]->GetName() == "TASD" 
-	      || _subDetectorVec[i]->GetName() == "TASD0" 
-	      || _subDetectorVec[i]->GetName() == "TASD1" 
-	      || _subDetectorVec[i]->GetName() == "SF"
-	      || _subDetectorVec[i]->GetName() == "SF0"
-	      || _subDetectorVec[i]->GetName() == "SF1"
-	      || _subDetectorVec[i]->GetName() == "SF2"
-	      || _subDetectorVec[i]->GetName() == "SF3")
+      else if(_subDetectorVec[i]->GetName().substr(0,4) == "TASD" 
+	      || _subDetectorVec[i]->GetName().substr(0,5) == "TASD0" 
+	      || _subDetectorVec[i]->GetName().substr(0,5) == "TASD1" 
+	      //|| _subDetectorVec[i]->GetName().substr(0,2) == "SF"
+	      || _subDetectorVec[i]->GetName().substr(0,3) == "SF0"
+	      || _subDetectorVec[i]->GetName().substr(0,3) == "SF1"
+	      || _subDetectorVec[i]->GetName().substr(0,3) == "SF2"
+	      || _subDetectorVec[i]->GetName().substr(0,3) == "SF3")
 	{
+	  //cout<<"else if true"<<endl;
 	  continue;
 	}
       else
 	{
-	  
+	  //cout<<"else"<<endl;
 	  for(unsigned int j=0;j<_subDetectorVec[i]->GetPlanes()->size();j++)
 	    {
 	      if(_subDetectorVec[i]->GetPlanes()->at(j)->GetHits().size()) nPlanes++;
@@ -216,6 +223,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
     }
   
   //cout<<"helixHits.size()="<<helixHits.size()<<endl;
+  cout<<"stackHits.size()="<<stackHits.size()<<endl;
   // If enough hits, use only helix and leverarm.
   // else? Lever arm and quadratic in one region?
   //if(helixHits>10)
@@ -252,7 +260,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       double posCharge = 1;
       double negCharge = 1;
 
-      //cout<<"LeverArm"<<endl;
+      cout<<"LeverArm"<<endl;
       debug.push_back(0);
       debug.push_back(0);
 
@@ -320,9 +328,11 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
   
   cout<<"in detector.cpp="<<retVal<<endl;
 
-  //if(fabs(retVal)<10 || fabs(retVal) >8000 || isnan(retVal)) retVal = 2000;
+  //if(fabs(retVal)<10 || fabs(retVal) >8000 || isnan(retVal)) retVal = -2000;
 
-  if(isnan(retVal)) retVal = -2000;
+  if(isnan(retVal) && fabs(retVal)>100000) retVal =0;
+
+  //if(isnan(retVal)) retVal = -2000;
   
   //retVal = 1000;
 
@@ -339,6 +349,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
     }
   */
   return retVal;
+  //return -2600;
 }
 
 
@@ -859,7 +870,7 @@ double fitfunc(Double_t *x,Double_t *par) {
 
   double z = x[0];
 
-  double fitval = par[0] + par[1]*z+par[2]*z*z+par[3]*z*z*z+par[4]*z*z*z*z;
+  double fitval = par[0] + par[1]*z+par[2]*z*z;//+par[3]*z*z*z+par[4]*z*z*z*z;
 
   return fitval;
 }
@@ -868,17 +879,17 @@ double fitfunc(Double_t *x,Double_t *par) {
 //*****************************************************************************
 double Detector::Helix(std::vector<cluster*>& hits){
   //*****************************************************************************
-  /*
+  
   cout<<"in Helix"<<endl;
-
+  /*
   for(unsigned int cnt = 0; cnt<hits.size();cnt++) 
     {
       cout<< hits[cnt]->vector()[0]<<" "
 	  <<hits[cnt]->vector()[1]<<" "
 	  <<hits[cnt]->vector()[2]<<endl;
     }
-  
   */
+  
 
   //Some catchers for pointless returns.
   int fitcatch;
@@ -909,16 +920,27 @@ double Detector::Helix(std::vector<cluster*>& hits){
     currentpos[0] = hits[ipoint]->vector()[0];
     currentpos[1] = hits[ipoint]->vector()[1];
     currentpos[2] = hits[ipoint]->vector()[2];
+    //cout<<"is problem in get bfield from subdetector"<<endl;
+    //cout<<hits[ipoint]->vector()[2]<<endl;
+    //cout<<GetSubDetector(hits[ipoint]->vector()[2])<<endl;
+    //cout<<GetSubDetector(hits[ipoint]->vector()[2])->GetName()<<endl;
+    //cout<<GetSubDetector(hits[ipoint]->vector()[2])->GetBField()<<endl;
     currentB = GetSubDetector(hits[ipoint]->vector()[2])->GetBField()->vector(currentpos);
+
+    //cout<<currentB<<endl;
+
     //double field = _supergeom.getRawBField(track.nodes()[0]->measurement().vector())[0]*_supergeom.getBScaleAvr();
     upos[pos] = xpos[pos] > 0 ? asin(ypos[pos]/currentpos.norm())
       : -asin(ypos[pos]/currentpos.norm());
     vpos[pos] = dot(currentpos,crossprod(z,currentB))/currentB.norm();
     Bmean += currentB.norm();
+    
+    //cout<<"X,Y="<<xpos[pos]<<"\t"<<ypos[pos]<<endl;
+    //cout<<"V,Z="<<vpos[pos]<<"\t"<<zpos[pos]<<endl;
     ++pos;
   }
   Bmean /= pos;
-  Bmean /= tesla;
+//Bmean /= tesla;
   
   if (fitpoints <= 15) { nfit = 1; fitRange[0] = fitpoints;}
   else if (fitpoints <= 40) { 
@@ -969,26 +991,43 @@ double Detector::Helix(std::vector<cluster*>& hits){
       double f1 = func4->GetParameter(0);*////
     double g1 = func4->GetParameter(1);
     double h1 = func4->GetParameter(2);  
+
+    //TFile f("fitex.root","recreate");
+    //trajFitVZ->Write();
+    
     
     //cout<<"after fitters"<<endl;
-
+    //cout<<"helix done fitting="<<ifit<<endl;
     if (ifit == 0) {
 
       V[4] = g;   //func2->GetParameter(1);
       V[3] = b;
 
       if (h1!=0) {
-	V[5] = 1./(0.3*Bmean*pow((1+g1*g1),3./2.)/
-		   (2*h1)*0.001);
-	V[5] /= GeV;
+	//cout<<"h1!=0"<<endl;
+	//cout<<Bmean<<"\t"<<g1<<"\t"<<h1<<endl;
+	//V[5] = 1./(0.3*Bmean*pow((1+g1*g1),3./2.)/
+	//	   (2*h1));
+
+
+	V[5] =200* 0.3*Bmean*pow(1+pow(g1,2),3./2.)/
+	  (2*h1);
+
+	//cout<<1/V[5]<<endl;
+	//V[5] /= GeV;
+	V[5]=1/V[5];
+	//cout<<1/V[5]<<endl;
 	sign = (int)( V[5]/fabs( V[5] ));
       } else V[5] = 0;
     } else {
       if ((int)(-c/fabs(c)) == sign) {
+	//cout<<"in the else"<<endl;
 	V[4] = g;
 	V[3] = b;
-	V[5] = 1/(-0.3*Bmean*pow((1+g1*g1),3./2.)/(2*h1)*0.01);
+	V[5] = 1/(-0.3*Bmean*pow((1+g1*g1),3./2.)/(2*h1));
+	//cout<<1/V[5]<<endl;
 	V[5] /= GeV;
+	//cout<<1/V[5]<<endl;
       } else break;
     }
     //cout<<"deleter death"<<endl;
@@ -1004,17 +1043,17 @@ double Detector::Helix(std::vector<cluster*>& hits){
   }
 
 
-  double retVal = 1/V[5];
+double retVal = 1.0/V[5];
 
   //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 400;
 
-  if(isnan(retVal)) retVal = 0;
+  //if(isnan(retVal)) retVal = 0;
 
-  if(retVal > 8000) retVal = 8000;
+  //if(retVal > 8000) retVal = 8000;
   
-  if(retVal < -8000) retVal = -8000;
+  //if(retVal < -8000) retVal = -8000;
 
-  if(retVal != 0) retVal = retVal/fabs(retVal) * (fabs(retVal) + GetSubDetector(hits[0]->vector()[2])->Getde_dx());
+  //if(retVal != 0) retVal = retVal/fabs(retVal) * (fabs(retVal) + GetSubDetector(hits[0]->vector()[2])->Getde_dx());
   
   return retVal;
 
@@ -1446,8 +1485,8 @@ vector<double> Detector::LeverArm(unsigned int i){
       cout<<"Lever arm fail 2"<<endl;
     }
 
-  //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 400;
-  if(isnan(retVal)) retVal = 0;
+  //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 2000;
+  //if(isnan(retVal)) retVal = 0;
 
   //if(retVal==0) retVal = badGuess;
 

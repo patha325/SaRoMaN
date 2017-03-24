@@ -56,13 +56,14 @@ void fitter::Initialize() {
   //Instantiate recpack manager.
   MINDfitman::instance().set_man_parameters( _store, _geom.setup() );
   
-  if (_X0 == 0){
-    man().model_svc().enable_noiser(_model, RP::ms, false);
-  }
-  else
-    {
-      man().model_svc().enable_noiser(_model, RP::ms, true);
-    }
+  //if (_X0 == 0){
+  //man().model_svc().enable_noiser(_model, RP::ms, false);
+  //}
+  //else
+  //{
+  cout<<"_model="<<_model<<endl;
+  man().model_svc().enable_noiser(_model, RP::ms, true);
+      //}
 
 
 
@@ -377,14 +378,10 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	//_traj.set_quality("initialqP",1);
 	cout<<"initialqP: "<<(double)(_traj.quality("initialqP"))<<endl;
 	cout<<"Momentum: "<<_traj.node(_traj.first_fitted_node()).state().vector()[5]<<endl;
+	cout<<"Momentum Xdir: "<<_traj.node(_traj.first_fitted_node()).state().vector()[3]<<endl;
+	cout<<"Momentum Ydir: "<<_traj.node(_traj.first_fitted_node()).state().vector()[4]<<endl;
 	cout<<"First fitted: "<<_traj.first_fitted_node()<<endl;
 	cout<<"First fitted z: "<<_traj.nodes()[_traj.first_fitted_node()]->measurement().position()[2]<<endl;
-
-	//for(unsigned int cnt = 0; cnt<_traj.size(); cnt++)
-	//{
-	//  _traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
-	//}
-
 
 	*(_trajs[i]) = _traj;
       }
@@ -480,7 +477,24 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	cout<<"End of fitter.cpp Fitted: "<<_fitted<<endl;
 	cout<<"End of fitter.cpp forwardFitcheck: "<<_forwardFitCheck<<endl;
 	cout<<"End of fitter.cpp reseedFitcheck: "<<_reseedFitCheck<<endl;
-	cout<<"End of fitter.cpp initialqP: "<<_initialqP<<endl;
+	cout<<"End of fitter.cpp initialqP: "<<_initialqP<<"\t"<<1.0/_initialqP<<endl;
+
+	cout<<"All nodes:"<<endl;
+	for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
+	  {
+	    if(_traj.nodes()[cnt]->status("fitted"))
+	      {
+		cout<<"X: "<<_traj.nodes()[cnt]->state().vector()[0]
+		    <<" Y: "<<_traj.nodes()[cnt]->state().vector()[1]
+		    <<" Z: "<<_traj.nodes()[cnt]->state().vector()[2]<<endl;
+		cout<<"Momentum: "<<1.0/_traj.nodes()[cnt]->state().vector()[5]<<endl;
+		cout<<"Momentum Xdir: "<<_traj.nodes()[cnt]->state().vector()[3]
+		    <<" Momentum Ydir: "<<_traj.nodes()[cnt]->state().vector()[4]<<endl;
+		//_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
+	      }
+	  }
+
+
 
 	///assign quality for each trajectory
 	_traj.set_quality("failType",_failType);
@@ -505,7 +519,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
   //TASDtracker();
 
-  TASDtracker2();
+  //TASDtracker2(); //Turned off for neutrino large run.
 
   cout<<"Finaly, how many tracks? "<<_trajs.size()<<endl;
 
@@ -635,8 +649,82 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
   //_traj.nodes()[2]->reset();
   //_traj.nodes()[3]->reset();
 
-  /// fit the trajectory                
-  ok0 = man().fitting_svc().fit(seedState0, _traj,true);
+  /// fit the trajectory              
+
+  cout<<"FitTrajectory All nodes before:"<<endl;
+  for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
+    {
+      if(_traj.nodes()[cnt]->status("fitted"))
+	{
+	  //cout<<_traj.nodes()[cnt]->state().vector()<<endl;
+	  // cout<<"size: "<<_traj.nodes()[cnt]->state().vector().size()<<endl;
+	  cout<<"X: "<<_traj.nodes()[cnt]->state().vector()[0]
+	      <<" Y: "<<_traj.nodes()[cnt]->state().vector()[1]
+	      <<" Z: "<<_traj.nodes()[cnt]->state().vector()[2]<<endl;
+	  cout<<"Momentum: "<<1.0/_traj.nodes()[cnt]->state().vector()[5]<<endl;
+	  //cout<<"Momentum Xdir: "<<_traj.nodes()[cnt]->state().vector()[3]
+	  //  <<" Momentum Ydir: "<<_traj.nodes()[cnt]->state().vector()[4]<<endl;
+	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
+	}
+    }
+  
+  //ok0 = man().fitting_svc().fit(seedState0, _traj,true);
+
+  ok0 = man().fitting_svc().fit(seedState0, _traj,false);
+
+  cout<<"FitTrajectory All nodes after:"<<endl;
+  for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
+    {
+      if(_traj.nodes()[cnt]->status("fitted"))
+	{
+	  //cout<<_traj.nodes()[cnt]->state().vector()<<endl;
+	  //cout<<"size: "<<_traj.nodes()[cnt]->state().vector().size()<<endl;
+	  cout<<"X: "<<_traj.nodes()[cnt]->state().vector()[0]
+	      <<" Y: "<<_traj.nodes()[cnt]->state().vector()[1]
+	      <<" Z: "<<_traj.nodes()[cnt]->state().vector()[2]<<endl;
+	  
+	  //cout<<"Smoothed"<<endl;
+	  //cout<<"X: "<<_traj.nodes()[cnt]->state().hv(RP::smoothed).vector()[0]
+	  //  <<" Y: "<<_traj.nodes()[cnt]->state().hv(RP::smoothed).vector()[1]
+	  //  <<" Z: "<<_traj.nodes()[cnt]->state().hv(RP::smoothed).vector()[2]<<endl;
+	  
+
+	  cout<<_supergeom.getDetectorModel()->GetSubDetector(_traj.nodes()[cnt]->state().vector()[2])->GetName()<<endl;
+	  cout<<"Momentum: "<<1.0/_traj.nodes()[cnt]->state().vector()[5]<<endl;
+	  //cout<<"Momentum Xdir: "<<_traj.nodes()[cnt]->state().vector()[3]
+	  //  <<" Momentum Ydir: "<<_traj.nodes()[cnt]->state().vector()[4]<<endl;
+	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
+	}
+    }
+  /*
+  if(_traj.size()>10)
+    {
+      double z1 = _traj.node(3).measurement().position()[2];
+      double y1 = _traj.node(3).measurement().position()[1];
+      double z2 = _traj.node(6).measurement().position()[2];
+      double y2 = _traj.node(6).measurement().position()[1];
+      double z3 = _traj.node(9).measurement().position()[2];
+      double y3 = _traj.node(9).measurement().position()[1];
+      
+      double a = sqrt((z1-z2)*(z1-z2)+(y1-y2)*(y1-y2));
+      double b = sqrt((z2-z3)*(z2-z3)+(y2-y3)*(y2-y3));
+      double c = sqrt((z3-z1)*(z3-z1)+(y3-y1)*(y3-y1));
+      
+      double s = (a+b+c)/2;
+      double A =sqrt((s*(s-a)*(s-b)*(s-c)));
+      double R = a*b*c/(4*A);
+      double B = 1.5;
+
+      double P = 0.3 * B * R;
+
+      _initialqP = 1.0/P;
+
+      _traj.set_quality("initialqP",_initialqP);
+    }
+  else
+    _traj.set_quality("initialqP",0);
+  */
+
 
   //cout<<"First fit equation"<<endl;
   //cout<<man().fitting_svc().fitting_representation().equation()<<endl;
@@ -670,6 +758,9 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
     }
   
   ///refit the trajectory only when the quality is not good
+  
+  // debug kalman
+  
   if (_refit && ok0 && !ok_quality){    
     State seedState1;
     ComputeSeedRefit(_traj, seedState1);
@@ -679,6 +770,8 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
     {
       ok1=true;
     }
+  
+  //ok1=true;
 
   ///check number of fitted nodes in traj
   _fitCheck =0;
@@ -712,6 +805,8 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
   */
 
   ///reseed the trajectory
+    // debug kalman
+  
   if (_intType!= 5){   // not CA
     if (_intType != 2){ // not all planes are single occ  
       if ( ( !ok0 || !ok1 || (double)_fitCheck/(double)_traj.size() < low_fit_cut ) && _fitCheck > 0)
@@ -726,6 +821,8 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
     }
     else _pr_count++;    
   }
+  
+  //_reseed_ok=true;
 
   //if reseed successful
   if (_reseed_ok){    
@@ -1318,7 +1415,19 @@ cluster*  fitter::GetMeasurement(bhep::hit& hit){
   cluster* me = new cluster();
   me->set_name(meastype);
   me->set_hv(HyperVector(hit_pos,cov,RP::xyz));
+
   me->set_name("volume", "mother");
+
+  //me->set_name("volume",
+  //	       _supergeom.getDetectorModel()->GetSubDetector(meas_pos[2])->GetName());
+
+  //const std::string volname = meas.name(RP::setup_volume);
+  //const HyperVector& pos_hv = meas.position_hv();  
+
+  cout<<"meas.name="<<me->name(RP::setup_volume)<<endl;
+  cout<<"pos_hv="<<me->position_hv()<<endl;
+
+
   me->set_position( meas_pos );
   //Add the hit energy deposit as a key to the Measurement.
   const dict::Key Edep = "E_dep";
@@ -1371,6 +1480,10 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   // Estime the momentum from range
   ComputeMomFromRange( traj, (int)traj.size(), firsthit, v);
 
+  //v[5] = 1.0/(-2600);
+
+  v[5] = -1.0/10000;
+
   double pSeed;
   //double wFe = _geom.get_Fe_prop();
   //Approximate p from plot of p vs. no. hits, then approx. de_dx from this.
@@ -1381,8 +1494,8 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   
 
 
-  v[3] = 0;//1;
-  v[4] = 0;//1;
+  //v[3] = 0;//1;
+  //v[4] = 0;//1;
 
 
   /*
@@ -1418,14 +1531,18 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   C[0][0] = 8.5 * 8.5 * cm * cm;
   C[1][1] = 1.5 * 1.5 *cm * cm;  // Expected pos res x,y
   //C[2][2] =  C[1][1] = 1.5 * 1.5 *cm * cm;//EGeo::zero_cov()/2;
+  //C[2][2] =  EGeo::zero_cov()/2;
+  C[2][2] = 0;//1.5 * 1.5 *cm * cm; 
   // Expected pos res z
   //C[3][3] = C[4][4] = 1.; // Expected pos dx/dz, dy/dz
   //C[3][3] = 4* 8.5 * 8.5 * cm * cm;
-  C[3][3] = 0.001;
-  C[4][4] = 0.0001; 
+  C[3][3] = 1;//0.001;
+  C[4][4] = 1;//0.0001; 
   //C[4][4] = 4* 1.5 * 1.5 * cm *cm; // Expected pos dx/dz, dy/dz
-  C[5][5] = 1./4. * v[5]*v[5];//0.0000001;//pow(1/2*v[5],2); // Expected pos dx/dz, dy/dz
+  C[5][5] = 0.001;//1.0/2600.0;//400.0/2600.0/2600.0;//1.0/100.0 * 1.0/100.0;//0.000004;//1.0/100;// 1./4. * v[5]*v[5];//0.0000001;//pow(1/2*v[5],2); // Expected pos dx/dz, dy/dz
 
+  //C[5][5]*=C[5][5];
+  //C[5][5] = 0;
 
   v2[0] = 1;
 
@@ -1434,8 +1551,12 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   seedState.set_hv(HyperVector(v,C)); 
   // The secondary sense HyperVector with sense=1 and no error 
   //seedState.set_hv(RP::sense, HyperVector(1)); 
-
-  seedState.set_hv(RP::sense,HyperVector(v2,C2));
+  
+  double sense=1;
+  //_state.set_hv(RP::sense,HyperVector(sense,0));
+  seedState.set_hv(RP::sense,HyperVector(sense,0));
+  
+  //seedState.set_hv(RP::sense,HyperVector(v2,C2));
 
   //seedState.set_hv(RP::sense,HyperVector(1));
 
@@ -1644,8 +1765,11 @@ void fitter::ComputeMomFromRange(const Trajectory& traj, int nplanes, int firsth
 
   // std::cout<<"Pathlength is "<<pathlength // <<" or "<<pathlength0
   //	   <<" with charge "<<meansign<<std::endl;
+
+    _initialqP = V[5];
+    //_initialqP = 0;
+
   
-  _initialqP = V[5];
   // _m.message("_initialqP ="<<_initialqP,bhep::VERBOSE);
   
 }
@@ -2784,6 +2908,58 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
 
   // Build new line with vertex and single hit in next (first downstream) plane.
 
+  // Need to modify this to allow propagation in x and y and not z.
+  // Take all hits. Find longest possible tracks. See if hits can/are added to this track.
+  // If hit(s) have been added. Then it must be a good track? Remove hits so we test all possibilities.
+
+  // We have removed hits from planesCopy, now create a structure with all of them.
+  // Then calculate distance between vertex and points.
+
+  
+  vector<cluster*> hitVector;
+  /*
+  if(vertexSet)
+    {
+      for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
+	{
+	  for(unsigned int ht=0; ht<planesCopy[pl]->GetNHits(); ht++ )
+	    {
+	      hitVector.push_back(planesCopy[pl]->GetHits()[ht]);  
+	    }	  
+	}
+
+      // find most distant hit and create line.
+
+      double max_dist = 0;
+      cluster* dist_hit;
+      for(unsigned int hit =0; hit<hitVector.size();hit++)
+	{
+	  double distx = vertex->position()[0]-hitVector[hit]->position()[0];
+	  distx*= distx;
+	  double disty = vertex->position()[1]-hitVector[hit]->position()[1];
+	  disty*= disty;
+	  double distz = vertex->position()[2]-hitVector[hit]->position()[2];
+	  distz*= distz;
+	  double dist = sqrt(distx+disty+distz);
+
+	  if(dist>max_dist)
+	    {
+	      dist_hit=hitVector[hit];
+	      max_dist = dist;
+	    }
+	}
+      // Create line, add hits. Redo this till all hits are used.
+
+      if(dist_hit)
+	{
+	  Line* temp_line = new Line(vertex,dist_hit);
+	}
+	
+
+
+
+    }
+  */
 
 
 

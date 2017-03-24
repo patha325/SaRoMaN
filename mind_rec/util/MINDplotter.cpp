@@ -175,6 +175,9 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   _XPos.clear();
   _YPos.clear();
   _ZPos.clear();
+  _XPosS.clear();
+  _YPosS.clear();
+  _ZPosS.clear();
   _Edep.clear();
   _HTime.clear();
   _NodeFitted.clear();
@@ -520,8 +523,8 @@ void MINDplotter::define_tree_branches() {
 
   statTree->Branch("traj_TrajVertex", &_vertZ, "traj_trajVert[trajNo]/D");
   statTree->Branch("traj_Fitted", &_Fit, "traj_success[trajNo]/I");
-  statTree->Branch("traj_Fitted", &_lowPt, "traj_lowPt[trajNo]/I");
-  statTree->Branch("traj_Fitted", &_hadron, "traj_hadron[trajNo]/I");
+  statTree->Branch("traj_lowPt", &_lowPt, "traj_lowPt[trajNo]/I");
+  statTree->Branch("traj_hadron", &_hadron, "traj_hadron[trajNo]/I");
   statTree->Branch("traj_TASDextrap", &_TASDextrapolation, "traj_TASDextrap[trajNo]/I");
   statTree->Branch("traj_TASDadded", &_TASDadded, "traj_TASDadded[trajNo]/I");
   statTree->Branch("traj_backFit",&_reFit,"traj_backFit[trajNo]/I");
@@ -616,6 +619,9 @@ void MINDplotter::define_tree_branches() {
   statTree->Branch("trajNode_XPos", &_XPos,32000,0);
   statTree->Branch("trajNode_YPos", &_YPos, 32000,0);
   statTree->Branch("trajNode_ZPos", &_ZPos,32000,0);
+  statTree->Branch("trajNode_XPos_smoothed", &_XPosS,32000,0);
+  statTree->Branch("trajNode_YPos_smoothed", &_YPosS, 32000,0);
+  statTree->Branch("trajNode_ZPos_smoothed", &_ZPosS,32000,0);
   statTree->Branch("trajNode_EngDeposit", &_Edep,32000,0);
   statTree->Branch("trajNode_Time", &_HTime,32000,0);
   statTree->Branch("trajNode_Fitted", &_NodeFitted,32000,0);
@@ -1619,8 +1625,7 @@ void MINDplotter::patternStats2(fitter& Fit) {
   //loop over trajectories
   for(int i=0; i<(int)traj.size(); i++){
     //if(traj[i]->quality("fitted")){
-
-    if(1){
+      if(1){
       _nhits[i] = traj[i]->size();
 
       cout<<"nodes="<<traj[i]->size()<<" hits="<<_nhits[i]<<endl;
@@ -1632,6 +1637,9 @@ void MINDplotter::patternStats2(fitter& Fit) {
       std::vector<double> vxpos;
       std::vector<double> vypos;
       std::vector<double> vzpos;
+      std::vector<double> vxposs;
+      std::vector<double> vyposs;
+      std::vector<double> vzposs;
       std::vector<double> vedep;
       std::vector<double> vtime;
       std::vector<double> vfitted;
@@ -1639,6 +1647,9 @@ void MINDplotter::patternStats2(fitter& Fit) {
       vxpos.clear();
       vypos.clear();
       vzpos.clear();
+      vxposs.clear();
+      vyposs.clear();
+      vzposs.clear();
       vedep.clear();
       vtime.clear();
       vfitted.clear();
@@ -1652,6 +1663,15 @@ void MINDplotter::patternStats2(fitter& Fit) {
 	  vxpos.push_back(meas.position()[0]);
 	  vypos.push_back(meas.position()[1]);
 	  vzpos.push_back(meas.position()[2]);
+	  /*
+	  if( traj[i]->node(iHits).status("fitted") &&  _nhits[i] >10)
+	    {
+	  vxposs.push_back( traj[i]->node(iHits).state().hv(RP::smoothed).vector()[0]);
+	  vyposs.push_back( traj[i]->node(iHits).state().hv(RP::smoothed).vector()[1]);
+	  vzposs.push_back( traj[i]->node(iHits).state().hv(RP::smoothed).vector()[2]);
+	    }
+	  */
+
 	  vedep.push_back(Fit.get_classifier().correctEdep( meas.hv("energy").vector()[0], 
 							    meas.vector()[0], meas.vector()[1],
 							    meas.vector()[2]));
@@ -1672,6 +1692,9 @@ void MINDplotter::patternStats2(fitter& Fit) {
       _XPos.push_back(vxpos);
       _YPos.push_back(vypos);
       _ZPos.push_back(vzpos);
+      _XPosS.push_back(vxposs);
+      _YPosS.push_back(vyposs);
+      _ZPosS.push_back(vzposs);
       _Edep.push_back(vedep);
       _HTime.push_back(vtime);
       _NodeFitted.push_back(vfitted);

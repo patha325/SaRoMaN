@@ -6,10 +6,12 @@ class batch_submit:
 
 	def __init__(self):
 		self.seed = 1
-		self.home = os.getenv("HOME")
-		self.working_dir = os.path.join(self.home,'SaRoMaN')
-		self.out_dir = os.path.join(self.home,'batch2')
-		self.instances = 20
+		#self.home = os.getenv("HOME")
+		self.home = '/data/neutrino05/phallsjo/copy'
+		self.working_dir = os.path.join(self.home,'SaRoMan')
+		#self.out_dir = os.path.join(self.home,'batch')
+		self.out_dir = '/data/neutrino03/phallsjo/batch'
+		self.instances = 2
 		#self.configfile =
 		self.batchfile = self.working_dir + "/run_"+str(self.seed)+".job"
 
@@ -21,13 +23,13 @@ class batch_submit:
 
 	def print_batch_submission(self):
 		batch_data = '''
-#PBS -N saroman.py_%(seed)d
+#PBS -N mySaroman.py_%(seed)d
 #PBS -q medium6
 #PBS -l walltime=5:59:00
-#PBS -e %(out_dir)s/saroman.py_%(seed)d.err
-#PBS -o %(out_dir)s/saroman.py_%(seed)d.out
+#PBS -e %(out_dir)s/mySaroman.py_%(seed)d.err
+#PBS -o %(out_dir)s/mySaroman.py_%(seed)d.out
 
-python %(working_dir)s/saroman.py -B %(seed)d
+python %(working_dir)s/mySaroman.py -B %(seed)d
 '''% vars(self)
 
 		#--configuration_file %(configfile)s

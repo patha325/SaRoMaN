@@ -4,4 +4,5 @@ from handle_third_party import handle_third_party
 from print_config import print_config
 from xml_parser import xml_parser
 from xml_AiDA_parser import xml_AiDA_parser
+from xml_AiDA_parser2 import xml_AiDA_parser2
 

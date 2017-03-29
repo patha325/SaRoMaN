@@ -155,7 +155,7 @@ class saroman:
         self.MIND_thickness_air = 0.5 # cm
         self.MIND_thickness_air_mm = 10*self.MIND_thickness_air
         self.MIND_rad_length_air = 303.9 #mm
-        self.MIND_min_eng_at_plane = 1#0.5#0.5#1#1.6#0#0.000016 #MeV
+        self.MIND_min_eng_at_plane = 1#0.5#1#1.6#0#0.000016 #MeV
         self.MIND_module_length = (self.MIND_thickness_active*self.MIND_active_layers +
                                    self.MIND_thickness_passive+self.MIND_thickness_bracing +
                                    self.MIND_thickness_air_mm)
@@ -282,13 +282,13 @@ class saroman:
         Clean up our own software, use before building and before committing to git.
         '''
         #sciNDG4
-        #command = [self.third_party_support+'/bin/scons','-c']
-        #subprocess.call(command, cwd = self.exec_base+'/sciNDG4')
+        command = [self.third_party_support+'/bin/scons','-c']
+        subprocess.call(command, cwd = self.exec_base+'/sciNDG4')
 
         #digi_ND
-        #subprocess.call('make clean', shell=True, cwd = self.exec_base+'/digi_ND') 
-        #command = self.exec_base+'/digi_ND/cleanup.sh'
-        #subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
+        subprocess.call('make clean', shell=True, cwd = self.exec_base+'/digi_ND') 
+        command = self.exec_base+'/digi_ND/cleanup.sh'
+        subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
 
         #mind_rec
         subprocess.call('make clean', shell=True, cwd = self.exec_base+'/mind_rec') 
@@ -301,21 +301,21 @@ class saroman:
         Build all the own libraries that are used for SaRoMaN
         '''
         #sciNDG4
-        #command = [self.third_party_support+'/bin/scons']
-        #print subprocess.list2cmdline(command)
-        #subprocess.call(command, cwd = self.exec_base+'/sciNDG4', env=os.environ)
+        command = [self.third_party_support+'/bin/scons']
+        print subprocess.list2cmdline(command)
+        subprocess.call(command, cwd = self.exec_base+'/sciNDG4', env=os.environ)
 
         
         #digi_ND
         #run configure and autogen in that context.
-        #command = self.exec_base+'/digi_ND/autogen.sh'
-        #print command
-        #subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
-        #subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
-        #command = self.exec_base+'/digi_ND/configure'
-        #print command
-        #subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
-        #subprocess.call('make', shell=True, cwd = self.exec_base+'/digi_ND')
+        command = self.exec_base+'/digi_ND/autogen.sh'
+        print command
+        subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
+        subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
+        command = self.exec_base+'/digi_ND/configure'
+        print command
+        subprocess.call('bash %s' %command, shell=True, cwd = self.exec_base+'/digi_ND')
+        subprocess.call('make', shell=True, cwd = self.exec_base+'/digi_ND')
 
         #mind_rec
         #run configure and autogen in that context.

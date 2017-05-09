@@ -52,8 +52,8 @@ class saroman:
         #Set up paths #
         self.home = os.getcwd()
         self.exec_base = self.home
-        self.out_base  = os.path.join(self.home, 'out')
-        #self.out_base = '/data/neutrino06/phallsjo/out'
+        #self.out_base  = os.path.join(self.home, 'out')
+        self.out_base = '/data/neutrino06/phallsjo/out'
         #self.out_base  = os.path.join(self.home, 'batch')
         self.scripts_dir = os.path.join(self.exec_base, 'saroman')
         self.third_party_support = os.path.join(self.home, 'third_party') 
@@ -71,7 +71,7 @@ class saroman:
 
         #Should be implemented as input values#
         self.train_sample = 0
-        self.part = 'mu-' #'14'
+        self.part = 'mu+' #'14'
         self.pid = 14 #14 for neutrino!
         #self.part = 'mu+'#'14'
         #self.pid = -13
@@ -79,7 +79,8 @@ class saroman:
         #self.seed = 5000 * random.random()
         self.seed = 1000
         self.Nevts = 1000
-        self.inttype = 'CC' #'CCQE'#Neutrino
+        self.inttype = 'CC'
+#self.inttype = 'CCQE'#Neutrino
         #self.Bfield = 1.5 #Tesla
         self.BfieldScaling = 1.0
 
@@ -109,14 +110,16 @@ class saroman:
             self.config_rec_pos_resY = 1.5 #cm #from gdml, 3.1 /2 ?
             self.config_rec_boxX = 17#8.5 #cm #when used?
             #self.xml_file_path = os.path.join(self.exec_base,'MIND.gdml')
-            #self.xml_file_path = os.path.join(self.exec_base,'MIND_v3b.gdml')
-            self.xml_file_path = os.path.join(self.exec_base,'MIND_v3corrected.gdml')
+            self.xml_file_path = os.path.join(self.exec_base,'MIND_v3a.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'MIND_v3corrected.gdml')
 
             #self.xml_file_path = os.path.join(self.exec_base,'AiDA_TASD.gdml')
             #self.xml_file_path = os.path.join(self.exec_base,'ND_v3.gdml') #neutrino
             #self.gdml_root_file = os.path.join(self.out_base,'ND_v3.gdml') #neutrino
             #self.xml_file_path = os.path.join(self.exec_base,'MIND_v4.gdml')
 
+            self.xml_file_path = os.path.join(self.exec_base,'MIND_firstBeamTest010517.gdml')
+            self.gdml_root_file = os.path.join(self.exec_base,'MIND_firstBeamTest010517.gdml')
 
         #Mind geometry
         #Different types of geometry, 3 represents a rectangular detector.
@@ -155,7 +158,7 @@ class saroman:
         self.MIND_thickness_air = 0.5 # cm
         self.MIND_thickness_air_mm = 10*self.MIND_thickness_air
         self.MIND_rad_length_air = 303.9 #mm
-        self.MIND_min_eng_at_plane = 1#0.5#1#1.6#0#0.000016 #MeV
+        self.MIND_min_eng_at_plane = 0.5#0.5#1#1.6#0#0.000016 #MeV
         self.MIND_module_length = (self.MIND_thickness_active*self.MIND_active_layers +
                                    self.MIND_thickness_passive+self.MIND_thickness_bracing +
                                    self.MIND_thickness_air_mm)

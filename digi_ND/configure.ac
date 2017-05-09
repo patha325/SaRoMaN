@@ -87,7 +87,7 @@ for prog in $prog_list; do
   test $prog = "root-config" && LIBS="$LIBS $($prog --glibs)"
 done
 
-LIBS="$LIBS $(root-config --libs) $(xml2-config --libs)"
+LIBS="$LIBS -lsqlite3 $(root-config --libs) $(xml2-config --libs)"
 
 
 AC_MSG_CHECKING([for bhep library])

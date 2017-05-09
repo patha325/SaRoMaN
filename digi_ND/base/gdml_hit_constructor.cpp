@@ -83,7 +83,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   //cout<<"_testBeam"<<_testBeam<<endl;
   
   //cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
-  /*
+  /*  
   for(int i=0;i<sortedHits.size();i++)
     {
       cout<<"time\tenergy\tT\tZ\tTASD\tY\tMother"<<endl;
@@ -92,12 +92,13 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
 	  <<sortedHits[i]->ddata("barPosT")<<"\t"
 	  <<sortedHits[i]->ddata("barPosZ")<<"\t"
 	  <<sortedHits[i]->idata("IsTASD")<<"\t"
-	  <<sortedHits[i]->idata("IsYBar")<<"\t"
-	  <<sortedHits[i]->mother_particle().name()<<endl;
+	  <<sortedHits[i]->idata("IsYBar")<<endl;
+	// <<sortedHits[i]->mother_particle().name()<<endl;
       //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
       //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
     }
   */
+  
   //cout<<"starting ClusteringAida"<<endl;
   
 
@@ -341,8 +342,8 @@ std::vector<bhep::hit*> gdml_hit_constructor::FilteringBadHits(const std::vector
     {
       //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
       //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 1.0)
-      if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< _minEng)
-	//if(hits[counter]->ddata( "EnergyDep" )< 0.1)
+      //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< _minEng)  //TESTBEAM2017
+	if(hits[counter]->ddata( "EnergyDep" )< 0.1)  //TESTBEAM2017
       {
         //cout<<"Removing hit from: "<<hits[inCounter]->mother_particle().name()<<endl;
         continue;
@@ -373,7 +374,7 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
     }
   else
     {
-      tolerance = 1; // 1 ns
+      tolerance = 10; // 1 ns //TESTBEAM2017
       filteredHits = FilteringBadHits(hits);
       //filteredHits = hits; //For the testbeam.
     }

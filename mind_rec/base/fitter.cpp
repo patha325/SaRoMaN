@@ -101,7 +101,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
   ///if pattern recognition 
   if (_patternRec) {
-    if ((int)_meas.size() < _min_seed_hits) {
+    if ((int)_meas.size() < 1){//_min_seed_hits) {
       _failEvent = 1; 
       ok = false; 
     }
@@ -295,6 +295,103 @@ bool fitter::Execute(bhep::particle& part,int evNo){
     } //end if(_testBeam)
   else
     {
+
+   //crazy test start
+      const vector<bhep::hit*> hits = part.hits( _detect );
+
+      int nMeas = hits.size();
+      double x[(const int)nMeas], y[(const int)nMeas], 
+	z[(const int)nMeas], u[(const int)nMeas];
+      int minindex = nMeas;
+      
+      for (int iMeas = 0;iMeas < nMeas;iMeas++){
+	x[iMeas] = hits[iMeas]->x()[0];
+	y[iMeas] = hits[iMeas]->x()[1];
+	z[iMeas] = hits[iMeas]->x()[2];
+      }
+
+      //Gets plane occupancies and total plane energies.
+      //Needs hits in increasing z order.
+      
+      //   std::cout<<"+++++I am in get_plane_occupancy"<<std::endl;
+      _m.message("++++ Calculating plane energies and occupancies ++++",bhep::VERBOSE);
+      bool ok = true;
+      
+      std::vector<plane_info*> _planes;
+      double _meanOcc;
+      
+      /// size of vector<cluster> hits
+      size_t nHits = _meas.size();
+      //cout<<"get_plane_occ ()  :: nHits="<<nHits<<endl;
+      int single_count = 0;
+      double testZ, testX, testY, curZ;
+      size_t hits_used = 0, imeas = 0;
+      int planeIndex=0 ;
+      
+      double _tolerance = _store.fetch_dstore("pos_resZ") * cm;
+     
+
+      _hitsPerPlanes.clear();
+      _avrHitsPerUsedPlanes.clear();
+ 
+      /// loop over hits to calculate plane occupancy  
+      do {
+	
+	testX = _meas[imeas]->position()[0];
+	testY = _meas[imeas]->position()[1];
+	testZ = _meas[imeas]->position()[2];
+	hits_used++;
+	// Avoid a hit with an undefined z position
+	//if ( fabs(testZ) >  _detLength ) 
+	//continue;
+	// If nan.
+	if(testX != testX) continue;
+	if(testY != testY) continue;
+	if(testZ != testZ) continue;
+	
+	///create plane info
+	plane_info* plane = new plane_info(planeIndex, testZ, _store);
+	plane->AddHit(_meas[imeas]);
+	//cout<<"testZ: "<<testZ<<endl;
+	
+	///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
+	for (size_t i = hits_used;i <nHits;i++) {
+	  curZ = _meas[i]->position()[2];
+	  //cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" _tolerance: "<<_tolerance<<endl;
+	  if (curZ <= testZ + _tolerance) {
+	    
+	    // add the hit to the same plane
+	    plane->AddHit(_meas[i]);
+	    //cout<<"Added hit"<<endl;
+	    testZ = _meas[i]->position()[2];
+	    hits_used++;
+	  } else break;
+	  
+	}
+	_planes.push_back(plane);
+	///increase the plane index
+	planeIndex++;
+	
+	_meanOcc += (double) plane->GetNHits();
+	
+	
+      } while (hits_used != nHits);
+      
+      ///total no of planes
+      double _nplanes = (int)_planes.size();
+      
+      _meanOcc /= (double)_nplanes;
+      _hitsPerPlanes.push_back(hits.size() / _planes.size());
+
+      _avrHitsPerUsedPlanes.push_back(_meanOcc);
+
+      _planes.clear();
+      _meanOcc = 0;
+
+    //end of crazyness.
+
+
+
       
       ///if pattern recognition and recTrajectory is ok
       if (_patternRec){
@@ -519,7 +616,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
   //TASDtracker();
 
-  //TASDtracker2(); //Turned off for neutrino large run.
+  TASDtracker2(); //Turned off for neutrino large run.
 
   cout<<"Finaly, how many tracks? "<<_trajs.size()<<endl;
 
@@ -527,7 +624,8 @@ bool fitter::Execute(bhep::particle& part,int evNo){
     {
       cout<<"_trajs.size()="<<_trajs.size()<<endl;
       
-      if(_trajs[j]->size()<2){
+      if(_trajs[j]->size()<3){
+      //if(_trajs[j]->size()<1){
 	cout<<"deleting too short track"<<endl;
 	_trajs.erase (_trajs.begin()+j);
 	//delete _trajs[j];
@@ -650,7 +748,7 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
   //_traj.nodes()[3]->reset();
 
   /// fit the trajectory              
-
+  /*
   cout<<"FitTrajectory All nodes before:"<<endl;
   for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
     {
@@ -667,11 +765,12 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
 	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
 	}
     }
+  */
   
   //ok0 = man().fitting_svc().fit(seedState0, _traj,true);
 
   ok0 = man().fitting_svc().fit(seedState0, _traj,false);
-
+  /*
   cout<<"FitTrajectory All nodes after:"<<endl;
   for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
     {
@@ -696,6 +795,7 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
 	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
 	}
     }
+  */
   /*
   if(_traj.size()>10)
     {
@@ -1477,12 +1577,20 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
 
   cout<<"z pos in fitter_seed: "<<v[2]<<endl; 
 
+  v[3] = (traj.nodes()[firsthit]->measurement().vector()[0] -traj.nodes()[firsthit+1]->measurement().vector()[0])/
+    (traj.nodes()[firsthit]->measurement().vector()[2] -traj.nodes()[firsthit+1]->measurement().vector()[2]);
+  v[4] = (traj.nodes()[firsthit]->measurement().vector()[1] -traj.nodes()[firsthit+1]->measurement().vector()[1])/
+    (traj.nodes()[firsthit]->measurement().vector()[2] -traj.nodes()[firsthit+1]->measurement().vector()[2]);
+
+
+
   // Estime the momentum from range
-  ComputeMomFromRange( traj, (int)traj.size(), firsthit, v);
+  //ComputeMomFromRange( traj, (int)traj.size(), firsthit, v);
 
   //v[5] = 1.0/(-2600);
 
   v[5] = -1.0/10000;
+  //v[5] = -1.0/5000;
 
   double pSeed;
   //double wFe = _geom.get_Fe_prop();
@@ -1539,7 +1647,9 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   C[3][3] = 1;//0.001;
   C[4][4] = 1;//0.0001; 
   //C[4][4] = 4* 1.5 * 1.5 * cm *cm; // Expected pos dx/dz, dy/dz
-  C[5][5] = 0.001;//1.0/2600.0;//400.0/2600.0/2600.0;//1.0/100.0 * 1.0/100.0;//0.000004;//1.0/100;// 1./4. * v[5]*v[5];//0.0000001;//pow(1/2*v[5],2); // Expected pos dx/dz, dy/dz
+  C[5][5] = 0.001;//0.001;//1.0/2600.0;//400.0/2600.0/2600.0;//1.0/100.0 * 1.0/100.0;//0.000004;//1.0/100;// 1./4. * v[5]*v[5];//0.0000001;//pow(1/2*v[5],2); // Expected pos dx/dz, dy/dz
+
+  //C[5][5]=0.1 *v[5] * 0.1 *v[5];
 
   //C[5][5]*=C[5][5];
   //C[5][5] = 0;
@@ -2767,35 +2877,25 @@ void fitter::AddHitsToTrack(const std::vector<plane_info*>& planes, Trajectory* 
 void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory* traj){
   //*****************************************************************************
 
-
   vector<Line*> lines;
-
   //cluster* vertex = planes[0]->GetHits()[0];
-
   cluster* vertex;
-
   //Take a track, find extrapolated hit in TASD. Fitt hits onto this track from planes.
   //The first (downstream) hit must be vertex.
-
   // create line from the two first (downstream) hits in the trajectory.
-
   // Try to add one hit from TASD and so on.
-
   // Add hits to traj, then think about creating other trajs.
 
   vector<plane_info*> planesCopy = planes;
 
   for(unsigned int i=0; i<_trajs.size(); i++ ){
-
     Line* temp_line = new Line(_trajs[i]->nodes()[0],_trajs[i]->nodes()[1]);
     
-    cout<<"Equation"<<endl;
-    temp_line->Equation();
+    //cout<<"Equation"<<endl;
+    //temp_line->Equation();
     
     lines.push_back(temp_line);
-        
     // Now add hits to lines, later add line hits to tracks.
-
   }
 
   bool vertexSet = false;
@@ -2806,11 +2906,12 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
 	{    
 	  for(unsigned int i = 0; i<lines.size(); i++)
 	    {
+	      /*
 	      cout<<"Hit="<<planesCopy[pl]->GetHits()[ht]->position()[0]<<" "
 	        <<planesCopy[pl]->GetHits()[ht]->position()[1]<<" "
 	        <<planesCopy[pl]->GetHits()[ht]->position()[2]<<endl;
 	      cout<<"R-value="<<lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht])<<endl;
-
+	      */
 	      if(lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht]) <30 )
 		{
 		  //lines[i]->AddHits(planesCopy[pl]->GetHits()[ht]);
@@ -2855,7 +2956,7 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
     }
   
   //Node vertex = lines[0]->GetHits()[0];
-
+  /*
   if(vertexSet)
     {
     cout<<"vertex ="
@@ -2863,7 +2964,7 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
     <<vertex->position()[1]<<"\t"
     <<vertex->position()[2]<<endl;
     }
-
+  */
   // Should have filled lines with hits. 
   // Fill traj with these line hits, then start building secondary tracks.
 
@@ -2890,21 +2991,21 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
   lines.clear();
 
 
-  cout<<"Planes hits after long tracks"<<endl;
+  //cout<<"Planes hits after long tracks"<<endl;
 
   double meanOcc=0;
 
   for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
     {
-      cout<<planesCopy[pl]->GetNHits()<<endl;
-      cout<<planesCopy[pl]->GetZ()<<endl;
+      //cout<<planesCopy[pl]->GetNHits()<<endl;
+      //cout<<planesCopy[pl]->GetZ()<<endl;
 
       meanOcc+=planesCopy[pl]->GetNHits();
     }
   meanOcc /= planesCopy.size();
 
 
-  cout<<"meanOcc="<<meanOcc<<endl;
+  //cout<<"meanOcc="<<meanOcc<<endl;
 
   // Build new line with vertex and single hit in next (first downstream) plane.
 
@@ -2916,7 +3017,7 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
   // Then calculate distance between vertex and points.
 
   
-  vector<cluster*> hitVector;
+  //vector<cluster*> hitVector;
   /*
   if(vertexSet)
     {
@@ -2955,15 +3056,158 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
 	  Line* temp_line = new Line(vertex,dist_hit);
 	}
 	
-
-
-
     }
   */
 
+  // Create a list of all remaining plane hits.
+
+  vector<cluster*> hitVector;
+  cout<<"New algorithm"<<endl;
+    if(vertexSet && meanOcc>0)
+    {
+      for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
+	{
+	  for(unsigned int ht=0; ht<planesCopy[pl]->GetNHits(); ht++ )
+	    {
+	      hitVector.push_back(planesCopy[pl]->GetHits()[ht]);  
+	    }	  
+	}
+      // Find hit furthest away.
+      while(true)
+	{
+	  double maxDistance = 0;
+	  unsigned int hitIndex = 0;
+	  
+	  for(unsigned int ht=0; ht<hitVector.size(); ht++ )
+	    {
+	      double dx = hitVector[ht]->position()[0] - vertex->position()[0];
+	      double dy = hitVector[ht]->position()[1] - vertex->position()[1];
+	      double dz = hitVector[ht]->position()[2] - vertex->position()[2];
+	      
+	      double distance = sqrt(dx*dx+dy*dy+dz*dz);
+	      
+	      if(distance>maxDistance)
+		{
+		  maxDistance = distance;
+		  hitIndex = ht;
+		}
+	    }
+	  /*
+	  cout<<"Using hit="<<"\t"
+	      <<hitVector[hitIndex]->position()[0]<<"\t"
+	      <<hitVector[hitIndex]->position()[1]<<"\t"
+	      <<hitVector[hitIndex]->position()[2]<<endl;
+	  */
+	  Line* temp_line = new Line(vertex,hitVector[hitIndex]);
+
+	  //RecObject* ro = dynamic_cast<RecObject*>(&(*(vertex)));
+	  //temp_line->AddHits(Node(*ro));
+	  hitVector.push_back(vertex);
+
+	  //RecObject* ro = dynamic_cast<RecObject*>(&(*(hitVector[hitIndex])));
+	  //temp_line->AddHits(Node(*ro));
+	  //hitVector.erase(hitVector.begin()+hitIndex);
+	  
+	  //cout<<"Equation"<<endl;
+	  //temp_line->Equation();
+
+	  //Try to add hits to this new line. And repeate.
+	  
+	  for(unsigned int ht=0; ht<hitVector.size(); ht++ )
+	    {
+	      /*
+	      cout<<temp_line->CalculateR(hitVector[ht])<<endl;
+	      cout<<hitVector[ht]->position()[0]<<"\t"
+		  <<hitVector[ht]->position()[1]<<"\t"
+		  <<hitVector[ht]->position()[2]<<endl;
+	      */
+	      if(temp_line->CalculateR(hitVector[ht]) <40 )
+		{
+		  //cout<<"Added"<<endl;
+		  RecObject* ro = dynamic_cast<RecObject*>(&(*(hitVector[ht])));
+		  temp_line->AddHits(Node(*ro));
+		  hitVector.erase(hitVector.begin()+ht);
+		}
+	    }
+	  //cout<<"hitVector.size()="<<hitVector.size()<<endl;
+	  unsigned int maxLength = 0;
+	  bool continuous = true;
+	  for(unsigned int ht=0; ht<temp_line->GetHits().size()-1; ht++)
+	    {
+	      // add some criteria for largests z-dist between hits.
+	      unsigned int length = abs(temp_line->GetHits()[ht].measurement().position()[2]
+					-temp_line->GetHits()[ht+1].measurement().position()[2]);
+
+	      if(length > maxLength) maxLength = length;
+	    }
+	  if(maxLength > 200) continuous = false;
+	  
+	  Trajectory* rem_traj = new Trajectory();
+	  
+	  for(unsigned int hit=0; hit<temp_line->GetHits().size(); hit++ ){
+	    
+	    rem_traj->add_node(temp_line->GetHits()[hit]);
+	  }
+
+	  if(rem_traj->size() > 1 && continuous)
+	  //if(rem_traj->size() > 0)
+	    {
+	      rem_traj->set_quality("failType",_failType);
+	      rem_traj->set_quality("intType",_intType);
+	      rem_traj->set_quality("nplanes",0);
+	      rem_traj->set_quality("freeplanes",0);
+	      rem_traj->set_quality("reseed",_reseed_ok);
+	      rem_traj->set_quality("xtent",0);
+	      rem_traj->set_quality("initialqP",_initialqP);
+	      rem_traj->set_quality("fitted",0);
+	      rem_traj->set_quality("vertZ", 0);
+	      rem_traj->set_quality("fitcheck", _fitCheck);
+	      rem_traj->set_quality("lowPt",1);
+	      rem_traj->set_quality("hadron",1);
+	      rem_traj->set_quality("TASDextrapolation",0);
+	      rem_traj->set_quality("TASDadded",0);
+	      for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
+		{
+		  rem_traj->nodes()[cnt]->set_status(RP::fitted);
+		}
+	      
+	      State seedState;
+	      //EVector v = seedState.vector();
+	      EVector V(6,0);
+	      EMatrix M(6,6,0);
+	      
+	      V[5] = 1/1;
+	      //EMatrix C0 = seedState.matrix();
+	      seedState.set_name(RP::particle_helix);
+	      seedState.set_name(RP::representation,RP::slopes_curv_z);
+	      seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
+	      seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
+	      
+	      //had_traj->nodes()[had_traj->first_fitted_node()]->set_state(seedState);
+	      
+	      for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
+		{
+		  rem_traj->nodes()[cnt]->set_state(seedState);
+		}
+
+	      cout<<"rem_traj->size()="<<rem_traj->size()<<endl;
+	      _trajs.push_back(rem_traj);
+	    }
+	  
+
+	  //hitVector.clear();
+	  
+	  //if(hitVector.size()==0) break;
+	  if(hitVector.size()<2) break;
+	}
+    }  
 
 
 
+
+    // old code
+
+    /*
   if(vertexSet && meanOcc>0)
     {
       unsigned int plane = 0;
@@ -2973,21 +3217,17 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
 	  plane++;
 	}
 	
-
       for(unsigned int ht=0; ht<planesCopy[plane]->GetNHits(); ht++ ){
 	
 	Line* temp_line = new Line(vertex,planesCopy[plane]->GetHits()[ht]);
 	
 	RecObject* ro = dynamic_cast<RecObject*>(&(*(vertex)));
-	
-	
 	temp_line->AddHits(Node(*ro));
 	
 	cout<<"Equation"<<endl;
 	temp_line->Equation();
 	
 	lines.push_back(temp_line);
-	
       }
       
       for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
@@ -3003,7 +3243,6 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
 		  
 		  if(lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht]) <30 )
 		    {
-		      
 		      //RecObject* ro = dynamic_cast<RecObject*>(&(lines[i]->GetHits()[ht]));
 		      RecObject* ro = dynamic_cast<RecObject*>(&(*(planesCopy[pl]->GetHits()[ht])));
 		      lines[i]->AddHits(Node(*ro));
@@ -3092,6 +3331,8 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
       
       lines.clear();
     }
+    */
+
   /*
 
   if(meanOcc==1)

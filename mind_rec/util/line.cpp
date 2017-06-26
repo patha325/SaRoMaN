@@ -54,22 +54,59 @@ double Line::CalculateR(cluster* hit) {
 
   //return sqrt(dx*dx+dy*dy+dz*dz);
 
-  double param = (hit->position()[2] - _mz)/_kz;
+  // line x1, x2. point x0
+  // Distance abs (x2-x1) x (x1-x0) / abs (x2-x1)
+
+  // rewrite as abs(a x b) / abs(a) 
+
+  double ax = _kx;
+  double ay = _ky;
+  double az = _kz;
+
+  double bx = _mx - hit->position()[0];
+  double by = _my - hit->position()[1];
+  double bz = _mz - hit->position()[2];
+
+  // cross-product
+
+  double cx = ay*bz - az*by;
+  double cy = az*bx - ax*bz;
+  double cz = ax*by - ay*bx;
+
+  double d = sqrt(cx*cx+cy*cy+cz*cz);
+
+  d/= sqrt(ax*ax+ay*ay+az*az);
+
+  /*
+
+
+  double param;
+
+  if(_kz) param = (hit->position()[2] - _mz)/_kz;
+  else if(_ky) param = (hit->position()[1] - _my)/_ky;
+  else param = (hit->position()[0] - _mx)/_kx;
+
+  //double param = (hit->position()[2] - _mz)/_kz;
   //double param = (hit->measurement().position()[2] - _mz)/_kz;
 
-  std::cout<<"param="<<param<<endl;
+  //std::cout<<"param="<<param<<endl;
 
   double dx = _mx + _kx * param - hit->position()[0];
   //double dx = _mx + _kx * param - hit->measurement().position()[0];
 
   double dy = _my + _ky * param - hit->position()[1];
 
+  double dz = _mz + _kz * param - hit->position()[2];
+
   //double dy = _my + _ky * param - hit->measurement()position()[1];
 
-  std::cout<<"dx="<<dx<<endl;
-  std::cout<<"dy="<<dy<<endl;
+  //std::cout<<"dx="<<dx<<endl;
+  //std::cout<<"dy="<<dy<<endl;
 
-  return sqrt(dx*dx+dy*dy);
+  return sqrt(dx*dx+dy*dy+dz*dz);
+  */
+
+  return d;
   
 
 

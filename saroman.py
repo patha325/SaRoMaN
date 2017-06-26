@@ -53,7 +53,8 @@ class saroman:
         self.home = os.getcwd()
         self.exec_base = self.home
         #self.out_base  = os.path.join(self.home, 'out')
-        self.out_base = '/data/neutrino06/phallsjo/out'
+        #self.out_base = '/data/neutrino06/phallsjo/out'
+        self.out_base = '/data/neutrino06/phallsjo/outTestBeam'
         #self.out_base  = os.path.join(self.home, 'batch')
         self.scripts_dir = os.path.join(self.exec_base, 'saroman')
         self.third_party_support = os.path.join(self.home, 'third_party') 
@@ -71,7 +72,7 @@ class saroman:
 
         #Should be implemented as input values#
         self.train_sample = 0
-        self.part = 'mu+' #'14'
+        self.part = 'pi-' #'mu+-, pi+-0, kaon+-0, anti- proton, e+-'
         self.pid = 14 #14 for neutrino!
         #self.part = 'mu+'#'14'
         #self.pid = -13
@@ -118,8 +119,14 @@ class saroman:
             #self.gdml_root_file = os.path.join(self.out_base,'ND_v3.gdml') #neutrino
             #self.xml_file_path = os.path.join(self.exec_base,'MIND_v4.gdml')
 
-            self.xml_file_path = os.path.join(self.exec_base,'MIND_firstBeamTest010517.gdml')
-            self.gdml_root_file = os.path.join(self.exec_base,'MIND_firstBeamTest010517.gdml')
+            #self.xml_file_path = os.path.join(self.exec_base,'MIND_firstBeamTest010517.gdml')
+            #self.gdml_root_file = os.path.join(self.exec_base,'MIND_firstBeamTest010517.gdml')
+
+            self.xml_file_path = os.path.join(self.exec_base,'MIND_secondBeamTest200617.gdml')
+
+            #self.xml_file_path = os.path.join(self.exec_base,'MIND_v3c.gdml')
+
+            self.gdml_root_file = self.xml_file_path
 
         #Mind geometry
         #Different types of geometry, 3 represents a rectangular detector.

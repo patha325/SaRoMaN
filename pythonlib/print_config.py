@@ -145,8 +145,8 @@ GENERATION fvert DV 3
 -4000
  
 GENERATION bspot DV 2
-0. #200.
-0. #200.
+200. #200.
+200. #200.
 
 GENERATION costh_min D 1 
 GENERATION costh_max D 1 #0.9

@@ -169,8 +169,9 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
    
     
   }
-  
 
+  
+  cout<<"performed clear"<<endl;
   ///clear the vectors
   _XPos.clear();
   _YPos.clear();
@@ -182,6 +183,12 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   _HTime.clear();
   _NodeFitted.clear();
   // _positionStart.clear();
+
+  cout<<"_XPos.size()="<<_XPos.size()<<endl;
+
+  _XPos.resize(30);
+  _YPos.resize(30);
+  _ZPos.resize(30);
 
   _XMeas.clear();
   _YMeas.clear();
@@ -425,10 +432,14 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   if(allfit) muonsel = longesttraj;
   // hadron_direction(Fit);
 
+  cout<<"_XPos.size()="<<_XPos.size()<<endl;
+
   /// 
   if (_patR){
     if ( _clu ) {
+      cout<<"_XPos.size()="<<_XPos.size()<<endl;
       hitBreakUp(Fit);
+      cout<<"_XPos.size()="<<_XPos.size()<<endl;
       patternStats2( Fit);
       //  else
       // patternStats1( Fit, *trajs[i],i );
@@ -1455,6 +1466,8 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
   _hitHad = 0;
   const dict::Key hadHit = "inhad";
 
+  cout<<"Start of hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
+
 
   _helix = Fit.get_classifier().GetHelix();
   _quad = Fit.get_classifier().GetQuad();
@@ -1529,7 +1542,11 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
   
     _MuProp.push_back(Fit.GetMeas(ih)->get_mu_prop());
 
+
+
   }
+  cout<<"before quickfix hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
+
   // Quick fix to see TASD hits.
   for(int hit=0; hit<Fit.GetNMeasTASD(); hit++ ){
     _XMeas.push_back(Fit.GetMeasTASD(hit)->position()[0]);
@@ -1538,7 +1555,7 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
 
   }
 
-
+  cout<<"after quickfix hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
 
   //// First Angles  
   if ( Fit.GetNMeas() > 6 ){
@@ -1562,18 +1579,24 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
 
   _m.message("inside hitBreakUp:: TruMu = ",_hitTrMu,bhep::VERBOSE);
   
-  
+  cout<<"Before get_trajs hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
   ///trajectories from fitter
   std::vector<Trajectory*>& trajs = Fit.get_trajs();
   
+  cout<<"after get_trajs hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
+
   //HitBreakUp for each traj
+  /*
   for(int tj=0; tj<(int)trajs.size(); tj++){
     
+    cout<<"in trajs loop hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
     //
     std::vector<Node*> nhits = trajs[tj]->nodes();
     
     ///loop over hits of each trajectory
     for (int iHits = 0;iHits <(int)trajs[tj]->size(); iHits++){
+
+      cout<<"in hit loop for trajs hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
       if (_fail[tj] != 2){
 	
 	///candidate hits (all hits are candidates now)
@@ -1603,7 +1626,10 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
     }
     _m.message("traj No= ",tj," ;total InMu=",_hitType[0][tj],"  ;total MuInMu=",_hitType[1][tj], " fitted node=",_hitType[2][tj],bhep::VERBOSE);
   }
+  */
   
+  cout<<"End of hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
+
   
 }
 
@@ -1616,11 +1642,14 @@ void MINDplotter::patternStats2(fitter& Fit) {
 
   // position of event hits
 
-  
+   cout<<"_XPos.size()="<<_XPos.size()<<endl;
 
   ///positions of hits
   std::vector<Trajectory*> &traj = Fit.get_trajs();
   _nallhits=0;
+
+
+  cout<<"_XPos.size()="<<_XPos.size()<<endl;
 
   //loop over trajectories
   for(int i=0; i<(int)traj.size(); i++){
@@ -1655,11 +1684,24 @@ void MINDplotter::patternStats2(fitter& Fit) {
       vfitted.clear();
       
 
+      //_XPos.clear();
+
+
+        cout<<"_XPos.size()="<<_XPos.size()<<endl;
+	cout<<"_XPos.capacity()="<<_XPos.capacity()<<endl;
+	cout<<"vxpos.size()="<<vxpos.size()<<endl;
+	cout<<"vxpos.capacity()="<<vxpos.capacity()<<endl;
+
       for (int iHits = 0;iHits < _nhits[i];iHits++){
 	
 	const Measurement& meas = traj[i]->node(iHits).measurement();
 	
 	if(_fail[i] != 2) {
+	  cout<<"In MINDPLOTTER="<<"\t"
+	      <<meas.position()[0]<<"\t"
+	      <<meas.position()[1]<<"\t"
+	      <<meas.position()[2]<<endl;
+
 	  vxpos.push_back(meas.position()[0]);
 	  vypos.push_back(meas.position()[1]);
 	  vzpos.push_back(meas.position()[2]);
@@ -1687,6 +1729,11 @@ void MINDplotter::patternStats2(fitter& Fit) {
 	//  _hitType[2][i]++;
       }
       
+      cout<<"_XPos.size()="<<_XPos.size()<<endl;
+      cout<<"_XPos.capacity()="<<_XPos.capacity()<<endl;
+      cout<<"vxpos.size()="<<vxpos.size()<<endl;
+      cout<<"vxpos.capacity()="<<vxpos.capacity()<<endl;
+
       
       ///Fill the Tree variables for hits
       _XPos.push_back(vxpos);

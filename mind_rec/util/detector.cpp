@@ -106,7 +106,6 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 
   cout<<"hits in detector="<<GetNHits()<<endl;
 
-
   double retVal = 0;
 
   //bool used = false;
@@ -313,11 +312,15 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 	  negCharge *= temp[3];
 	}
 
-      //cout<<"posCharge="<<posCharge<<endl;
-      //cout<<"negCharge="<<negCharge<<endl;
+      cout<<"posCharge="<<posCharge<<endl;
+      cout<<"negCharge="<<negCharge<<endl;
 
-      if(posCharge>negCharge) retVal = fabs(retVal);
-      else retVal = -1 * fabs(retVal);
+      if(posCharge == 0 && negCharge ==0)
+	retVal = 0;
+      else if(posCharge>negCharge) 
+	retVal = fabs(retVal);
+      else 
+	retVal = -1 * fabs(retVal);
 
 
     }
@@ -1336,28 +1339,29 @@ vector<double> Detector::LeverArm(unsigned int i){
   double chargeProb = 0;
   double badGuess = 1000;
   vector<double> retValVec;
-  /*
+  
+  cout<<"LeverArm called with: "<<i<<endl;
+  if(i==2) i-=1; //TESTBEAM!
+
   cout<<_subDetectorVec[i-1]->GetName()<<endl;
   cout<<_subDetectorVec[i]->GetName()<<endl;
   cout<<_subDetectorVec[i+1]->GetName()<<endl;
-  */
- 
-  //cout<<_subDetectorVec[i-1]->GetMaxPlane()<<endl;
-  //cout<<_subDetectorVec[i]->GetMinPlane()<<endl;
-  //cout<<_subDetectorVec[i]->GetMaxPlane()<<endl;
-  //cout<<_subDetectorVec[i+1]->GetMinPlane()<<endl;
-
   
-  if( _subDetectorVec[i-1]->GetMaxPlane() &&_subDetectorVec[i]->GetMinPlane() && 
+   
+  cout<<_subDetectorVec[i-1]->GetMaxPlane()<<endl;
+  cout<<_subDetectorVec[i]->GetMinPlane()<<endl;
+  cout<<_subDetectorVec[i]->GetMaxPlane()<<endl;
+  cout<<_subDetectorVec[i+1]->GetMinPlane()<<endl;
+  
+  if(_subDetectorVec[i-1]->GetMaxPlane() &&_subDetectorVec[i]->GetMinPlane() && 
       _subDetectorVec[i]->GetMaxPlane() &&  _subDetectorVec[i+1]->GetMinPlane())
     {
-
+      
       //cout<<(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0)<<endl;
       //cout<<(_subDetectorVec[i]->GetMinPlane()->GetHits().size()>0)<<endl;
       //cout<<(_subDetectorVec[i]->GetMinPlane() !=  _subDetectorVec[i]->GetMaxPlane())<<endl;
       //cout<<(_subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0)<<endl;
       //cout<<(_subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)<<endl;
-
       
       if(_subDetectorVec[i-1]->GetMaxPlane()->GetHits().size()>0 &&
 	 _subDetectorVec[i]->GetMinPlane()->GetHits().size()>0 &&
@@ -1365,124 +1369,124 @@ vector<double> Detector::LeverArm(unsigned int i){
 	 _subDetectorVec[i]->GetMaxPlane()->GetHits().size()>0 &&
 	 _subDetectorVec[i+1]->GetMinPlane()->GetHits().size()>0)
 	{
-
-
-  double dy = (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[1] -
-	       _subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[1]);
-  double dz = (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[2] - 
-	       _subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[2]);
-  
-  double theta1 = atan(dy/dz);
-  
-  //double errZ = 10; //mm
-  double errZ = 0; //mm
-  double errY = 15; //mm
-  
-  //double errTheta1 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * (errY*errY+errY*errY/(errZ*errZ*errZ*errZ));//(2*errZ*errZ+2*errY*errY);
-  
-  //double errTheta1 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * errY*errY /(dz*dz) + errZ*errZ*dy*dy/(dz*dz*dz*dz);  
-  
-  double errTheta1 = 1.0/(dy*dy+dz*dz) * 1.0/(dy*dy+dz*dz) * (dz*dz*errY*errY + dy*dy*errZ*errZ);
-  
-  errTheta1 = sqrt(errTheta1);
-  
-  dy = (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[1] -_subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[1]);
-  
-  dz = (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[2]);
-  
-  double theta2 =atan(dy/dz);
-  
-  //double errTheta2 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * (errY*errY+errY*errY/(errZ*errZ*errZ*errZ));
-  
-  //double errTheta2 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * errY*errY /(dz*dz) + errZ*errZ*dy*dy/(dz*dz*dz*dz);  
-  
-  double errTheta2 = 1.0/(dy*dy+dz*dz) * 1.0/(dy*dy+dz*dz) * (dz*dz*errY*errY + dy*dy*errZ*errZ);
-  
-  errTheta2 = sqrt(errTheta2);
-  
-  double delta1 = theta2-theta1;
-
-  angle = delta1;
-  
-  //double delta1 = theta1-theta2;
-  
-  double errDelta1 = errTheta2*errTheta2 + errTheta1*errTheta1;
-  
-  errDelta1 = sqrt(errDelta1);
-  
-  //cout<<"before l"<<endl;
-  double l = (_subDetectorVec[i]->GetPlanes()->at(1)->GetHits()[0]->position()[2]  - 
-	      _subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position()[2])*1000;
-  //cout<<"before p"<<endl;
-  //double p = 0.3* 
-  //_subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position())[0] *
-  //l/ delta1;
-  /*
-  double p = 0.3* 
-    _subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position())[0]*
-    l/ delta1;
-  */
-
-  double p;
-  double fieldVal = _subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position())[0];
-
-  if(delta1)
-    {
-      //p= fieldVal/fabs(fieldVal) *delta1/fabs(delta1) * (_subDetectorVec[i+1]->GetPrevde_dx() + 
-      //			(_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i+1]->GetZMin())*_subDetectorVec[i+1]->Getde_dx());
-    
-      p= fieldVal/fabs(fieldVal) *delta1/fabs(delta1) * RangeMomentum(_subDetectorVec[i+1]);
-}
-  else
-    {
-      //p = badGuess * fieldVal/fabs(fieldVal);
-      p=0;
-    }
-
-  
-  //cout<<"Momentum="<<p<<endl;
-  
-  _subDetectorVec[i]->SetCharge(p/fabs(p));
-  _subDetectorVec[i]->SetMomentum(fabs(p));
-  _subDetectorVec[i]->SetError(fabs(p*errDelta1/delta1));
-  
-  double X0 = _subDetectorVec[i]->GetX0Eff();
-  
-  double chargeWidth = 13.6/(fabs(p)*(fabs(p)/sqrt(p*p+105.65*105.65))) *
-    sqrt(l/X0) *
-    (1+0.0036*log(l/X0));
-  
-  chargeWidth = chargeWidth*chargeWidth + errDelta1*errDelta1;
-  chargeWidth= sqrt(chargeWidth);
-  
-  //double angularResolution = 1.0/
-  
-  // B field negative, changes places of the probabilities.
-		  	  
-  //double chargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(delta1-chargeWidth)*(delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
-  
-  //double negChargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(-delta1-chargeWidth)*(-delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
-  
-  negChargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(delta1-chargeWidth)*(delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
-  
-  chargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(-delta1-chargeWidth)*(-delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
-  
-  _subDetectorVec[i]->SetChargeProb(chargeProb);
-  
-  _subDetectorVec[i]->SetNegChargeProb(negChargeProb);
-    
-  retVal = p;
-
-  //retVal = delta1;
+	  
+	  
+	  double dy = (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[1] -
+		       _subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[1]);
+	  double dz = (_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position()[2] - 
+		       _subDetectorVec[i-1]->GetMaxPlane()->GetHits()[0]->position()[2]);
+	  
+	  double theta1 = atan(dy/dz);
+	  
+	  //double errZ = 10; //mm
+	  double errZ = 0; //mm
+	  double errY = 15; //mm
+	  
+	  //double errTheta1 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * (errY*errY+errY*errY/(errZ*errZ*errZ*errZ));//(2*errZ*errZ+2*errY*errY);
+	  
+	  //double errTheta1 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * errY*errY /(dz*dz) + errZ*errZ*dy*dy/(dz*dz*dz*dz);  
+	  
+	  double errTheta1 = 1.0/(dy*dy+dz*dz) * 1.0/(dy*dy+dz*dz) * (dz*dz*errY*errY + dy*dy*errZ*errZ);
+	  
+	  errTheta1 = sqrt(errTheta1);
+	  
+	  dy = (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[1] -_subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[1]);
+	  
+	  dz = (_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i]->GetMaxPlane()->GetHits()[0]->position()[2]);
+	  
+	  double theta2 =atan(dy/dz);
+	  
+	  //double errTheta2 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * (errY*errY+errY*errY/(errZ*errZ*errZ*errZ));
+	  
+	  //double errTheta2 = 1.0/(1.0+(dy/dz * dy/dz)) * 1.0/(1.0+(dy/dz * dy/dz)) * errY*errY /(dz*dz) + errZ*errZ*dy*dy/(dz*dz*dz*dz);  
+	  
+	  double errTheta2 = 1.0/(dy*dy+dz*dz) * 1.0/(dy*dy+dz*dz) * (dz*dz*errY*errY + dy*dy*errZ*errZ);
+	  
+	  errTheta2 = sqrt(errTheta2);
+	  
+	  double delta1 = theta2-theta1;
+	  
+	  angle = delta1;
+	  
+	  //double delta1 = theta1-theta2;
+	  
+	  double errDelta1 = errTheta2*errTheta2 + errTheta1*errTheta1;
+	  
+	  errDelta1 = sqrt(errDelta1);
+	  
+	  //cout<<"before l"<<endl;
+	  double l = (_subDetectorVec[i]->GetPlanes()->at(1)->GetHits()[0]->position()[2]  - 
+		      _subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position()[2])*1000;
+	  //cout<<"before p"<<endl;
+	  //double p = 0.3* 
+	  //_subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position())[0] *
+	  //l/ delta1;
+	  
+	  //  double p = 0.3* 
+	    //_subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetMinPlane()->GetHits()[0]->position())[0]*
+	    //l/ delta1;
+	  
+	  
+	  double p;
+	  double fieldVal = _subDetectorVec[i]->GetBField()->vector(_subDetectorVec[i]->GetPlanes()->at(0)->GetHits()[0]->position())[0];
+	  
+	  if(delta1)
+	    {
+	      //p= fieldVal/fabs(fieldVal) *delta1/fabs(delta1) * (_subDetectorVec[i+1]->GetPrevde_dx() + 
+	      //			(_subDetectorVec[i+1]->GetMinPlane()->GetHits()[0]->position()[2] - _subDetectorVec[i+1]->GetZMin())*_subDetectorVec[i+1]->Getde_dx());
+	      
+	      p= fieldVal/fabs(fieldVal) *delta1/fabs(delta1) * RangeMomentum(_subDetectorVec[i+1]);
+	    }
+	  else
+	    {
+	      //p = badGuess * fieldVal/fabs(fieldVal);
+	      p=0;
+	    }
+	  
+	  
+	  //cout<<"Momentum="<<p<<endl;
+	  
+	  _subDetectorVec[i]->SetCharge(p/fabs(p));
+	  _subDetectorVec[i]->SetMomentum(fabs(p));
+	  _subDetectorVec[i]->SetError(fabs(p*errDelta1/delta1));
+	  
+	  double X0 = _subDetectorVec[i]->GetX0Eff();
+	  
+	  double chargeWidth = 13.6/(fabs(p)*(fabs(p)/sqrt(p*p+105.65*105.65))) *
+	    sqrt(l/X0) *
+	    (1+0.0036*log(l/X0));
+	  
+	  chargeWidth = chargeWidth*chargeWidth + errDelta1*errDelta1;
+	  chargeWidth= sqrt(chargeWidth);
+	  
+	  //double angularResolution = 1.0/
+	  
+	  // B field negative, changes places of the probabilities.
+	  
+	  //double chargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(delta1-chargeWidth)*(delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
+	  
+	  //double negChargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(-delta1-chargeWidth)*(-delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
+	  
+	  negChargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(delta1-chargeWidth)*(delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
+	  
+	  chargeProb =  1/(sqrt(2* M_PI) * chargeWidth) * exp(-(-delta1-chargeWidth)*(-delta1-chargeWidth)/(2*chargeWidth*chargeWidth));
+	  
+	  _subDetectorVec[i]->SetChargeProb(chargeProb);
+	  
+	  _subDetectorVec[i]->SetNegChargeProb(negChargeProb);
+	  
+	  retVal = p;
+	  
+	  //retVal = delta1;
 	}
       else
 	{
-	  cout<<"Lever arm fail 1"<<endl;
+	  cout<<"Lever arm fail 1,, not enought hits for lever2"<<endl;
 	}
     }
   else
     {
-      cout<<"Lever arm fail 2"<<endl;
+      cout<<"Lever arm fail 2, not enought hits for lever1"<<endl;
     }
 
   //if(retVal==0 || fabs(retVal) >8000 || isnan(retVal)) retVal = 2000;
@@ -1493,13 +1497,11 @@ vector<double> Detector::LeverArm(unsigned int i){
   //if(retVal==0) retVal = badGuess;
 
   //if(retVal != 0) retVal = retVal/fabs(retVal) * (fabs(retVal) + _subDetectorVec[i]->Getde_dx());
-
+  
   retValVec.push_back(retVal);
   retValVec.push_back(angle);
   retValVec.push_back(chargeProb);
   retValVec.push_back(negChargeProb);
-
-
 
   cout<<"lever_arm function="<<retVal<<endl;
 

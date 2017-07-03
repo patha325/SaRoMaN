@@ -1,4 +1,4 @@
-#######################################################################################################################
+######################################################################################################################
 #Created by Patrik Hallsjo @ University of Glasgow
 #Need automatic dating through GIT, 
 #Modified on 4/11-2015
@@ -52,9 +52,9 @@ class saroman:
         #Set up paths #
         self.home = os.getcwd()
         self.exec_base = self.home
-        #self.out_base  = os.path.join(self.home, 'out')
+        self.out_base  = os.path.join(self.home, 'out')
         #self.out_base = '/data/neutrino06/phallsjo/out'
-        self.out_base = '/data/neutrino06/phallsjo/outTestBeam'
+        #self.out_base = '/data/neutrino06/phallsjo/outTestBeam'
         #self.out_base  = os.path.join(self.home, 'batch')
         self.scripts_dir = os.path.join(self.exec_base, 'saroman')
         self.third_party_support = os.path.join(self.home, 'third_party') 
@@ -72,7 +72,7 @@ class saroman:
 
         #Should be implemented as input values#
         self.train_sample = 0
-        self.part = 'pi-' #'mu+-, pi+-0, kaon+-0, anti- proton, e+-'
+        self.part = 'mu-' #'mu+-, pi+-0, kaon+-0, anti- proton, e+-'
         self.pid = 14 #14 for neutrino!
         #self.part = 'mu+'#'14'
         #self.pid = -13
@@ -83,7 +83,7 @@ class saroman:
         self.inttype = 'CC'
 #self.inttype = 'CCQE'#Neutrino
         #self.Bfield = 1.5 #Tesla
-        self.BfieldScaling = 1.0
+        self.BfieldScaling = 1.0 #1.0/1.5 #1.0
 
         self.testBeam = 0 #Should perhaps be renamed using AIDA in testbeam. Model is AIDA and parsing daq files.
         
@@ -122,7 +122,7 @@ class saroman:
             #self.xml_file_path = os.path.join(self.exec_base,'MIND_firstBeamTest010517.gdml')
             #self.gdml_root_file = os.path.join(self.exec_base,'MIND_firstBeamTest010517.gdml')
 
-            self.xml_file_path = os.path.join(self.exec_base,'MIND_secondBeamTest200617.gdml')
+            self.xml_file_path = os.path.join(self.exec_base,'MIND_secondBeamTest200630.gdml')
 
             #self.xml_file_path = os.path.join(self.exec_base,'MIND_v3c.gdml')
 

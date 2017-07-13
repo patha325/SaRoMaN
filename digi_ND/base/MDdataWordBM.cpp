@@ -1,17 +1,19 @@
-/* This file is part of BabyMINDupack
+/* This file is part of BabyMINDdaq software package. This software
+ * package is designed for internal use for the Baby MIND detector
+ * collaboration and is tailored for this use primarily.
  *
- * BabyMINDupack is free software: you can redistribute it and/or modify
+ * BabyMINDdaq is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * BabyMINDupack is distributed in the hope that it will be useful,
+ * BabyMINDdaq is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with BabyMINDupack.  If not, see <http://www.gnu.org/licenses/>.
+ * along with BabyMINDdaq.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -114,6 +116,32 @@ uint32_t MDdataWordBM::GetTemperature() {
   return 0;
 }
 
+uint32_t MDdataWordBM::GetTDMSlotID() {
+    if (IsValid())  return ( (*(uint32_t*)(_data) & TDMSlotIDMask ) >> TDMSlotIDShift );
+    return 0;
+}
+
+uint32_t MDdataWordBM::GetTDMID() {
+    if (IsValid())  return ( (*(uint32_t*)(_data) & TDMIDMask ) >> TDMIDShift );
+    return 0;
+}
+
+uint32_t MDdataWordBM::GetTDMTag() {
+    if (IsValid())  return ( (*(uint32_t*)(_data) & TDMTAGMask ) >> TDMTAGShift );
+    return 0;
+}
+
+uint32_t MDdataWordBM::GetTDMsumL() {
+    if (IsValid())  return ( (*(uint32_t*)(_data) & TDMsumLMask ) >> TDMsumLShift );
+    return 0;
+}
+
+uint32_t MDdataWordBM::GetTDMsumH() {
+    if (IsValid())  return ( (*(uint32_t*)(_data) & TDMsumHMask ) >> TDMsumHShift );
+    return 0;
+}
+
+
 void MDdataWordBM::Dump() {
   cout << *this;
 }
@@ -140,7 +168,7 @@ ostream & operator<<(ostream &s, MDdataWordBM &dw) {
     if ( dw.GetEdgeId()==0 ) s << "  Time (0, RE): ";
     else s << "  Time (1, FE): ";
 
-    s << dw.GetTriggerTime();
+    s << dw.GetHitTime();
     break;
 
   case MDdataWordBM::ChargeMeas:
@@ -171,11 +199,20 @@ ostream & operator<<(ostream &s, MDdataWordBM &dw) {
     break;
 
   case MDdataWordBM::SpillTrailer2:
-    s << "Spill Trailer (2) Spill time: " << dw.GetSpillTime();
+    s << "Spill TimeID Spill time: " << dw.GetSpillTime();
     break;
 
+    
+  case MDdataWordBM::TDM:
+      if (dw.GetTDMID()==0)
+         s <<"TDM Start: " <<dw.GetTDMSlotID()<<" TDM Tag: "<<dw.GetTDMTag();
+      if (dw.GetTDMID()==1)
+         s <<"TDM Stop: " <<dw.GetTDMSlotID()<<" TDM sumL: "<<dw.GetTDMsumL()<<" TDM sumH: "<<dw.GetTDMsumH(); 
+    break;
+    
+    
   default:
-    s << "Unknown data word (" << *(dw.GetDataPtr()) << ")\n";
+    s << "Unknown data word (" << hex << *(dw.GetDataPtr()) << dec << ")\n";
     break;
   }
 

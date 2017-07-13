@@ -99,6 +99,9 @@ bool fitter::Execute(bhep::particle& part,int evNo){
   
   //cout<<"What is patternRec: "<<_patternRec<<endl;
 
+
+  cout<<"_meas.size()="<<_meas.size()<<endl;
+
   ///if pattern recognition 
   if (_patternRec) {
     if ((int)_meas.size() < 1){//_min_seed_hits) {
@@ -124,6 +127,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
   if(_testBeam)
     {
+      cout<<"In testbeam"<<endl;
       const vector<bhep::hit*> hits = part.hits( _detect );
 
       //bool event_classif::Execute(const vector<cluster*>& hits,
@@ -139,8 +143,8 @@ bool fitter::Execute(bhep::particle& part,int evNo){
       
       Trajectory* traj = new Trajectory();
       
-     
       int nMeas = hits.size();
+      cout<<"hits.size()="<<hits.size()<<endl;
       double x[(const int)nMeas], y[(const int)nMeas], 
 	z[(const int)nMeas], u[(const int)nMeas];
       int minindex = nMeas;
@@ -263,7 +267,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
       //cout<<"_meanOcc="<<_meanOcc<<endl;
 
-      _hitsPerPlanes.push_back(hits.size() / _planes.size());
+      _hitsPerPlanes.push_back(hits.size() /(double) _planes.size());
 
       _avrHitsPerUsedPlanes.push_back(_meanOcc);
 
@@ -381,12 +385,12 @@ bool fitter::Execute(bhep::particle& part,int evNo){
       double _nplanes = (int)_planes.size();
       
       _meanOcc /= (double)_nplanes;
-      _hitsPerPlanes.push_back(hits.size() / _planes.size());
+      _hitsPerPlanes.push_back(hits.size() / (double)_planes.size());
 
       _avrHitsPerUsedPlanes.push_back(_meanOcc);
 
       _planes.clear();
-      _meanOcc = 0;
+      _meanOcc = 0.0;
 
     //end of crazyness.
 

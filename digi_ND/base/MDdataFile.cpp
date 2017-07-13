@@ -87,8 +87,6 @@ void MDdateFile::init() {
 
       _spill_pos.push_back(_curPos-4);
     }
-    // break at 50 spills.
-    //if(_spill_size.size() == 50) break;
   }
 
   this->reset();

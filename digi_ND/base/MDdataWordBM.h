@@ -1,17 +1,19 @@
-/* This file is part of BabyMINDupack
+/* This file is part of BabyMINDdaq software package. This software
+ * package is designed for internal use for the Baby MIND detector
+ * collaboration and is tailored for this use primarily.
  *
- * BabyMINDupack is free software: you can redistribute it and/or modify
+ * BabyMINDdaq is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * BabyMINDupack is distributed in the hope that it will be useful,
+ * BabyMINDdaq is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with BabyMINDupack.  If not, see <http://www.gnu.org/licenses/>.
+ * along with BabyMINDdaq.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -52,6 +54,13 @@ class MDdataWordBM : public MDdataWord {
   uint32_t GetAmplitude();
   uint32_t GetHumidity();
   uint32_t GetTemperature();
+  uint32_t GetTDMID();
+  uint32_t GetTDMSlotID();
+  uint32_t GetTDMTag();
+  uint32_t GetTDMsumL();
+  uint32_t GetTDMsumH();
+  
+  
 
   enum DWBMDataType {
    SpillHeader   = 0x0,
@@ -61,7 +70,8 @@ class MDdataWordBM : public MDdataWord {
    TrigTrailer1  = 0x4,
    TrigTrailer2  = 0x5,
    SpillTrailer1 = 0x6,
-   SpillTrailer2 = 0x7
+   SpillTrailer2 = 0x7,
+   TDM           = 0xE
   };
 
   enum DWBMAmplitideId {
@@ -91,7 +101,12 @@ class MDdataWordBM : public MDdataWord {
    AmplitudeIdMask  = 0x0000F000,
    AmplitudeMask    = 0x00000FFF,
    HumidityMask     = 0x000000FF,
-   TemperatureMask  = 0x003FFF00
+   TemperatureMask  = 0x003FFF00,
+   TDMSlotIDMask    = 0x03E00000,
+   TDMIDMask        = 0x0C000000,
+   TDMTAGMask       = 0x000000FF,
+   TDMsumLMask       = 0x00007FF,
+   TDMsumHMask       = 0x003FF00
   };
 
   enum DWBMShift {
@@ -112,7 +127,12 @@ class MDdataWordBM : public MDdataWord {
    AmplitudeIdShift  = 12,
    AmplitudeShift    = 0,
    HumidityShift     = 0,
-   TemperatureShift  = 8
+   TemperatureShift  = 8,
+   TDMSlotIDShift    = 21,
+   TDMIDShift        = 26,
+   TDMTAGShift       = 0,
+   TDMsumLShift       = 0,
+   TDMsumHShift       = 11,
   };
 };
 

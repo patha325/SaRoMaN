@@ -83,7 +83,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   //cout<<"_testBeam"<<_testBeam<<endl;
   
   //cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
-  /*  
+  /*
   for(int i=0;i<sortedHits.size();i++)
     {
       cout<<"time\tenergy\tT\tZ\tTASD\tY\tMother"<<endl;
@@ -102,7 +102,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   //cout<<"starting ClusteringAida"<<endl;
   
 
-  cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
+  //cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
 
   std::vector<bhep::hit*> mindHits;
 
@@ -120,8 +120,8 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
 	}
     }
   
-  cout<<"TASDHits.size()="<<TASDHits.size()<<endl;
-  cout<<"mindHits.size()="<<mindHits.size()<<endl;
+  //cout<<"TASDHits.size()="<<TASDHits.size()<<endl;
+  //cout<<"mindHits.size()="<<mindHits.size()<<endl;
 
   if(TASDHits.size()) ClusteringAida(TASDHits);
   if(mindHits.size()) Clustering2(mindHits);
@@ -342,8 +342,8 @@ std::vector<bhep::hit*> gdml_hit_constructor::FilteringBadHits(const std::vector
     {
       //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
       //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 1.0)
-      //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< _minEng)  //TESTBEAM2017
-	if(hits[counter]->ddata( "EnergyDep" )< 0.1)  //TESTBEAM2017
+      //if(hits[counter]->ddata( "time" ) > 50.0 || hits[counter]->ddata( "EnergyDep" )< _minEng)  //TESTBEAM2017
+      if(hits[counter]->ddata( "EnergyDep" )< 0.1)  //TESTBEAM2017
       {
         //cout<<"Removing hit from: "<<hits[inCounter]->mother_particle().name()<<endl;
         continue;
@@ -590,8 +590,8 @@ void gdml_hit_constructor::ClusteringXY(const std::vector<bhep::hit*> hits, int 
   */
   int vox_num = vox_x + vox_y*_nVoxX;
   
-  cout<<"vox_num "<<vox_num<<endl;
-  cout<<"z "<<z<<endl;
+  //cout<<"vox_num "<<vox_num<<endl;
+  //cout<<"z "<<z<<endl;
   
 
   //for the whole vector.

@@ -47,7 +47,7 @@ void MINDfitman::fit_mode()
     .set_max_consecutive_extrap_failures(10); 
 
  //_man.fitting_svc().retrieve_fitter<KalmanFitter>(_fitter,_model)
- // .set_use_back_filtering(true); 
+ //.set_use_back_filtering(true); 
 
   _inRecMode = false;
 

@@ -63,6 +63,12 @@ void fitter::Initialize() {
   //{
   cout<<"_model="<<_model<<endl;
   man().model_svc().enable_noiser(_model, RP::ms, true);
+  man().model_svc().enable_correction(_model, RP::eloss, true);
+
+  // Strangely we get better results with these off? Is the setup incorrect?
+  //man().model_svc().enable_noiser(_model, RP::ms, false);
+  //man().model_svc().enable_correction(_model, RP::eloss, false);
+
       //}
 
 
@@ -127,6 +133,10 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
   if(_testBeam)
     {
+      _usedPlanes.clear();
+      _hitsPerPlanes.clear();
+      _avrHitsPerUsedPlanes.clear();
+
       cout<<"In testbeam"<<endl;
       const vector<bhep::hit*> hits = part.hits( _detect );
 
@@ -204,12 +214,106 @@ bool fitter::Execute(bhep::particle& part,int evNo){
       size_t nHits = _meas.size();
       //cout<<"get_plane_occ ()  :: nHits="<<nHits<<endl;
       int single_count = 0;
-      double testZ, testX, testY, curZ;
+      double testZ, testX, testY;
       size_t hits_used = 0, imeas = 0;
       int planeIndex=0 ;
       
       double _tolerance = _store.fetch_dstore("pos_resZ") * cm;
       
+      // New
+      int usedHits =0;
+      cout<<"_meas.size()="<<_meas.size()<<endl;
+      for (int iMeas = 0;iMeas < _meas.size();iMeas+=usedHits)
+	{
+	  usedHits=0;
+	  cout<<"iMeas="<<iMeas<<endl;
+	  
+	  testX = _meas[iMeas]->position()[0];
+	  testY = _meas[iMeas]->position()[1];
+	  testZ = _meas[iMeas]->position()[2];
+	  
+	  // Avoid a hit with an undefined z position
+	  //if nan
+	  if(testX != testX) continue;
+	  if(testY != testY) continue;
+	  if(testZ != testZ) continue;
+	  
+	  ///create plane info
+	  //plane_info* plane = new plane_info(planeIndex, testZ, _store);
+	  _planes.push_back(new plane_info(planeIndex, testZ, _store));
+	  _planes.back()->AddHit(_meas[iMeas]);
+	  //plane->AddHit(_meas[iMeas]);
+	  //_planes.push_back(plane);
+	  usedHits++;
+	  
+	  double curZ = _meas[iMeas]->position()[2];
+ 
+	  for(int iMeas2 = iMeas+1;iMeas2 < _meas.size();iMeas2++)
+	    {
+	      testZ = _meas[iMeas2]->position()[2];
+	      cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" _tolerance: "<<_tolerance<<endl;
+	      if (testZ <= curZ + 2*_tolerance) {
+		_planes.back()->AddHit(_meas[iMeas2]);
+		cout<<"Added hit"<<endl;
+		usedHits++;
+	      }
+	      else break;
+	    }
+	  //_planes.push_back(plane);
+	  //delete plane;
+	///increase the plane index
+	planeIndex++; 
+	cout<<"usedHits="<<usedHits<<endl;
+	}
+      
+
+
+      /* do {
+	testX = _meas[imeas]->position()[0];
+	testY = _meas[imeas]->position()[1];
+	testZ = _meas[imeas]->position()[2];
+
+	// Avoid a hit with an undefined z position
+	//if nan
+	if(testX != testX) continue;
+	if(testY != testY) continue;
+	if(testZ != testZ) continue;
+
+	///create plane info
+	plane_info* plane = new plane_info(planeIndex, testZ, _store);
+	plane->AddHit(_meas[imeas]);
+	hits_used++;
+
+	///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
+	for (size_t i = hits_used;i <nHits;i++) {
+	  double curZ = _meas[i]->position()[2];
+	  cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" _tolerance: "<<_tolerance<<endl;
+	  if (curZ <= testZ + _tolerance) {
+	    // add the hit to the same plane
+	    plane->AddHit(_meas[i]);
+	    cout<<"Added hit"<<endl;
+	    testZ = _meas[i]->position()[2];
+	    hits_used++;
+	  } else break;
+	}
+	cout<<"get plane info = "<<plane->GetZ()<<" Occ= "<<plane->GetNHits()<<" PlaneNo= "<<plane->GetPlaneNo()<<endl;
+	///fill the plane_info vector
+
+	_planes.push_back(plane);
+	  
+	imeas=hits_used;
+	delete plane;
+	///increase the plane index
+	planeIndex++;
+	
+	_meanOcc += (double) plane->GetNHits();
+	
+      } while (hits_used != nHits);
+      */
+
+      // Not working properly?
+      /*
+
       /// loop over hits to calculate plane occupancy  
       do {
 	
@@ -233,21 +337,27 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
 	for (size_t i = hits_used;i <nHits;i++) {
 	  curZ = _meas[i]->position()[2];
-	  //cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" _tolerance: "<<_tolerance<<endl;
+	  cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" _tolerance: "<<_tolerance<<endl;
 	  if (curZ <= testZ + _tolerance) {
 	    
 	    // add the hit to the same plane
 	    plane->AddHit(_meas[i]);
-	    //cout<<"Added hit"<<endl;
+	    cout<<"Added hit"<<endl;
 	    testZ = _meas[i]->position()[2];
 	    hits_used++;
 	  } else break;
 	  
 	}
 	_m.message(" get plane info =",plane->GetZ()," Occ=",plane->GetNHits()," PlaneNo=",plane->GetPlaneNo(), bhep::VERBOSE);
-	//cout<<"get plane info = "<<plane->GetZ()<<" Occ= "<<plane->GetNHits()<<" PlaneNo= "<<plane->GetPlaneNo()<<endl;
+	cout<<"get plane info = "<<plane->GetZ()<<" Occ= "<<plane->GetNHits()<<" PlaneNo= "<<plane->GetPlaneNo()<<endl;
 	///fill the plane_info vector
-	_planes.push_back(plane);
+	if(plane->GetNHits()>0)
+	  {
+	    _planes.push_back(plane);
+	  }
+	imeas=hits_used;
+
+	delete plane;
 	///increase the plane index
 	planeIndex++;
 	
@@ -256,17 +366,25 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	
       } while (hits_used != nHits);
       
+      */
       ///total no of planes
       double _nplanes = (int)_planes.size();
       
+      for(unsigned int i=0;i<_planes.size();i++)
+	{
+	  cout<<"PlaneZ="<<_planes[i]->GetZ()<<" PlaneNo="<<_planes[i]->GetPlaneNo()<<endl;
+	}
+
       _meanOcc /= (double)_nplanes;
 
       // hits.size(); / _planes.size();
 
-      //cout<<"_nplanes="<<_nplanes<<endl;
+      cout<<"_nplanes="<<_nplanes<<endl;
 
       //cout<<"_meanOcc="<<_meanOcc<<endl;
 
+      _usedPlanes.push_back(_nplanes);
+      
       _hitsPerPlanes.push_back(hits.size() /(double) _planes.size());
 
       _avrHitsPerUsedPlanes.push_back(_meanOcc);
@@ -334,7 +452,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
       
       double _tolerance = _store.fetch_dstore("pos_resZ") * cm;
      
-
+      _usedPlanes.clear();
       _hitsPerPlanes.clear();
       _avrHitsPerUsedPlanes.clear();
  
@@ -546,18 +664,19 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 	  // if (ok)cout<<"if classifier3="<<endl; 
 
 	  cout<<"before fitTrajectory"<<endl;
-	  //for(int j = 0; j<_traj.size();j++)
-	  //{
-	  //  if(_traj.nodes()[j]->status("fitted"))
-	  //{
-	  //  cout<<"momentum: "<<1.0/_traj.nodes()[j]->state().hv().vector()[5]<<endl;
-	  //  cout<<_traj.nodes()[j]->measurement().position()[2]<<endl;
-	  //  cout<<_geom.getBField(_traj.nodes()[j]->measurement().position())[0]<<endl;
-	  //}
-	  //  else break;
-	  //}
+	  for(int j = 0; j<_traj.size();j++)
+	    {
+	      if(_traj.nodes()[j]->status("fitted"))
+		{
+		  cout<<"momentum: "<<1.0/_traj.nodes()[j]->state().hv().vector()[5]<<endl;
+		  cout<<_traj.nodes()[j]->measurement().position()[2]<<endl;
+		  //cout<<_geom.getBField(_traj.nodes()[j]->measurement().position())[0]<<endl;
+		}
+	      //else break;
+	    }
 
 	  _fitted = FitTrajectory(seedState,i);
+	  //_fitted = FitTrajectory2(seedState,i);
 	  
 	  _m.message("- traj node0=",*(_traj.nodes()[0]),bhep::DETAILED);
 	  
@@ -702,11 +821,82 @@ void fitter::Reset() {
   // _hadUnit.clear();
 }
 
+bool fitter::FitTrajectory2(const State& seedState, const int trajno)
+{
+  /*
+// Create and fill the state vector 
+EVector v(6,0); 
+v[0]= 0; // x position of the state 
+v[1]= 0; // y position 
+v[2]= 0; // z position 
+v[3]= 0; // x slope (dx/dz) 
+v[4]= 0; // y slope (dy/dz) 
+v[5]= 1; // q/p (charge over momentum) 
+
+// Create and fill the state matrix 
+EMatrix C(6,6,0); 
+C[0][0] = C[1][1] = 1; // square of the position error 
+C[2][2] = 0 ; // no error in z since this is the running coordinate 
+C[3][3] = C[4][4] = 0.1; // square of the slope error 
+C[5][5] = 0.1; // square of 1/p error 
+
+// Create and fill the State it self 
+State state; 
+// The State representation 
+state.set_name(RP::rep, RP::slopes_curv_z); 
+// The main HyperVector 
+state.set_hv(HyperVector(v,C)); 
+// The secondary sense HyperVector with sense=1 and no error 
+state.set_hv(RP::sense, HyperVector(1)); 
+
+
+// select the Kalman Filter fitter 
+manager.fitting_svc().select_fitter(RP::kalman); 
+// select the slopes_curv_z fitting representation (x,y,x,dx/z,dy/dz,q/p) 
+manager.fitting_svc().set_fitting_representation(RP::slopes_curv_z); 
+
+Some fitters as the Kalman Filter have also some options that can be changed. The code below fits a Trajectory provided the Trajectory and a seed State 
+
+// fit a trajectory provided a seed state
+bool ok = manager.fitting_svc().fit(seed, traj); 
+   */
+
+
+  EVector v(6,0); 
+  EMatrix C(6,6,0);
+  State _instate;
+  double sense=1;
+  v[2] = -50;   // starts at z=-50.
+  v[5] = 1;     // q/p
+
+  v[2]=seedState.vector()[2];
+
+  // a large diagonal covariance matrix
+  C[0][0] = C[1][1] = 100;
+  C[2][2] = 0.00001;    // no error on Z since planes are perpendicular to z
+  C[3][3] = C[4][4] = 1;
+  C[5][5] = 1.;
+
+  _instate.set_name(_model);           // model name
+  _instate.set_hv(HyperVector(v,C));   // the state HyperVector
+  _instate.set_parameter(0.);          // the parameter (irrelevant for "particle/helix" model)
+  _instate.set_name(RP::representation, RP::slopes_curv_z); 
+  _instate.set_hv(RP::sense,HyperVector(sense,0));
+
+  bool ok = man().fitting_svc().fit(_instate,_traj);
+
+  return ok;
+}
+
+
 //*************************************************************
 bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
   //*************************************************************
 
   _m.message("+++ FitTrajectory function ++++",bhep::VERBOSE);
+
+  string fitter = _store.fetch_sstore("kfitter");
+
 
   // Trajectory traj1 = _traj;
   //_traj2 = _traj;
@@ -770,11 +960,79 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
 	}
     }
   */
-  
+  /*
+  for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
+    {
+           State tempState = _traj.node(_traj.first_fitted_node()).state();
+	   //tempState.vector()=_traj.nodes()[cnt]->state().vector();
+
+	   EVector v(6,0);
+	   v = _traj.nodes()[cnt]->state().vector();
+	   EMatrix C(6,6,0);
+	   c = _traj.nodes()[cnt]->state().matrix();
+	   v[5]=seedState0.vector()[5];
+
+	   tempState.set_hv(HyperVector(v,C));
+	   _traj.nodes()[cnt]->set_state(tempState);
+    }
+  */
   //ok0 = man().fitting_svc().fit(seedState0, _traj,true);
 
-  ok0 = man().fitting_svc().fit(seedState0, _traj,false);
+  //ok0 = man().fitting_svc().fit(seedState0, _traj,false);
+  cout<<"start reading here"<<endl;
+  ok0 = man().fitting_svc().fit(seedState0, _traj,false,_model);
+  cout<<"pause reading here"<<endl;
+  
+  Trajectory temp;
+  for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
+    {
+      if(_traj.nodes()[cnt]->status("fitted"))
+	{
+	  //smoothed
+	  
+	  //cout<<_traj.nodes()[cnt]->state().hvmap().has_key(RP::filtered)<<endl;
+	  //cout<<_traj.nodes()[cnt]->state().hv(RP::filtered).vector()[0]
+	  //  <<"\t"
+	  //  <<_traj.nodes()[cnt]->state().hv(RP::filtered).vector()[1]
+	  //  <<"\t"
+	  //  <<_traj.nodes()[cnt]->state().hv(RP::filtered).vector()[2]
+	  //  <<endl;
+	  
+	  //_traj.nodes()[cnt]->state().set_name(RP::representation, RP::slopes_curv_z); 
+	  temp.add_node(*_traj.nodes()[cnt]);
+	  
+	}
+    }
+  
+  
+  for(unsigned int cnt = 0; cnt<temp.nodes().size(); cnt++)
+    {
+      temp.nodes()[cnt]->clear();
+    }
+  
+  //temp.sort_nodes(RP::z, -1);
+
+ // man().fitting_svc().retrieve_fitter<KalmanFitter>(fitter,_model)
+   // .set_use_back_filtering(true); 
+    
+  //ok0 = man().fitting_svc().fit(seedState0, _traj,false,_model);
+  //ok0 = man().fitting_svc().fit(seedState0, temp,false,_model);
+  
+  cout<<"pause2 reading here"<<endl;
   /*
+  temp.sort_nodes(RP::z, -1);
+  
+  State seedState1;
+
+  ComputeSeed(temp,seedState1,0);
+
+  ok0 = man().fitting_svc().fit(seedState1, temp,false,_model);
+  */
+  cout<<"end reading here"<<endl; 
+
+  //_traj = temp;
+
+  
   cout<<"FitTrajectory All nodes after:"<<endl;
   for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
     {
@@ -799,7 +1057,7 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
 	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
 	}
     }
-  */
+  
   /*
   if(_traj.size()>10)
     {
@@ -929,10 +1187,10 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
   //_reseed_ok=true;
 
   //if reseed successful
-  if (_reseed_ok){    
-    _traj = _traj2;
-  }
-  else if (!ok0) ok=false;
+  //if (_reseed_ok){    
+  //_traj = _traj2;
+  //}
+  //else if (!ok0) ok=false;
 
   // std::cout<<"copied trajectory =" << _traj<<std::endl;
   // std::cout<<"Trajectory status is "<<_traj.status("fitted")<<std::endl;
@@ -1594,6 +1852,8 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   //v[5] = 1.0/(-2600);
 
   v[5] = -1.0/10000;
+  //v[5] = 1;
+  //v[5] = -1.0/1500;
   //v[5] = -1.0/5000;
 
   double pSeed;
@@ -1644,14 +1904,19 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   C[1][1] = 1.5 * 1.5 *cm * cm;  // Expected pos res x,y
   //C[2][2] =  C[1][1] = 1.5 * 1.5 *cm * cm;//EGeo::zero_cov()/2;
   //C[2][2] =  EGeo::zero_cov()/2;
-  C[2][2] = 0;//1.5 * 1.5 *cm * cm; 
+  C[2][2] = 0.00001;//0;//1.5 * 1.5 *cm * cm; 
   // Expected pos res z
   //C[3][3] = C[4][4] = 1.; // Expected pos dx/dz, dy/dz
   //C[3][3] = 4* 8.5 * 8.5 * cm * cm;
-  C[3][3] = 1;//0.001;
-  C[4][4] = 1;//0.0001; 
+  C[3][3] = 8.5 * 8.5;//1;//0.001;
+  C[4][4] = 1.5 * 1.5;//1;//0.0001; 
   //C[4][4] = 4* 1.5 * 1.5 * cm *cm; // Expected pos dx/dz, dy/dz
-  C[5][5] = 0.001;//0.001;//1.0/2600.0;//400.0/2600.0/2600.0;//1.0/100.0 * 1.0/100.0;//0.000004;//1.0/100;// 1./4. * v[5]*v[5];//0.0000001;//pow(1/2*v[5],2); // Expected pos dx/dz, dy/dz
+  //C[5][5] = 1;//1.0/10.0 * 1.0/10000.0 * 1.0/10000.0;//0.000000001;//0.001;//0.001;//1.0/2600.0;//400.0/2600.0/2600.0;//1.0/100.0 * 1.0/100.0;//0.000004;//1.0/100;// 1./4. * v[5]*v[5];//0.0000001;//pow(1/2*v[5],2); // Expected pos dx/dz, dy/dz
+
+  //C[5][5] = 0.002;
+  //C[5][5] = 1.0/10.0 * 1.0/10000.0 * 1.0/10000.0;
+  C[5][5] = 0.001;
+
 
   //C[5][5]=0.1 *v[5] * 0.1 *v[5];
 
@@ -1659,16 +1924,21 @@ void fitter::ComputeSeed(const Trajectory& traj, State& seedState, int firsthit)
   //C[5][5] = 0;
 
   v2[0] = 1;
+  //v2[2] = 1;
 
   seedState.set_name(RP::representation, RP::slopes_curv_z); 
+  //seedState.set_name(RP::fit_representation, seedState.name(RP::representation));
+
   // The main HyperVector 
   seedState.set_hv(HyperVector(v,C)); 
+  //seedState.set_hv(HyperVector(v,C),RP::slopes_curv_z); 
   // The secondary sense HyperVector with sense=1 and no error 
   //seedState.set_hv(RP::sense, HyperVector(1)); 
   
   double sense=1;
   //_state.set_hv(RP::sense,HyperVector(sense,0));
   seedState.set_hv(RP::sense,HyperVector(sense,0));
+  //seedState.set_hv(RP::sense,HyperVector(v2,0,RP::xyz));
   
   //seedState.set_hv(RP::sense,HyperVector(v2,C2));
 
@@ -1925,680 +2195,6 @@ void fitter::ReadParam(){
       
 }
 
-
-
-//*****************************************************************************
-void fitter::TASDtracker(){
-  //*****************************************************************************
-  // Identify tracks, find vertex and angle.
-
-  // Split into smaller functions aswell.
-
-  // Idea, start adding hits from TASD to muontrack. 
-  // If there is no muontrack, do we even need to do this?
-
-  size_t hits_used = 0;
-  size_t nHits = _measTASD.size();
-  
-  std::vector<plane_info*> planes;
-  double meanOcc=0;
-  //int planeIndex=0;
-  //double tolerance = _store.fetch_dstore("pos_resZ") * cm;
-  //int imeas = 0;
-
-  // How many tracks are there in the babyMIND?
-  
-  cout<<"_trajs.size()="<<_trajs.size()<<endl;
-  
-
-  /*
-  // Add TASD hits to planes. (Also create planes)
-  while (hits_used != nHits)
-    {
-      //double testX = _meas[]->position()[0];
-      //double testY = _meas[imeas]->position()[1];
-      double testZ = _measTASD[imeas]->position()[2];
-      hits_used++;
-      ///create plane info
-      plane_info* plane = new plane_info(planeIndex, testZ, _store);
-      plane->AddHit(_measTASD[imeas]);
-      ///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
-      for (size_t i = hits_used;i <nHits;i++) {
-	double curZ = _measTASD[i]->position()[2];
-	//cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" tolerance: "<<tolerance<<endl;
-	imeas = i;
-	if (curZ <= testZ + tolerance) {
-	  // add the hit to the same plane
-	  plane->AddHit(_measTASD[i]);
-	  //cout<<"Added hit"<<endl;
-	  testZ = _measTASD[i]->position()[2];
-	  hits_used++;
-	} else break; 
-      }
-      planes.push_back(plane);
-      ///increase the plane index
-      planeIndex++;
-      meanOcc += (double) plane->GetNHits();
-    }
-  meanOcc /= (double) planes.size();
-  */
-
-  meanOcc = CreatePlanesWithHits(_measTASD,planes);
-
-  cout<<"planes.size()="<<planes.size()<<endl;
-  cout<<"meanOcc="<<meanOcc<<endl;
-  
-
-
-  cout<<"Before all trajs how many hits are in TASD?"<<endl;
-  /*
-    for(int pl=planes.size()-1; pl >= 0; pl-- ){
-    cout<<"Planes z: "<<planes[pl]->GetZ()<<endl;   
-    cout<<"Nhits for z: "<<planes[pl]->GetNHits()<<endl;
-    }
-  */
-  
-  // Create hadron tracks.
-  // Find occ planes for hadron hits in MIND.
-  
-  size_t had_hits_used = 0;
-  size_t had_nHits = _hadmeas.size();
-  
-  std::vector<plane_info*> had_planes;
-  double had_meanOcc=0;
-  int had_planeIndex=0;
-  double had_tolerance = _store.fetch_dstore("pos_resZ") * cm;
-  int had_imeas = 0;
-  
-  sort( _hadmeas.begin(), _hadmeas.end(), forwardSorter() );
-  // Add hits to planes. (Also create planes)
-  // Sorted backwards!
-  while (had_hits_used != had_nHits)
-    {
-      //double testX = _meas[]->position()[0];
-      //double testY = _meas[imeas]->position()[1];
-      double testZ = _hadmeas[had_imeas]->position()[2];
-      had_hits_used++;
-      ///create plane info
-      plane_info* plane = new plane_info(had_planeIndex, testZ, _store);
-      plane->AddHit(_hadmeas[had_imeas]);
-      ///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
-      for (size_t i = had_hits_used;i <had_nHits;i++) {
-	double curZ = _hadmeas[i]->position()[2];
-	//cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" tolerance: "<<tolerance<<endl;
-	had_imeas = i;
-	if (curZ <= testZ + had_tolerance) {
-	  // add the hit to the same plane
-	  plane->AddHit(_hadmeas[i]);
-	  //cout<<"Added hit"<<endl;
-	  testZ = _hadmeas[i]->position()[2];
-	  had_hits_used++;
-	} else break; 
-      }
-      had_planes.push_back(plane);
-      ///increase the plane index
-      had_planeIndex++;
-      had_meanOcc += (double) plane->GetNHits();
-    }
-
-  cout<<_hadmeas.size()<<endl;
-  cout<<had_meanOcc<<endl;
-  if( had_planes.size())
-    {
-      had_meanOcc /= (double) had_planes.size();
-    }
-  
-  cout<<had_planes.size()<<endl;
-  cout<<"had_meanOcc="<<had_meanOcc<<endl;
-  
-  sort( _hadmeas.begin(), _hadmeas.end(), reverseSorter() );
-  
-  // Start building the hadron track from hits in the MIND.
-  // Remember that we do not use tracks < 4 hits from MIND. in the normal way.
-  // If single occ, add else move on. PERHAPS BAD ASSUMPTION?
-  Trajectory* had_traj = new Trajectory();
-  std::vector<plane_info*> had_mult_planes;
-  
-  
-  //for(int pl=had_planes.size()-1; pl >= 0; pl-- ){
-  for(unsigned int pl = 0; pl<had_planes.size(); pl++)
-    {
-      cout<<"Planes z: "
-	  <<had_planes[pl]->GetZ()<<"\t"
-	  <<had_planes[pl]->GetNHits()<<endl;
-      
-      if(had_planes[pl]->GetNHits()==1)
-	{
-	  double Chi2;
-	  bool okfit;
-
-	  try {
-	    //cout<<testtraj.size()<<endl;
-	    //cout<<had_mult_planes[pl]->GetNHits()<<endl;
-	    //cout<<Chi2[ht]<<endl;
-	    okfit = man().matching_svc().match_trajectory_measurement(*(had_traj), *(had_planes[pl]->GetHits()[0]), Chi2);
-	  } catch (const char* msg){
-	    okfit = false;
-	    std::cout<<msg<<std::endl;
-	  }
-	  if ( !okfit ) Chi2 = 9999999;
-
-	  if(Chi2 < 10){
-	      RecObject* ro = dynamic_cast<RecObject*>(&(*(had_planes[pl]->GetHits()[0])));
-	  //muontraj.add_node(Node(*ro));
-	  //ro->set_status(RP::fitted);
-	  had_traj->add_node(Node(*ro));
-	}
-      else  had_mult_planes.push_back(had_planes[pl]);
-
-
-	}
-      else
-	{
-	  had_mult_planes.push_back(had_planes[pl]);
-	}
-    } 
- 
-  // find single occ plane and fit best hit.
-  
-  bool okfit;
-  long ChiMin;
-  
-  //Trajectory& testtraj = *(had_traj);
-  
-  
-  ///The hit corresponds to min Chi2 will be added to the Trajectory & assigns as muon candidate, else considered as Hadron
-  for (int pl = 0; pl< had_mult_planes.size(); pl++){
-    
-    double Chi2[(const int)( had_mult_planes[pl]->GetNHits())];
-    
-    for (int ht=0; ht< had_mult_planes[pl]->GetNHits(); ht++){
-      try {
-	//cout<<testtraj.size()<<endl;
-	cout<<had_mult_planes[pl]->GetNHits()<<endl;
-	cout<<Chi2[ht]<<endl;
-	okfit = man().matching_svc().match_trajectory_measurement(*(had_traj), *( had_mult_planes[pl]->GetHits()[ht]), Chi2[ht]);
-      } catch (const char* msg){
-	okfit = false;
-	//std::cout<<msg<<std::endl;
-      }
-      // _m.message("meas.dim() = ",(_planes[pl]->GetHits()[ht])->dim(),bhep::VERBOSE);
-      if ( !okfit ) Chi2[ht] = 9999999;
-    }
-    
-    ChiMin = TMath::LocMin((const int)(had_mult_planes[pl]->GetNHits()), Chi2);
-    
-    for (int iht = 0; iht <  had_mult_planes[pl]->GetNHits();iht++){
-      
-      if (iht==(int)ChiMin && abs(Chi2[ChiMin])<10) {
-	
-	RecObject* ro = dynamic_cast<RecObject*>(&(*( had_mult_planes[pl]->GetHits()[iht])));
-	had_traj->add_node(Node(*ro));
-	
-      }
-    }
-  
-
-
-  }
-  //cout<<"had_traj->size()="<<had_traj->size()<<endl;
-  
- cout<<"had_traj->size()="<<had_traj->size()<<endl;
-  
-  if(had_traj->size() > 1)
-    {
-      had_traj->set_quality("failType",_failType);
-      had_traj->set_quality("intType",_intType);
-      had_traj->set_quality("nplanes",0);
-      had_traj->set_quality("freeplanes",0);
-      had_traj->set_quality("reseed",_reseed_ok);
-      had_traj->set_quality("xtent",0);
-      had_traj->set_quality("initialqP",_initialqP);
-      //had_traj->set_quality("fitted",_fitted);
-      had_traj->set_quality("fitted",0);
-      had_traj->set_quality("vertZ", 0);
-      had_traj->set_quality("fitcheck", _fitCheck);
-      had_traj->set_quality("lowPt",1);
-
-      had_traj->set_quality("hadron",1);
-
-      had_traj->set_quality("TASDextrapolation",0);
-      had_traj->set_quality("TASDadded",0);
-
-	
-      
-      for(unsigned int cnt = 0; cnt<had_traj->size(); cnt++)
-      {
-        had_traj->nodes()[cnt]->set_status(RP::fitted);
-      }
-
-      State seedState;
-      //EVector v = seedState.vector();
-      EVector V(6,0);
-      EMatrix M(6,6,0);
-      
-      V[5] = 1/1;
-      //EMatrix C0 = seedState.matrix();
-      seedState.set_name(RP::particle_helix);
-      seedState.set_name(RP::representation,RP::slopes_curv_z);
-      seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
-      seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
-      
-      //had_traj->nodes()[had_traj->first_fitted_node()]->set_state(seedState);
-
-      for(unsigned int cnt = 0; cnt<had_traj->size(); cnt++)
-	{
-	  had_traj->nodes()[cnt]->set_state(seedState);
-	}
-      _trajs.push_back(had_traj);
-    }
-  else delete had_traj;
-  
-  cout<<"_trajs.size()="<<_trajs.size()<<endl;
-  
-  // Should not be done if not fitted or no hits in tasd.
-  
-  // Now try to add hits to the created tracks.
-  // Keep the hits not addable. 
-
-  vector<cluster*> remainingHits;
-
-  for (unsigned int i=0; i<_trajs.size(); i++){ 
-    
-    _traj = *(_trajs[i]);
-    int fittedNodes = 0;
-    for(int counter = 0; counter<_traj.size(); counter++)
-      {
-	fittedNodes += _traj.nodes()[counter]->status("fitted");
-      }
-
-    if(!_traj.status(RP::fitted)) continue;
-    if(!fittedNodes) continue;
-    _traj.sort_nodes(RP::z, 1);
-    
-    // Handle TASD hits
-    // use hit 0 and 1, the two first in the trajectory to calculate dy/dz and dx/dz
-    // using this can extrapolate what hits to use in TASD, they should be on that line (more or less).
-    //check if the expected hits are there.
-    // Find single occupancy planes. Fit straight line using these.
-    // See what hits to add and which not to add.
-
-    //cout<<"meanOcc="<<meanOcc<<endl;
-    //meanOcc /= (double) planes.size();
-    cout<<"planes.size()="<<planes.size()<<endl;
-    cout<<"meanOcc="<<meanOcc<<endl;
-    cout<<" _trajs[i]->size()="<< _trajs[i]->size()<<endl;
-        
-    // Check single occ planes, create tracks.
-    // Add to _trajs. Then configure that algorithm.
-    // How many tracks in TASD? (mean occ) or actually find tracks?
-    //if((int)(_trajs[i]->quality("usedTASD")))
-    //{
-    //  cout<<"not here yet"<<endl;
-    //}
-
-    _traj.set_quality("TASDextrapolation",0);
-    _traj.set_quality("TASDadded",0);
-
-    if(meanOcc > 4 || _trajs.size() > 4)
-      {
-	cout<<"too large mean occ or too many trajs!"<<meanOcc
-	    <<" "<<_trajs.size()<<endl;
-	// Need to do something else (smarter for showers),
-	// start checking length of traj in MIND, energy dep in TASD?
-      }	
-    else if (meanOcc ==0 || _trajs.size() == 0)
-      {
-	cout<<"no mean occ, no trajs"<<endl;	
-      }
-    else if(meanOcc == 1 && _trajs.size() == 1)
-      {
-	_traj.set_quality("TASDextrapolation",1);
-	int size = _traj.size();
-	cout<< "one of each"<<endl;
-	for(int pl=planes.size()-1; pl >= 0; pl-- ){
-	  //cout<<"Planes z: "<<planes[pl]->GetZ()<<endl;   
-	  //if(_planes[pl]->GetNHits()!=1) break;
-	  //if(planes[pl]->GetNHits()!=1) continue;
-	  
-	  RecObject* ro = dynamic_cast<RecObject*>(&(*(planes[pl]->GetHits()[0])));
-	  //_trajs[0]->add_node(Node(*ro));
-	  //ro->set_status(RP::fitted,0);
-	  _traj.add_node(Node(*ro));
-	  //(planes[pl]->GetHits()[0])->set_name("inMu", "True");
-	  
-	  planes.clear(); 
-	} 
-	if(_traj.size() > size) _traj.set_quality("TASDadded",1);
-
-      }
-    else
-      {
-	_traj.set_quality("TASDextrapolation",1);
-	int size = _traj.size();
-	
-	// use dx/dz and dy/dz from MIND track to find TASD track.
-	
-	vector<cluster*> usedHits;
-	//vector<cluster*> remainingHits;
-	double error = 85*3;//25; //mm accepted error in x and y from extrapolation.
-	
-	double mindZ0 = _traj.nodes()[0]->measurement().position()[2];
-	double mindZ1 = _traj.nodes()[1]->measurement().position()[2];
-	
-	cout<<(_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName() == "S0" &&
-	       _supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName() == "SFFFS0")<<endl;
-	cout<<_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName()<<endl;
-	cout<<_supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName()<<endl;
-	
-	if(_supergeom.getDetectorModel()->GetSubDetector(mindZ0)->GetName() == "S0" &&
-	   _supergeom.getDetectorModel()->GetSubDetector(mindZ1)->GetName() == "SFFFS0")
-	  {
-	    
-	    vector<cluster*> tempHits;
-	    
-	    tempHits.push_back((cluster*)&_traj.nodes()[1]->measurement());
-	    tempHits.push_back((cluster*)&_traj.nodes()[0]->measurement());
-	    int iner = 0;
-	    
-	    for(int cnt = planes.size()-1; cnt >=0; cnt--)
-	      {
-		usedHits.clear();
-		if(iner+1 >tempHits.size()) break;
-		
-		double dz = tempHits[iner]->position()[2] - tempHits[iner+1]->position()[2];
-		
-		if(dz==0)
-		  {
-		  dz = tempHits[iner-1]->position()[2] - tempHits[iner+1]->position()[2];
-		  }		
-
-		double dx = tempHits[iner]->position()[0] - tempHits[iner+1]->position()[0];
-		double dxdz = dx/dz;
-		double edxdz = error;
-
-		if( cnt > planes.size()-4)
-		  {
-		    edxdz = 85*3;
-		  }
-		
-		double dy = tempHits[iner]->position()[1] - tempHits[iner+1]->position()[1];
-		double dydz = dy/dz;
-		double edydz = error;
-		
-		//cout<<"extraZ "<<cnt<<" "<<planes.size()-1<<endl;
-		double extraZ = planes[cnt]->GetZ();
-		//cout<<"tempHits "<<tempHits.size()<<" "<<iner+1<<endl;
-		
-		double extraX, extraY;
-
-		//if(tempHits[iner+1]->position()[2]!=extraZ)
-		  //{
-		    extraX = tempHits[iner+1]->position()[0] - 
-		  dxdz *(tempHits[iner+1]->position()[2]-extraZ);
-		    extraY = tempHits[iner+1]->position()[1] - 
-		  dydz *(tempHits[iner+1]->position()[2]-extraZ);
-		    // }
-		//else
-		//extraX = tempHits[iner+1]->position()[0] - 
-		//  dxdz *(tempHits[iner]->position()[2]-extraZ);
-		//extraY = tempHits[iner+1]->position()[1] - 
-		//dydz *(tempHits[iner]->position()[2]-extraZ);
-		
-		// Is there a TASD hit in extrapolated area?
-		
-		for(int hit = 0; hit < planes[cnt]->GetNHits(); hit++)
-		  {
-		    cluster* currHit = planes[cnt]->GetHits()[hit];
-		    double hitX = currHit->position()[0];
-		    double hitY =  currHit->position()[1];
-		    cout<<"Z="<<currHit->position()[2]<<endl;
-		    cout<<hitX<<" "<<hitY<<endl;
-		    cout<<"Extrapolation="<<extraX<<" "<<extraY<<endl;
-		    //cout<<edxdz<<" "<<edydz<<endl;
-		    
-		    
-		    if(abs(hitX-extraX) <edxdz && abs(hitY-extraY) <edydz)
-		      {
-			usedHits.push_back(currHit);
-			tempHits.push_back(currHit);
-			planes[cnt]->GetHits().erase(planes[cnt]->GetHits().begin()+hit);
-			iner++;
-			cout<<"UsedHit"<<endl;
-			//break;
-		      }
-		    else remainingHits.push_back(currHit);
-		    
-		  }
-		
-		// Trying to use chi2 to choose what hits to use.
-		
-		double Chi2[(const int)( usedHits.size())];
-		bool ok;
-		long ChiMin;
-		
-		for (int ht=0; ht< usedHits.size(); ht++){
-		  try {
-		    ok = man().matching_svc().match_trajectory_measurement(_traj, *(usedHits[ht]), Chi2[ht]);
-		    cout<<"In try for usedHits Chi2[ht]="<<Chi2[ht]<<endl;
-
-		  } catch (const char* msg){
-		    ok = false;
-		    //std::cout<<msg<<std::endl;
-		  }
-		  // _m.message("meas.dim() = ",(_planes[pl]->GetHits()[ht])->dim(),bhep::VERBOSE);
-		  if ( !ok ) Chi2[ht] = 9999999;
-		}
-		
-		ChiMin = TMath::LocMin((const int)(usedHits.size()), Chi2);
-		
-		for (int iht = 0; iht <  usedHits.size();iht++){
-		  //cout<<"iht="<<iht<<endl;
-		  //cout<<"ChiMin="<<ChiMin<<endl;
-		  
-		  //if (iht==(int)ChiMin && abs(Chi2[ChiMin])<14) {
-		  if (iht==(int)ChiMin) {
-		    
-		    cout<<"Chi2[ChiMin]="<<Chi2[ChiMin]<<endl;
-		    RecObject* ro = dynamic_cast<RecObject*>(&(*( usedHits[iht])));
-		    //ro->set_status(RP::fitted,0);
-		    cout<<"Chi2 added usedHits[iht]->->position()[2]="
-			<<usedHits[iht]->position()[2]<<endl;
-		    _traj.add_node(Node(*ro));
-		  }
-		  else remainingHits.push_back(usedHits[iht]);
-		}
-		
-		// End Trying to use chi2 to choose what hits to use.
-
-		//cout<<"usedHits="<<usedHits.size()<<endl;
-		//cout<<"remainingHits="<<remainingHits.size()<<endl;		
-		
-		// Generalize for case with multiple tracks in MIND.
-		// handle remainingHits? How... refil planes, using remaininghits, find single occ.
-		
-	      }
-	  }
-	
-	if(_traj.size() > size) _traj.set_quality("TASDadded",1);
-
-      }// end else if( _trajs.size() == 1)
-    cout<<"after all _traj.size()="<<_traj.size()<<endl;
-    
-    cout<<"_traj.nodes().size()="<<_traj.nodes().size()<<endl;
-    _traj.sort_nodes(RP::z, -1);
-    _traj.set_quality("vertZ", _traj.nodes()[_traj.nodes().size()-1]->measurement().position()[2]);
-    
-    cout<<"lowPt="<<_traj.quality("lowPt")<<endl;
-    cout<<"hadron="<< _traj.quality("hadron")<<endl;
-    
-    
-    if(_traj.quality("lowPt") == 1 &&  _traj.quality("hadron") ==0) _traj.sort_nodes(RP::z, -1);
-    else _traj.sort_nodes(RP::z, 1);
-    
-    *(_trajs[i]) = _traj;
-   
-  }  // End loop over trajectories. (For TASD hits
-  
-
- // Add the remainding hits to a new track.
-
-  cout<<"remainingHits.size()="<<remainingHits.size()<<endl;
-  
-
-  size_t rem_hits_used = 0;
-  size_t rem_nHits = remainingHits.size();
-  
-  std::vector<plane_info*> rem_planes;
-  double rem_meanOcc=0;
-  int rem_planeIndex=0;
-  double rem_tolerance = _store.fetch_dstore("pos_resZ") * cm;
-  int rem_imeas = 0;
-  
-  sort( remainingHits.begin(), remainingHits.end(), forwardSorter() );
-  // Add hits to planes. (Also create planes)
-  // Sorted backwards!
-  while (rem_hits_used != rem_nHits)
-    {
-      //double testX = _meas[]->position()[0];
-      //double testY = _meas[imeas]->position()[1];
-      double testZ = remainingHits[rem_imeas]->position()[2];
-      rem_hits_used++;
-      ///create plane info
-      plane_info* plane = new plane_info(rem_planeIndex, testZ, _store);
-      plane->AddHit(remainingHits[rem_imeas]);
-      ///calculate the z position which is the current z for hits 1 -> total no of hits in the cluster 
-      for (size_t i = rem_hits_used;i <rem_nHits;i++) {
-	double curZ = remainingHits[i]->position()[2];
-	//cout<<"curZ: "<<curZ<<" testZ: "<<testZ<<" tolerance: "<<tolerance<<endl;
-	rem_imeas = i;
-	if (curZ <= testZ + rem_tolerance) {
-	  // add the hit to the same plane
-	  plane->AddHit(remainingHits[i]);
-	  //cout<<"Added hit"<<endl;
-	  testZ = remainingHits[i]->position()[2];
-	  rem_hits_used++;
-	} else break; 
-      }
-      rem_planes.push_back(plane);
-      ///increase the plane index
-      rem_planeIndex++;
-      rem_meanOcc += (double) plane->GetNHits();
-    }
-
-  Trajectory* rem_traj = new Trajectory();
-  std::vector<plane_info*> rem_mult_planes;
-  
-  for(unsigned int pl = 0; pl<rem_planes.size(); pl++)
-    {
-      // cout<<"Planes z: "
-      //  <<had_planes[pl]->GetZ()<<"\t"
-      //  <<had_planes[pl]->GetNHits()<<endl;
-      
-      if(rem_planes[pl]->GetNHits()==1)
-	{
-	  
-	  RecObject* ro = dynamic_cast<RecObject*>(&(*(rem_planes[pl]->GetHits()[0])));
-	  //muontraj.add_node(Node(*ro));
-	  //ro->set_status(RP::fitted);
-	  rem_traj->add_node(Node(*ro));
-	}
-      else
-	{
-	  rem_mult_planes.push_back(rem_planes[pl]);
-	}
-      
-    }
-
- ///The hit corresponds to min Chi2 will be added to the Trajectory 
-  for (int pl = 0; pl< rem_mult_planes.size(); pl++){
-    
-    double Chi2[(const int)( rem_mult_planes[pl]->GetNHits())];
-    bool okfit;
-    long ChiMin;
-    
-    for (int ht=0; ht< rem_mult_planes[pl]->GetNHits(); ht++){
-      try {
-	//cout<<testtraj.size()<<endl;
-	//cout<<had_mult_planes[pl]->GetNHits()<<endl;
-	//cout<<Chi2[ht]<<endl;
-	okfit = man().matching_svc().match_trajectory_measurement(*(rem_traj), *( rem_mult_planes[pl]->GetHits()[ht]), Chi2[ht]);
-      } catch (const char* msg){
-	okfit = false;
-	//std::cout<<msg<<std::endl;
-      }
-      // _m.message("meas.dim() = ",(_planes[pl]->GetHits()[ht])->dim(),bhep::VERBOSE);
-      if ( !okfit ) Chi2[ht] = 9999999;
-    }
-    
-    ChiMin = TMath::LocMin((const int)(rem_mult_planes[pl]->GetNHits()), Chi2);
-    
-    for (int iht = 0; iht <  rem_mult_planes[pl]->GetNHits();iht++){
-      
-      if (iht==(int)ChiMin && abs(Chi2[ChiMin])<10) {
-	
-	RecObject* ro = dynamic_cast<RecObject*>(&(*( rem_mult_planes[pl]->GetHits()[iht])));
-	rem_traj->add_node(Node(*ro));
-	
-      }
-    }
-  }
-
-  cout<<"rem_traj->size()="<<rem_traj->size()<<endl;
-
-//Trajectory* rem_traj = new Trajectory();
-  /*
-  for (int iht = 0; iht <  remainingHits.size();iht++){
-      RecObject* ro = dynamic_cast<RecObject*>(&(*( remainingHits[iht])));
-      //ro->set_status(RP::fitted,0);
-      rem_traj->add_node(Node(*ro));
-    }
-  */
-
-  if(rem_traj->size() > 1)
-    {
-      rem_traj->set_quality("failType",_failType);
-      rem_traj->set_quality("intType",_intType);
-      rem_traj->set_quality("nplanes",0);
-      rem_traj->set_quality("freeplanes",0);
-      rem_traj->set_quality("reseed",_reseed_ok);
-      rem_traj->set_quality("xtent",0);
-      rem_traj->set_quality("initialqP",_initialqP);
-      rem_traj->set_quality("fitted",0);
-      rem_traj->set_quality("vertZ", 0);
-      rem_traj->set_quality("fitcheck", _fitCheck);
-      rem_traj->set_quality("lowPt",1);
-      rem_traj->set_quality("hadron",1);
-      rem_traj->set_quality("TASDextrapolation",0);
-      rem_traj->set_quality("TASDadded",0);
-      for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
-      {
-        rem_traj->nodes()[cnt]->set_status(RP::fitted);
-      }
-
-      State seedState;
-      //EVector v = seedState.vector();
-      EVector V(6,0);
-      EMatrix M(6,6,0);
-      
-      V[5] = 1/1;
-      //EMatrix C0 = seedState.matrix();
-      seedState.set_name(RP::particle_helix);
-      seedState.set_name(RP::representation,RP::slopes_curv_z);
-      seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
-      seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
-      
-      //had_traj->nodes()[had_traj->first_fitted_node()]->set_state(seedState);
-
-      for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
-	{
-	  rem_traj->nodes()[cnt]->set_state(seedState);
-	}
-      _trajs.push_back(rem_traj);
-    }
-
-}
-
 //*****************************************************************************
 void fitter::TASDtracker2(){
   //*****************************************************************************
@@ -2647,12 +2243,7 @@ void fitter::TASDtracker2(){
      }
    // Assume that these hits form a trajectory.
 
-
-
-
 }
-
-
 
 //*****************************************************************************
 double fitter::CreatePlanesWithHits(const std::vector<cluster*>&  meas, std::vector<plane_info*>& planes){
@@ -2710,173 +2301,6 @@ double fitter::CreatePlanesWithHits(const std::vector<cluster*>&  meas, std::vec
   return meanOcc;
 }
 
-/*
-void fitter::AddHitsToTrack(const std::vector<plane_info*>& planes, Trajectory* traj){
-
-  for(unsigned int pl = 0; pl<planes.size(); pl++)
-    { 
-      if(planes[pl]->GetNHits()==1)
-	{
-	  double Chi2;
-	  bool okfit;
-
-	  try {
-	    //cout<<testtraj.size()<<endl;
-	    //cout<<had_mult_planes[pl]->GetNHits()<<endl;
-	    //cout<<Chi2[ht]<<endl;
-	    okfit = man().matching_svc().match_trajectory_measurement(*(traj), *(planes[pl]->GetHits()[0]), Chi2);
-	  } catch (const char* msg){
-	    okfit = false;
-	    std::cout<<msg<<std::endl;
-	  }
-	  if ( !okfit ) Chi2 = 9999999;
-
-	  if(Chi2 < 10){
-	      RecObject* ro = dynamic_cast<RecObject*>(&(*(had_planes[pl]->GetHits()[0])));
-	  //muontraj.add_node(Node(*ro));
-	  //ro->set_status(RP::fitted);
-	  had_traj->add_node(Node(*ro));
-	}
-      else  had_mult_planes.push_back(had_planes[pl]);
-
-
-	}
-      else
-	{
-	  had_mult_planes.push_back(had_planes[pl]);
-	}
-    } 
-}
-*/
-
-//*****************************************************************************
-void fitter::AddHitsToTrack(const std::vector<plane_info*>& planes, Trajectory* traj){
-  //*****************************************************************************
-
-  // Take vertex and hits and a trajectory with atleast a hit in last (upstream) hit in TASD or hits downstream in MIND.
-
-  // Planes will be ordered in increasing z.
-
-
-  // How many long lines could there be? Mean occ in last mind planes.
-
-  int nPosTracks = planes[planes.size()-1]->GetNHits();
-
-  vector<plane_info*> planesCopy = planes;
-
-  // Possible vertex;
-  cluster* vertex = planes[0]->GetHits()[0];
-
-  vector<Line*> lines;
-
-  for(unsigned int i = 0; i<nPosTracks; i++)
-    {
-      cout<<"vertex= "<<
-	vertex->position()[0]<<" "
-	  <<vertex->position()[1]<<" "
-	  <<vertex->position()[2]<<endl;
-
-      cout<<"last plane hit="<<
-	planes[planes.size()-1]->GetHits()[i]->position()[0]<<" "
-	  <<planes[planes.size()-1]->GetHits()[i]->position()[1]<<" "
-	  <<planes[planes.size()-1]->GetHits()[i]->position()[2]<<endl;
-
-      //Line* temp_line = new Line(vertex,planes[planes.size()-1]->GetHits()[i]);
-      
-      cout<<"Equation"<<endl;
-      //temp_line->Equation();
-      
-      //lines.push_back(temp_line);
-    }
-
-  for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
-    {
-      for (unsigned int ht=0; ht< planesCopy[pl]->GetNHits(); ht++)
-	{    
-	  for(unsigned int i = 0; i<nPosTracks; i++)
-	    {
-	      cout<<"Hit="<<planesCopy[pl]->GetHits()[ht]->position()[0]<<" "
-	        <<planesCopy[pl]->GetHits()[ht]->position()[1]<<" "
-	        <<planesCopy[pl]->GetHits()[ht]->position()[2]<<endl;
-	      //cout<<"R-value="<<lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht])<<endl;
-
-	      if(lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht]) <10 )
-		{
-		  //lines[i]->AddHits(planesCopy[pl]->GetHits()[ht]);
-		  //cout<<"Did erase work="<<planesCopy[pl]->GetNHits()<<endl;
-		  if(planesCopy[pl]->GetNHits()!=1)
-		    {
-		      planesCopy[pl]->GetHits().erase(planesCopy[pl]->GetHits().begin()+ht);
-		    }
-		  else
-		    {
-		      //planesCopy.erase(planesCopy.begin(),planesCopy.begin()+pl);
-		      planesCopy[pl]->GetHits().clear();
-		    }
-
-		  //cout<<"Did erase work="<<planesCopy[pl]->GetNHits()<<endl;
-		  break;
-		}
-	    }
-	}
-
-      if(planesCopy[pl]->GetNHits()==0)
-      {
-        planesCopy.erase(planesCopy.begin()+pl);
-      }
-				   
-      
-    }
-  
-  cout<<"nPosTracks="<<nPosTracks<<endl;
-
-  for(unsigned int i = 0; i<nPosTracks; i++)
-    {
-      cout<<"lines[i]->GetHits().size()="<<lines[i]->GetHits().size()<<endl;
-    }
-
-  // Add the hits/lines to tracks.
-  // Which one to use? Extrapolate
-
-  // simple case first
-
-  cout<<"_trajs.size()="<<_trajs.size()<<endl;
-  cout<<"_trajs[0]->size()="<<_trajs[0]->size()<<endl;
- 
- 
-  //for(unsigned int hit=0; hit<lines[0]->GetHits().size(); hit++ ){
-    
-    //RecObject* ro = dynamic_cast<RecObject*>(&(*(lines[0]->GetHits()[hit])));
-    //_trajs[0]->add_node(Node(*ro));
-    
-    //planes.clear(); 
-    //} 
-
-  cout<<"_trajs[0]->size()="<<_trajs[0]->size()<<endl;
-
-
-  // So far, should have handled all the long tracks. Now need to find minor tracks.
-
-  cout<<"Planes hits after long tracks"<<endl;
-
-  for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
-    {
-      cout<<planesCopy[pl]->GetNHits()<<endl;
-      cout<<planesCopy[pl]->GetZ()<<endl;
-    }
-
-  // Create many minor tracks? We have vertex, we can get final hits.
-  // Would it be better to remove/mark hits close to primary tracks?
-  // Creating minor tracks, safe longest possible track? Would that work?
-
-  // Create line vertex and extremum.
-  // Can we add hits? Check all possibilites. Save longest track. 
-
-
-
-  
-}
-
 //*****************************************************************************
 void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory* traj){
   //*****************************************************************************
@@ -2890,75 +2314,95 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
   // Try to add one hit from TASD and so on.
   // Add hits to traj, then think about creating other trajs.
 
+
   vector<plane_info*> planesCopy = planes;
 
+
   for(unsigned int i=0; i<_trajs.size(); i++ ){
-    Line* temp_line = new Line(_trajs[i]->nodes()[0],_trajs[i]->nodes()[1]);
+    _trajs[i]->sort_nodes(RP::z, -1);
+
+    //Line* temp_line = new Line(_trajs[i]->nodes()[0],_trajs[i]->nodes()[1]);
+    int nodes = _trajs[i]->nodes().size();
+
+    Line* temp_line = new Line(_trajs[i]->nodes()[nodes-1],_trajs[i]->nodes()[nodes-2]);
+    /*
+    cout<<_trajs[i]->nodes()[nodes-1]->measurement().position()[0]<<"\t"
+	<<_trajs[i]->nodes()[nodes-1]->measurement().position()[1]<<"\t"
+	<<_trajs[i]->nodes()[nodes-1]->measurement().position()[2]<<endl;
     
+    cout<<_trajs[i]->nodes()[nodes-2]->measurement().position()[0]<<"\t"
+	<<_trajs[i]->nodes()[nodes-2]->measurement().position()[1]<<"\t"
+	<<_trajs[i]->nodes()[nodes-2]->measurement().position()[2]<<endl;
+    */
+
     //cout<<"Equation"<<endl;
-    //temp_line->Equation();
+    temp_line->Equation();
     
     lines.push_back(temp_line);
     // Now add hits to lines, later add line hits to tracks.
   }
 
-  bool vertexSet = false;
+  // Need to rewrite the above loops to make sense. Check best hit for line.
+  // technically a double optimation problem. should check best hit used for its best line. Start with level 1, only one muon track/ one track in baby MIND and perhaps several smaller in TASD. Fit hits from muon track in TASD then build several other tracks.
 
-  for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
+  // Fix two functions, one for the extrapolation, one for the secondary tracks. (Only in TASD)
+
+  bool vertexSet = false;
+  for(unsigned int i = 0; i<lines.size(); i++)
     {
-      for (unsigned int ht=0; ht< planesCopy[pl]->GetNHits(); ht++)
-	{    
-	  for(unsigned int i = 0; i<lines.size(); i++)
+      for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
+	{
+	  //cout<<"At planesCopy="<<pl<<"\t and Z="<<planesCopy[pl]->GetZ()<<endl;
+	  double lowest = 15.0;
+	  int lowestKey =99; //Random high value
+
+	  for (unsigned int ht=0; ht< planesCopy[pl]->GetNHits(); ht++)
 	    {
 	      /*
-	      cout<<"Hit="<<planesCopy[pl]->GetHits()[ht]->position()[0]<<" "
-	        <<planesCopy[pl]->GetHits()[ht]->position()[1]<<" "
-	        <<planesCopy[pl]->GetHits()[ht]->position()[2]<<endl;
-	      cout<<"R-value="<<lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht])<<endl;
+	      cout<<planesCopy[pl]->GetHits()[ht]->position()[0]<<"\t"
+		  <<planesCopy[pl]->GetHits()[ht]->position()[1]<<"\t"
+		  <<planesCopy[pl]->GetHits()[ht]->position()[2]<<endl;
 	      */
-	      if(lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht]) <30 )
+	      lines[i]->PointAtZ(planesCopy[pl]->GetZ());
+
+	      double dy = lines[i]->CalculateRY(planesCopy[pl]->GetHits()[ht]);
+	      double dx = lines[i]->CalculateRX(planesCopy[pl]->GetHits()[ht]);
+
+	      //cout<<"dx="<<dx<<"\t"<<"dy="<<dy<<endl;
+	      if(dy<lowest && dx<100 )
 		{
-		  //lines[i]->AddHits(planesCopy[pl]->GetHits()[ht]);
-		  
-		  if(!vertexSet)
-		    {
-		      vertexSet = true;
-		      vertex = planesCopy[pl]->GetHits()[ht];
-		    }
+		  lowest = dy;
+		  lowestKey = ht;
+		}
+	    }
 
-		  //RecObject* ro = dynamic_cast<RecObject*>(&(lines[i]->GetHits()[ht]));
-		  RecObject* ro = dynamic_cast<RecObject*>(&(*(planesCopy[pl]->GetHits()[ht])));
-		  lines[i]->AddHits(Node(*ro));
-
-		  //cout<<"Did erase work="<<planesCopy[pl]->GetNHits()<<endl;
-		  if(planesCopy[pl]->GetNHits()!=1)
-		    {
-		      planesCopy[pl]->GetHits().erase(planesCopy[pl]->GetHits().begin()+ht);
-		    }
-		  else
-		    {
-		      //planesCopy.erase(planesCopy.begin(),planesCopy.begin()+pl);
-		      planesCopy[pl]->GetHits().clear();
-		    }
-
-		  //cout<<"Did erase work="<<planesCopy[pl]->GetNHits()<<endl;
-
-
-		  // How about not breaking? Break and then test to find single occ.
-		  //
-		  break;
+	  if(lowestKey!=99)
+	    {
+	      if(!vertexSet)
+		{
+		  vertexSet = true;
+		  vertex = planesCopy[pl]->GetHits()[lowestKey];
+		}
+	      else if(vertex->position()[2]>planesCopy[pl]->GetHits()[lowestKey]->position()[2])
+		{
+		  vertex = planesCopy[pl]->GetHits()[lowestKey];
+		}
+	      
+	      RecObject* ro = dynamic_cast<RecObject*>(&(*(planesCopy[pl]->GetHits()[lowestKey])));
+	      lines[i]->AddHits(Node(*ro));
+	      //cout<<"Added at z"<<planesCopy[pl]->GetHits()[lowestKey]->position()[2]<<endl;
+	      
+	      if(planesCopy[pl]->GetNHits()!=1)
+		{
+		  planesCopy[pl]->GetHits().erase(planesCopy[pl]->GetHits().begin()+lowestKey);
+		}
+	      else
+		{
+		  planesCopy[pl]->GetHits().clear();
 		}
 	    }
 	}
-
-      if(planesCopy[pl]->GetNHits()==0)
-      {
-        planesCopy.erase(planesCopy.begin()+pl);
-      }
-				   
-      
     }
-  
   //Node vertex = lines[0]->GetHits()[0];
   /*
   if(vertexSet)
@@ -2969,16 +2413,6 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
     <<vertex->position()[2]<<endl;
     }
   */
-  // Should have filled lines with hits. 
-  // Fill traj with these line hits, then start building secondary tracks.
-
-    // Create many minor tracks? We have vertex, we can get final hits.
-  // Would it be better to remove/mark hits close to primary tracks?
-  // Creating minor tracks, safe longest possible track? Would that work?
-
-  // Create line vertex and extremum.
-  // Can we add hits? Check all possibilites. Save longest track. 
-  
   for(unsigned int i=0; i<_trajs.size(); i++ ){
     
     for(unsigned int hit=0; hit<lines[i]->GetHits().size(); hit++ ){
@@ -2991,9 +2425,19 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
       //planes.clear(); 
     }
   } 
+  //lines.clear();
 
-  lines.clear();
+  
+  // Should have filled lines with hits. 
+  // Fill traj with these line hits, then start building secondary tracks.
 
+    // Create many minor tracks? We have vertex, we can get final hits.
+  // Would it be better to remove/mark hits close to primary tracks?
+  // Creating minor tracks, safe longest possible track? Would that work?
+
+  // Create line vertex and extremum.
+  // Can we add hits? Check all possibilites. Save longest track. 
+  
 
   //cout<<"Planes hits after long tracks"<<endl;
 
@@ -3008,395 +2452,208 @@ void fitter::AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory*
     }
   meanOcc /= planesCopy.size();
 
+  // Have vertex. Find extremum, build line.
+  // If possible to add hits, do so. Else remove line. and extremum.
+  // Create lines untill all hits used.
 
-  //cout<<"meanOcc="<<meanOcc<<endl;
-
-  // Build new line with vertex and single hit in next (first downstream) plane.
-
-  // Need to modify this to allow propagation in x and y and not z.
-  // Take all hits. Find longest possible tracks. See if hits can/are added to this track.
-  // If hit(s) have been added. Then it must be a good track? Remove hits so we test all possibilities.
-
-  // We have removed hits from planesCopy, now create a structure with all of them.
-  // Then calculate distance between vertex and points.
-
+  //vector <std::pair <std::pair<unsigned int,unsigned int>, cluster*> > hitVector;
   
-  //vector<cluster*> hitVector;
-  /*
-  if(vertexSet)
-    {
-      for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
-	{
-	  for(unsigned int ht=0; ht<planesCopy[pl]->GetNHits(); ht++ )
-	    {
-	      hitVector.push_back(planesCopy[pl]->GetHits()[ht]);  
-	    }	  
-	}
-
-      // find most distant hit and create line.
-
-      double max_dist = 0;
-      cluster* dist_hit;
-      for(unsigned int hit =0; hit<hitVector.size();hit++)
-	{
-	  double distx = vertex->position()[0]-hitVector[hit]->position()[0];
-	  distx*= distx;
-	  double disty = vertex->position()[1]-hitVector[hit]->position()[1];
-	  disty*= disty;
-	  double distz = vertex->position()[2]-hitVector[hit]->position()[2];
-	  distz*= distz;
-	  double dist = sqrt(distx+disty+distz);
-
-	  if(dist>max_dist)
-	    {
-	      dist_hit=hitVector[hit];
-	      max_dist = dist;
-	    }
-	}
-      // Create line, add hits. Redo this till all hits are used.
-
-      if(dist_hit)
-	{
-	  Line* temp_line = new Line(vertex,dist_hit);
-	}
-	
-    }
-  */
-
-  // Create a list of all remaining plane hits.
-
-  vector<cluster*> hitVector;
-  cout<<"New algorithm"<<endl;
-    if(vertexSet && meanOcc>0)
-    {
-      for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
-	{
-	  for(unsigned int ht=0; ht<planesCopy[pl]->GetNHits(); ht++ )
-	    {
-	      hitVector.push_back(planesCopy[pl]->GetHits()[ht]);  
-	    }	  
-	}
-      // Find hit furthest away.
-      while(true)
-	{
-	  double maxDistance = 0;
-	  unsigned int hitIndex = 0;
-	  
-	  for(unsigned int ht=0; ht<hitVector.size(); ht++ )
-	    {
-	      double dx = hitVector[ht]->position()[0] - vertex->position()[0];
-	      double dy = hitVector[ht]->position()[1] - vertex->position()[1];
-	      double dz = hitVector[ht]->position()[2] - vertex->position()[2];
-	      
-	      double distance = sqrt(dx*dx+dy*dy+dz*dz);
-	      
-	      if(distance>maxDistance)
-		{
-		  maxDistance = distance;
-		  hitIndex = ht;
-		}
-	    }
-	  /*
-	  cout<<"Using hit="<<"\t"
-	      <<hitVector[hitIndex]->position()[0]<<"\t"
-	      <<hitVector[hitIndex]->position()[1]<<"\t"
-	      <<hitVector[hitIndex]->position()[2]<<endl;
-	  */
-	  Line* temp_line = new Line(vertex,hitVector[hitIndex]);
-
-	  //RecObject* ro = dynamic_cast<RecObject*>(&(*(vertex)));
-	  //temp_line->AddHits(Node(*ro));
-	  hitVector.push_back(vertex);
-
-	  //RecObject* ro = dynamic_cast<RecObject*>(&(*(hitVector[hitIndex])));
-	  //temp_line->AddHits(Node(*ro));
-	  //hitVector.erase(hitVector.begin()+hitIndex);
-	  
-	  //cout<<"Equation"<<endl;
-	  //temp_line->Equation();
-
-	  //Try to add hits to this new line. And repeate.
-	  
-	  for(unsigned int ht=0; ht<hitVector.size(); ht++ )
-	    {
-	      /*
-	      cout<<temp_line->CalculateR(hitVector[ht])<<endl;
-	      cout<<hitVector[ht]->position()[0]<<"\t"
-		  <<hitVector[ht]->position()[1]<<"\t"
-		  <<hitVector[ht]->position()[2]<<endl;
-	      */
-	      if(temp_line->CalculateR(hitVector[ht]) <40 )
-		{
-		  //cout<<"Added"<<endl;
-		  RecObject* ro = dynamic_cast<RecObject*>(&(*(hitVector[ht])));
-		  temp_line->AddHits(Node(*ro));
-		  hitVector.erase(hitVector.begin()+ht);
-		}
-	    }
-	  //cout<<"hitVector.size()="<<hitVector.size()<<endl;
-	  unsigned int maxLength = 0;
-	  bool continuous = true;
-	  for(unsigned int ht=0; ht<temp_line->GetHits().size()-1; ht++)
-	    {
-	      // add some criteria for largests z-dist between hits.
-	      unsigned int length = abs(temp_line->GetHits()[ht].measurement().position()[2]
-					-temp_line->GetHits()[ht+1].measurement().position()[2]);
-
-	      if(length > maxLength) maxLength = length;
-	    }
-	  if(maxLength > 200) continuous = false;
-	  
-	  Trajectory* rem_traj = new Trajectory();
-	  
-	  for(unsigned int hit=0; hit<temp_line->GetHits().size(); hit++ ){
-	    
-	    rem_traj->add_node(temp_line->GetHits()[hit]);
-	  }
-
-	  if(rem_traj->size() > 1 && continuous)
-	  //if(rem_traj->size() > 0)
-	    {
-	      rem_traj->set_quality("failType",_failType);
-	      rem_traj->set_quality("intType",_intType);
-	      rem_traj->set_quality("nplanes",0);
-	      rem_traj->set_quality("freeplanes",0);
-	      rem_traj->set_quality("reseed",_reseed_ok);
-	      rem_traj->set_quality("xtent",0);
-	      rem_traj->set_quality("initialqP",_initialqP);
-	      rem_traj->set_quality("fitted",0);
-	      rem_traj->set_quality("vertZ", 0);
-	      rem_traj->set_quality("fitcheck", _fitCheck);
-	      rem_traj->set_quality("lowPt",1);
-	      rem_traj->set_quality("hadron",1);
-	      rem_traj->set_quality("TASDextrapolation",0);
-	      rem_traj->set_quality("TASDadded",0);
-	      for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
-		{
-		  rem_traj->nodes()[cnt]->set_status(RP::fitted);
-		}
-	      
-	      State seedState;
-	      //EVector v = seedState.vector();
-	      EVector V(6,0);
-	      EMatrix M(6,6,0);
-	      
-	      V[5] = 1/1;
-	      //EMatrix C0 = seedState.matrix();
-	      seedState.set_name(RP::particle_helix);
-	      seedState.set_name(RP::representation,RP::slopes_curv_z);
-	      seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
-	      seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
-	      
-	      //had_traj->nodes()[had_traj->first_fitted_node()]->set_state(seedState);
-	      
-	      for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
-		{
-		  rem_traj->nodes()[cnt]->set_state(seedState);
-		}
-
-	      cout<<"rem_traj->size()="<<rem_traj->size()<<endl;
-	      _trajs.push_back(rem_traj);
-	    }
-	  
-
-	  //hitVector.clear();
-	  
-	  //if(hitVector.size()==0) break;
-	  if(hitVector.size()<2) break;
-	}
-    }  
-
-
-
-
-    // old code
-
-    /*
   if(vertexSet && meanOcc>0)
     {
-      unsigned int plane = 0;
+      while(true)
+	{
+	  int hitsInPlane =0;
+	  double maxDistance = 0;
+	  unsigned int hitIndex = 0;
+	  unsigned int planeIndex = 0;
 
-      if(vertex->position()[2] == planesCopy[0]->GetZ())
-	{
-	  plane++;
-	}
-	
-      for(unsigned int ht=0; ht<planesCopy[plane]->GetNHits(); ht++ ){
-	
-	Line* temp_line = new Line(vertex,planesCopy[plane]->GetHits()[ht]);
-	
-	RecObject* ro = dynamic_cast<RecObject*>(&(*(vertex)));
-	temp_line->AddHits(Node(*ro));
-	
-	cout<<"Equation"<<endl;
-	temp_line->Equation();
-	
-	lines.push_back(temp_line);
-      }
-      
-      for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
-	{
-	  for (unsigned int ht=0; ht< planesCopy[pl]->GetNHits(); ht++)
-	    {    
-	      for(unsigned int i = 0; i<lines.size(); i++)
+	  // build find extremum and buld line. Could be both in x, y, z.
+	  for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
+	    {
+	      if(!(planesCopy[pl]->GetZ()<vertex->position()[2]))
 		{
-		  cout<<"Hit="<<planesCopy[pl]->GetHits()[ht]->position()[0]<<" "
-		      <<planesCopy[pl]->GetHits()[ht]->position()[1]<<" "
-		      <<planesCopy[pl]->GetHits()[ht]->position()[2]<<endl;
-		  cout<<"R-value="<<lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht])<<endl;
-		  
-		  if(lines[i]->CalculateR(planesCopy[pl]->GetHits()[ht]) <30 )
+		  for(unsigned int ht=0; ht<planesCopy[pl]->GetNHits(); ht++ )
 		    {
-		      //RecObject* ro = dynamic_cast<RecObject*>(&(lines[i]->GetHits()[ht]));
-		      RecObject* ro = dynamic_cast<RecObject*>(&(*(planesCopy[pl]->GetHits()[ht])));
-		      lines[i]->AddHits(Node(*ro));
+		      //std::pair<unsigned int,unsigned int> temp = make_pair(pl,ht);
+		      //std::pair <std::pair<unsigned int,unsigned int>, cluster*> temp2 = make_pair(temp,planesCopy[pl]->GetHits()[ht]);
+		      
+		      //hitVector.push_back(planesCopy[pl]->GetHits()[ht]);  
+		      //hitVector.push_back(temp2);
+
+		      //double dx = planesCopy[pl]->GetHits()[ht]->position()[0] - vertex->position()[0];
+		      //double dy = planesCopy[pl]->GetHits()[ht]->position()[1] - vertex->position()[1];
+		      //double dz = planesCopy[pl]->GetHits()[ht]->position()[2] - vertex->position()[2];
+		      //double distance = sqrt(dx*dx+dy*dy+dz*dz);
+
+		      double distance= lines[0]->CalculateR(planesCopy[pl]->GetHits()[ht]);
+		      /*
+		      cout<<"distance="<<distance<<endl;
+		      
+		      cout<<planesCopy[pl]->GetHits()[ht]->position()[0]<<"\t"
+			  <<planesCopy[pl]->GetHits()[ht]->position()[1]<<"\t"
+			  <<planesCopy[pl]->GetHits()[ht]->position()[2]<<endl;
+		      */
+		      hitsInPlane++;
+
+		      if(distance>maxDistance)
+			{
+			  maxDistance = distance;
+			  hitIndex = ht;
+			  planeIndex = pl;
+			}
+		      
+		    }	  
+		}
+	    }
+	  Line* temp_line;
+	  if(maxDistance>0)
+	    {
+	      // Finding extremum by dist to vertex. How about as dist to first line? Want to remove all hits around a cone of the line as scattering etc.
+	      /*
+	      cout<<"extremum="<<planesCopy[planeIndex]->GetHits()[hitIndex]->position()[0]<<"\t"
+		  <<planesCopy[planeIndex]->GetHits()[hitIndex]->position()[1]<<"\t"
+		  <<planesCopy[planeIndex]->GetHits()[hitIndex]->position()[2]<<endl;
+	      */
+	      temp_line = new Line(vertex,planesCopy[planeIndex]->GetHits()[hitIndex]);
+	      RecObject* ro = dynamic_cast<RecObject*>(&(*(planesCopy[planeIndex]->GetHits()[hitIndex])));
+	      temp_line->AddHits(Node(*ro));
+
+	      ro = dynamic_cast<RecObject*>(&(*(vertex)));
+	      temp_line->AddHits(Node(*ro));
+	      
+	      if(planesCopy[planeIndex]->GetNHits()!=1)
+		{
+		  planesCopy[planeIndex]->GetHits().erase(planesCopy[planeIndex]->GetHits().begin()+hitIndex);
+		}
+	      else
+		{
+		  planesCopy[planeIndex]->GetHits().clear();
+		}
+	      
+	      
+	      // If possible to add hits, do so. Else remove line. and extremum.
+	      // Create lines until all hits used.
+	      
+	      for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
+		{
+		  //cout<<"At planesCopy rem="<<pl<<"\t and Z="<<planesCopy[pl]->GetZ()<<endl;
+		  //double lowest = 5.0;
+		  //int lowestKey =99; //Random high value
+		  
+		  //cerr<<planesCopy[pl]->GetNHits()<<endl;
+		  
+		  for (unsigned int ht=0; ht< planesCopy[pl]->GetNHits(); ht++)
+		    {
+		      //cerr<<planesCopy[pl]->GetHits()[ht]->position()[2]<<endl;
+		      
+		      double d = temp_line->CalculateR(planesCopy[pl]->GetHits()[ht]);
+		      //cout<<"d="<<d<<endl;
+		      if(d<13)
+			{
+			  //lowest = d;
+			  //lowestKey = ht;
+
+			  RecObject* ro = dynamic_cast<RecObject*>(&(*(planesCopy[pl]->GetHits()[ht])));
+			  temp_line->AddHits(Node(*ro));
+			  //cout<<"Rem Added at z"<<planesCopy[pl]->GetHits()[ht]->position()[2]<<endl;
+			  
+			  if(planesCopy[pl]->GetNHits()!=1)
+			{
+			  planesCopy[pl]->GetHits().erase(planesCopy[pl]->GetHits().begin()+ht);
+			}
+			  else
+			    {
+			      planesCopy[pl]->GetHits().clear();
+			    }
+			  
+			}
+		    }
+		  /*
+		  if(lowestKey!=99)
+		    {
+		      
+		      RecObject* ro = dynamic_cast<RecObject*>(&(*(planesCopy[pl]->GetHits()[lowestKey])));
+		      temp_line->AddHits(Node(*ro));
+		      cout<<"Rem Added at z"<<planesCopy[pl]->GetHits()[lowestKey]->position()[2]<<endl;
 		      
 		      if(planesCopy[pl]->GetNHits()!=1)
 			{
-			  planesCopy[pl]->GetHits().erase(planesCopy[pl]->GetHits().begin()+ht);
+			  planesCopy[pl]->GetHits().erase(planesCopy[pl]->GetHits().begin()+lowestKey);
 			}
 		      else
 			{
 			  planesCopy[pl]->GetHits().clear();
 			}
-		      break;
 		    }
+		  */
+		}
+	      
+	      
+	      unsigned int maxLength = 0;
+	      bool continuous = true;
+	      for(unsigned int ht=1; ht<temp_line->GetHits().size(); ht++)
+		{
+		  // add some criteria for largests z-dist between hits.
+		  unsigned int length = abs(temp_line->GetHits()[ht-1].measurement().position()[2]
+					    -temp_line->GetHits()[ht].measurement().position()[2]);
+		  
+		  if(length > maxLength) maxLength = length;
+		}
+	      if(maxLength > 200) continuous = false;
+	      
+	      Trajectory* rem_traj = new Trajectory();
+	      
+	      for(unsigned int hit=0; hit<temp_line->GetHits().size(); hit++ )
+		{ 
+		  rem_traj->add_node(temp_line->GetHits()[hit]);
+		}
+	      
+	      if(rem_traj->size() > 2 && continuous)
+		{
+		  rem_traj->set_quality("failType",_failType);
+		  rem_traj->set_quality("intType",_intType);
+		  rem_traj->set_quality("nplanes",0);
+		  rem_traj->set_quality("freeplanes",0);
+		  rem_traj->set_quality("reseed",_reseed_ok);
+		  rem_traj->set_quality("xtent",0);
+		  rem_traj->set_quality("initialqP",_initialqP);
+		  rem_traj->set_quality("fitted",0);
+		  rem_traj->set_quality("vertZ", 0);
+		  rem_traj->set_quality("fitcheck", _fitCheck);
+		  rem_traj->set_quality("lowPt",1);
+		  rem_traj->set_quality("hadron",1);
+		  rem_traj->set_quality("TASDextrapolation",0);
+		  rem_traj->set_quality("TASDadded",0);
+		  for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
+		    {
+		      rem_traj->nodes()[cnt]->set_status(RP::fitted);
+		    }
+		  
+		  State seedState;
+		  //EVector v = seedState.vector();
+		  EVector V(6,0);
+		  EMatrix M(6,6,0);
+		  
+		  V[5] = 1/1;
+		  //EMatrix C0 = seedState.matrix();
+		  seedState.set_name(RP::particle_helix);
+		  seedState.set_name(RP::representation,RP::slopes_curv_z);
+		  seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
+		  seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
+		  
+		  for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
+		    {
+		      rem_traj->nodes()[cnt]->set_state(seedState);
+		    }
+		  //cout<<"rem_traj->size()="<<rem_traj->size()<<endl;
+		  _trajs.push_back(rem_traj);
 		}
 	    }
+	  //if(hitVector.size()<2) break;
 	  
-	  if(planesCopy[pl]->GetNHits()==0)
-	    {
-	      planesCopy.erase(planesCopy.begin()+pl);
-	    }
+	  if(hitsInPlane<2) break;
 	  
 	}
-
-      cout<<"Second line building"<<endl;
-      cout<<lines.size()<<endl;
-	
-
-      
-      for(unsigned int i=0; i<lines.size(); i++ ){
-	cout<<"lines="<<i<<" hits="<<lines[i]->GetHits().size()<<endl;
-
-
-	Trajectory* rem_traj = new Trajectory();
-	
-	
-	for(unsigned int hit=0; hit<lines[i]->GetHits().size(); hit++ ){
-	  
-	  rem_traj->add_node(lines[i]->GetHits()[hit]);
-	}
-	
-	if(rem_traj->size() > 1)
-	  {
-	    rem_traj->set_quality("failType",_failType);
-	    rem_traj->set_quality("intType",_intType);
-	    rem_traj->set_quality("nplanes",0);
-	    rem_traj->set_quality("freeplanes",0);
-	    rem_traj->set_quality("reseed",_reseed_ok);
-	    rem_traj->set_quality("xtent",0);
-	    rem_traj->set_quality("initialqP",_initialqP);
-	    rem_traj->set_quality("fitted",0);
-	    rem_traj->set_quality("vertZ", 0);
-	    rem_traj->set_quality("fitcheck", _fitCheck);
-	    rem_traj->set_quality("lowPt",1);
-	    rem_traj->set_quality("hadron",1);
-	    rem_traj->set_quality("TASDextrapolation",0);
-	    rem_traj->set_quality("TASDadded",0);
-	    for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
-	      {
-		rem_traj->nodes()[cnt]->set_status(RP::fitted);
-	      }
-	    
-	    State seedState;
-	    //EVector v = seedState.vector();
-	    EVector V(6,0);
-	    EMatrix M(6,6,0);
-	    
-	    V[5] = 1/1;
-	    //EMatrix C0 = seedState.matrix();
-	    seedState.set_name(RP::particle_helix);
-	    seedState.set_name(RP::representation,RP::slopes_curv_z);
-	    seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
-	    seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
-	    
-	    //had_traj->nodes()[had_traj->first_fitted_node()]->set_state(seedState);
-	    
-	    for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
-	      {
-		rem_traj->nodes()[cnt]->set_state(seedState);
-	      }
-	    _trajs.push_back(rem_traj);
-	  }
-	//delete rem_traj;
-	
-      } 
-      
-      lines.clear();
     }
-    */
-
-  /*
-
-  if(meanOcc==1)
-    {
-      Trajectory* rem_traj = new Trajectory();
-
-
-      for(unsigned int pl = 0; pl<planesCopy.size(); pl++)
-	{
-
-	  RecObject* ro = dynamic_cast<RecObject*>(&(*(planesCopy[pl]->GetHits()[0])));
-	  rem_traj->add_node(Node(*ro));
-
-	}
-
-      if(rem_traj->size() > 1)
-	{
-	  rem_traj->set_quality("failType",_failType);
-	  rem_traj->set_quality("intType",_intType);
-	  rem_traj->set_quality("nplanes",0);
-	  rem_traj->set_quality("freeplanes",0);
-	  rem_traj->set_quality("reseed",_reseed_ok);
-	  rem_traj->set_quality("xtent",0);
-	  rem_traj->set_quality("initialqP",_initialqP);
-	  rem_traj->set_quality("fitted",0);
-	  rem_traj->set_quality("vertZ", 0);
-	  rem_traj->set_quality("fitcheck", _fitCheck);
-	  rem_traj->set_quality("lowPt",1);
-	  rem_traj->set_quality("hadron",1);
-	  rem_traj->set_quality("TASDextrapolation",0);
-	  rem_traj->set_quality("TASDadded",0);
-	  for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
-	    {
-	      rem_traj->nodes()[cnt]->set_status(RP::fitted);
-	    }
-	  
-	  State seedState;
-	  //EVector v = seedState.vector();
-	  EVector V(6,0);
-	  EMatrix M(6,6,0);
-	  
-	  V[5] = 1/1;
-	  //EMatrix C0 = seedState.matrix();
-	  seedState.set_name(RP::particle_helix);
-	  seedState.set_name(RP::representation,RP::slopes_curv_z);
-	  seedState.set_hv(RP::sense,HyperVector(V,M,RP::x));
-	  seedState.set_hv(HyperVector(V,M,RP::slopes_curv_z));
-	  
-	  //had_traj->nodes()[had_traj->first_fitted_node()]->set_state(seedState);
-	  
-	  for(unsigned int cnt = 0; cnt<rem_traj->size(); cnt++)
-	    {
-	      rem_traj->nodes()[cnt]->set_state(seedState);
-	    }
-	  _trajs.push_back(rem_traj);
-	}
-      
-    }
-  */
-  
-  
   
 }

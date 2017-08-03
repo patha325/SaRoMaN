@@ -103,6 +103,7 @@ public:
   std::vector<double> _ychi;
   std::vector<double> _hitsPerPlanes;
   std::vector<double> _avrHitsPerUsedPlanes;
+  std::vector<int> _usedPlanes;
 
   std::vector<double> _helix;
   std::vector<double> _quad;
@@ -125,6 +126,7 @@ public:
   std::vector<double> GetY0() {return _y0;}
   std::vector<double> GetXChi() {return _xchi;}
   std::vector<double> GetYChi() {return _ychi;}
+  std::vector<int> GetUP() {return _usedPlanes;}
   std::vector<double> GetHPP() {return _hitsPerPlanes;}
   std::vector<double> GetAHPP() {return _avrHitsPerUsedPlanes;}
 
@@ -136,13 +138,9 @@ protected:
   //read parameters from store
   void ReadParam();
 
-  void TASDtracker();
-
   void TASDtracker2();
 
   double CreatePlanesWithHits(const std::vector<cluster*>&  meas, std::vector<plane_info*>& planes);
-
-  void AddHitsToTrack(const std::vector<plane_info*>& planes, Trajectory* traj);
 
   void AddHitsToTrack2(const std::vector<plane_info*>& planes, Trajectory* traj);
 
@@ -163,6 +161,7 @@ protected:
  
   //fit trajectory
   bool FitTrajectory(const State& seed, const int trajno);
+  bool FitTrajectory2(const State& seed, const int trajno);
   //bool ReseedTrajectory(Trajectory& traj,const int trajno);
   bool ReseedTrajectory(const int trajno);
   //bool fitHadrons();

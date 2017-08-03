@@ -28,6 +28,8 @@ public:
   virtual ~Line();
 
   double CalculateR(cluster* hit);
+  double CalculateRX(cluster* hit);
+  double CalculateRY(cluster* hit);
   //double CalculateR(Node* hit);
 
   //void AddHits(cluster* hit){hits.push_back(hit);};
@@ -37,6 +39,7 @@ public:
   std::vector<Node> GetHits(){return hits;};
 
   void Equation();
+  void PointAtZ(double z);
 
  private:
 

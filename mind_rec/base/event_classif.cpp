@@ -206,7 +206,7 @@ void event_classif::Finalize() {
     _outFileEv->Close();
 
     delete _outFileEv;
-    delete _likeTree;
+    //delete _likeTree;
   }
 }
 
@@ -855,6 +855,7 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   //V[5]=1.0/-2600;
 
   V[5] = -1.0/10000;
+  //V[5] = -1.0/1500;
   //V[5] = -1.0/5000;
 
   //Momentum. Estimate from empirical extent function.
@@ -899,10 +900,10 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   M[0][0] = 8.5 * 8.5 * cm * cm;
   M[1][1] = 1.5 * 1.5 *cm * cm;  // Expected pos res x,y
   //M[2][2] = EGeo::zero_cov()/2.;
-    M[2][2] = 0;// M[1][1] = 0;//1.5 * 1.5 *cm * cm;
+  M[2][2] = 0.00001;//0;// M[1][1] = 0;//1.5 * 1.5 *cm * cm;
   //M[2][2] = 15/(muontraj.nodes()[0]->measurement().vector()[2]* muontraj.nodes()[0]->measurement().vector()[2]);//1.5 * 1.5 *cm * cm;
-    M[3][3] = 1;//0.1;//0.01;
-    M[4][4] = 1;//0.1;//0.001; 
+  M[3][3] = 8.5 * 8.5;//1;//0.1;//0.01;
+  M[4][4] = 1.5 * 1.5;//1;//0.1;//0.001; 
     M[5][5] = 0.001;//0.001;//1.0/2600.0;//400.0/2600.0/2600.0;//1.0/100.0 * 1.0/100.0; //0.000004;//100*V[5]*V[5];//1.0/100;//1./4. * V[5]*V[5]; error in p 500;
     //M[5][5]=0.1 *V[5] * 0.1 *V[5];
     //M[5][5]*=M[5][5];
@@ -926,14 +927,35 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
   // The secondary sense HyperVector with sense=1 and no error 
   //seed.set_hv(RP::sense, HyperVector(1)); 
 
+  cout<<"before first fit"<<endl;
+  for(unsigned int cnt = 0; cnt<muontraj.nodes().size(); cnt++)
+    {
+      if(muontraj.nodes()[cnt]->status("fitted"))
+	{
+	  cout<<" Z: "<<muontraj.nodes()[cnt]->state().vector()[2]<<endl;
+	  cout<<"Momentum: "<<1.0/muontraj.nodes()[cnt]->state().vector()[5]<<endl;
+	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
+	}
+    }
+
   double sense=1;
   //_state.set_hv(RP::sense,HyperVector(sense,0));
   seed.set_hv(RP::sense,HyperVector(sense,0));
 
-
-
   bool ok = perform_kalman_fit( seed, muontraj);
   
+  cout<<"after first fit"<<endl;
+  for(unsigned int cnt = 0; cnt<muontraj.nodes().size(); cnt++)
+    {
+      if(muontraj.nodes()[cnt]->status("fitted"))
+	{
+	  cout<<" Z: "<<muontraj.nodes()[cnt]->state().vector()[2]<<endl;
+	  cout<<"Momentum: "<<1.0/muontraj.nodes()[cnt]->state().vector()[5]<<endl;
+	  //_traj.nodes()[cnt]->set_state(_traj.node(_traj.first_fitted_node()).state());
+	}
+    }
+
+
   if ( !ok )
     _failType = 5;
   

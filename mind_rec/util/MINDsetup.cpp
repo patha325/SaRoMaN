@@ -785,8 +785,8 @@ void MINDsetup::addProperties(){
 
   // _gsetup.set_volume_property_to_sons("mother","X0",X0AIR);
 
-  //if(StepSize){
-    //_gsetup.set_volume_property_to_sons("mother","StepSize",StepSize);
+  if(StepSize)
+    _gsetup.set_volume_property_to_sons("mother","StepSize",StepSize);
     
   _gsetup.set_volume_property_to_sons("mother",RP::SurfNormal,_zaxis);
 
@@ -875,7 +875,7 @@ void MINDsetup::addProperties(){
 	  double wSc = numScint *SCINT_z / length;
 	  double wFe = numFe * IRON_z / length;
 	  
-	  X0Eff = X0Fe * wFe + X0Sc * wSc;
+	  X0Eff = 1/(1/X0Fe * wFe + 1/X0Sc * wSc);
 
 	  _wFe = wFe;
 
@@ -907,8 +907,8 @@ void MINDsetup::addProperties(){
 
 	  
 
-	  //std::cout<<"Local de_dx is "<<de_dx<<std::endl;
-
+	  std::cout<<"Local de_dx is "<<de_dx<<std::endl;
+	  std::cout<<"Local de_dx*length is "<<de_dx*length<<std::endl;
 	  std::cout<<"modulelength "<<length<<" numFe "<<numFe<<" numScint "<<numScint<<std::endl;
 	  std::cout<<"iron_z "<<IRON_z<<" scint_z "<<SCINT_z<<std::endl;
 

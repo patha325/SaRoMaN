@@ -176,6 +176,8 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   _XPos.clear();
   _YPos.clear();
   _ZPos.clear();
+  _PPos.clear();
+  _trajIter.clear();
   _XPosS.clear();
   _YPosS.clear();
   _ZPosS.clear();
@@ -185,16 +187,17 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   // _positionStart.clear();
 
   cout<<"_XPos.size()="<<_XPos.size()<<endl;
-
+  /*
   _XPos.resize(30);
   _YPos.resize(30);
   _ZPos.resize(30);
-
+  */
   _XMeas.clear();
   _YMeas.clear();
   _ZMeas.clear();
   _EMeas.clear();
   _TMeas.clear();
+  _PMeas.clear();
   _MuProp.clear();
 
   _helix.clear();
@@ -217,6 +220,7 @@ void MINDplotter::Execute(fitter& Fit, const bhep::event& evt) {
   _y0.clear();
   _xchi.clear();
   _ychi.clear();
+  _usedPlanes.clear();
   _hitsPerPlanes.clear();
   _avrHitsPerUsedPlanes.clear();
 
@@ -627,9 +631,11 @@ void MINDplotter::define_tree_branches() {
   
   statTree->Branch("traj_NoHits", &_nhits, "traj_nhits[trajNo]/I");
   statTree->Branch("classif_Nallhits", &_nallhits, "classif_traj_nallhits/I"); 
+  statTree->Branch("trajIter", &_trajIter,32000.0);
   statTree->Branch("trajNode_XPos", &_XPos,32000,0);
   statTree->Branch("trajNode_YPos", &_YPos, 32000,0);
   statTree->Branch("trajNode_ZPos", &_ZPos,32000,0);
+  statTree->Branch("trajNode_PPos", &_PPos,32000,0);
   statTree->Branch("trajNode_XPos_smoothed", &_XPosS,32000,0);
   statTree->Branch("trajNode_YPos_smoothed", &_YPosS, 32000,0);
   statTree->Branch("trajNode_ZPos_smoothed", &_ZPosS,32000,0);
@@ -643,6 +649,7 @@ void MINDplotter::define_tree_branches() {
   statTree->Branch("raw_Zmeas", &_ZMeas,32000,0);
   statTree->Branch("raw_EngMeas", &_EMeas,32000,0);
   statTree->Branch("raw_TimeMeas", &_TMeas,32000,0);
+  statTree->Branch("raw_MomentumMeas", &_PMeas,32000,0);
   statTree->Branch("raw_MotherPrSop", &_MuProp, 32000, 0);
 
   statTree->Branch("traj_initPHelix", &_helix,32000,0);
@@ -666,6 +673,7 @@ void MINDplotter::define_tree_branches() {
   statTree->Branch("test_beam_y0", &_y0,32000,0);  
   statTree->Branch("test_beam_xchi", &_xchi,32000,0);  
   statTree->Branch("test_beam_ychi", &_ychi,32000,0);  
+  statTree->Branch("test_beam_usedPlanes", &_usedPlanes,32000,0);  
   statTree->Branch("test_beam_hitsPerPlanes", &_hitsPerPlanes,32000,0);  
   statTree->Branch("test_beam_avrHitsPerUsedPlanes", &_avrHitsPerUsedPlanes,32000,0);  
 
@@ -821,12 +829,12 @@ bool MINDplotter::extrap_to_vertex(const Trajectory& traj,
 
 
   //State tempstate = traj.nodes()[traj.nodes().size()-1]->state();
-
-  cout<<"Last Momentum"<<1./tempstate.hv().vector()[5]<<endl;
+  //cout<<"Last Momentum"<<1./tempstate.hv().vector()[5]<<endl;
   
 
   ///set the 1st fitted node state
   ste = traj.node(traj.first_fitted_node()).state();
+  //ste = traj.node(traj.last_fitted_node()).state();
 
   /// start position for each trajectory
   for(int i=0; i<3; i++) {
@@ -863,7 +871,7 @@ bool MINDplotter::extrap_to_vertex(const Trajectory& traj,
       <<endl;
 
   bool ok;
-  /* Comment out extrapolation.
+  // Comment out extrapolation.
   if(traj.quality("lowPt") != 1) // Get around not having a vertex.
     {
       /// Add the surfaceof vertex and prpagate to that surface
@@ -874,10 +882,14 @@ bool MINDplotter::extrap_to_vertex(const Trajectory& traj,
       //Convert to slopes representation.
       // fitObj.man().model_svc().conversion_svc().representation().convert(ste, RP::slopes_curv_z);
     }
-  */
+  
   //Grab fitted vertex information.
   _fittedVert = ste.hv().vector();
   _vertMat = ste.hv().matrix();
+
+  cout<<"momentum="<<_fittedVert[5]<<"\terror="<<sqrt(_vertMat[5][5])<<endl;
+  cout<<"momentum="<<1./_fittedVert[5]<<"\terror="<<sqrt(_vertMat[5][5])/_fittedVert[5]/_fittedVert[5]<<endl;
+
   _m.message("extrapolated vertex =",_fittedVert[2],"\n",bhep::DETAILED);
 
   ok = true;
@@ -1095,6 +1107,12 @@ bool MINDplotter::extract_true_particle2(const bhep::event& evt) {
 
   for (int iParts=(int)Pospart.size()-1;iParts >= 0;iParts--){
     count=0;
+    /*
+    cout<<"true_particle.hits_map.size()="<<Pospart[iParts]->hit_map().size()<<endl;
+    cout<<"true_particle.trajectories.size()="<<Pospart[iParts]->tracks().size()<<endl;
+    if(Pospart[iParts]->tracks().size()>0)
+      cout<<"true_particle.trajectories.momentum().size()="<<Pospart[iParts]->tracks()[0]->p3().size()<<endl;
+    */
 
     //cout<<"in hadron="<<Pospart[iParts]->p()<<"  pdg="<<Pospart[iParts]->pdg()<<endl;
     //cout<<"ID="<<Pospart[iParts]->fetch_sproperty("G4TrackID")<<" parentID="<<Pospart[iParts]->find_dproperty("G4ParentID")<<endl;
@@ -1489,6 +1507,7 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
   _y0 = Fit.GetY0();
   _xchi = Fit.GetXChi();
   _ychi = Fit.GetYChi();
+  _usedPlanes = Fit.GetUP();
   _hitsPerPlanes = Fit.GetHPP();
   _avrHitsPerUsedPlanes = Fit.GetAHPP();
 
@@ -1539,13 +1558,19 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
 						      Fit.GetMeas(ih)->position()[2]));
     //_TMeas.push_back((Fit.GetMeas(ih)->get_time()-Fit.GetMeas(0)->get_time())); // For testbeam
     _TMeas.push_back((Fit.GetMeas(ih)->get_time()));
+    _PMeas.push_back(Fit.GetMeas(ih)->get_hits()[0]->ddata("momentum"));
   
     _MuProp.push_back(Fit.GetMeas(ih)->get_mu_prop());
 
-
-
+    /*
+    for(unsigned int innerhit = 0; innerhit<Fit.GetMeas(ih)->get_hits().size(); innerhit++)
+      {
+	cout<<"innerhit="<<Fit.GetMeas(ih)->get_hits().size()<<endl;
+	cout<<"at z="<<Fit.GetMeas(ih)->position()[2]<<"momentum="<<Fit.GetMeas(ih)->get_hits()[innerhit]->ddata("momentum")<<endl;
+      }
+    */
   }
-  cout<<"before quickfix hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
+  //cout<<"before quickfix hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
 
   // Quick fix to see TASD hits.
   for(int hit=0; hit<Fit.GetNMeasTASD(); hit++ ){
@@ -1555,7 +1580,7 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
 
   }
 
-  cout<<"after quickfix hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
+  //cout<<"after quickfix hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
 
   //// First Angles  
   if ( Fit.GetNMeas() > 6 ){
@@ -1642,22 +1667,23 @@ void MINDplotter::patternStats2(fitter& Fit) {
 
   // position of event hits
 
-   cout<<"_XPos.size()="<<_XPos.size()<<endl;
+  //cout<<"_XPos.size()="<<_XPos.size()<<endl;
 
   ///positions of hits
   std::vector<Trajectory*> &traj = Fit.get_trajs();
   _nallhits=0;
 
 
-  cout<<"_XPos.size()="<<_XPos.size()<<endl;
+  //cout<<"_XPos.size()="<<_XPos.size()<<endl;
 
   //loop over trajectories
+  cout<<"traj.size()="<<traj.size()<<endl;
   for(int i=0; i<(int)traj.size(); i++){
     //if(traj[i]->quality("fitted")){
       if(1){
       _nhits[i] = traj[i]->size();
 
-      cout<<"nodes="<<traj[i]->size()<<" hits="<<_nhits[i]<<endl;
+      //cout<<"traj="<<i<<" nodes="<<traj[i]->size()<<" hits="<<_nhits[i]<<endl;
 
       /// Sum of hits of trajectory
       _nallhits += traj[i]->size();
@@ -1666,9 +1692,11 @@ void MINDplotter::patternStats2(fitter& Fit) {
       std::vector<double> vxpos;
       std::vector<double> vypos;
       std::vector<double> vzpos;
+      std::vector<double> vIter;
       std::vector<double> vxposs;
       std::vector<double> vyposs;
       std::vector<double> vzposs;
+      std::vector<double> vmomentum;
       std::vector<double> vedep;
       std::vector<double> vtime;
       std::vector<double> vfitted;
@@ -1679,6 +1707,7 @@ void MINDplotter::patternStats2(fitter& Fit) {
       vxposs.clear();
       vyposs.clear();
       vzposs.clear();
+      vmomentum.clear();
       vedep.clear();
       vtime.clear();
       vfitted.clear();
@@ -1686,25 +1715,35 @@ void MINDplotter::patternStats2(fitter& Fit) {
 
       //_XPos.clear();
 
-
+      /*
         cout<<"_XPos.size()="<<_XPos.size()<<endl;
 	cout<<"_XPos.capacity()="<<_XPos.capacity()<<endl;
 	cout<<"vxpos.size()="<<vxpos.size()<<endl;
 	cout<<"vxpos.capacity()="<<vxpos.capacity()<<endl;
-
+      */
       for (int iHits = 0;iHits < _nhits[i];iHits++){
 	
 	const Measurement& meas = traj[i]->node(iHits).measurement();
 	
 	if(_fail[i] != 2) {
-	  cout<<"In MINDPLOTTER="<<"\t"
-	      <<meas.position()[0]<<"\t"
-	      <<meas.position()[1]<<"\t"
-	      <<meas.position()[2]<<endl;
-
+	  /*
+	  if(traj[i]->node(iHits).status("fitted"))
+	    {
+	      cout<<"In MINDPLOTTER="<<"\t"
+		  <<1/traj[i]->node(iHits).state().vector()[5]<<"\t"
+		  <<meas.position()[0]<<"\t"
+		  <<meas.position()[1]<<"\t"
+		  <<meas.position()[2]<<endl;
+	    }
+	  */
 	  vxpos.push_back(meas.position()[0]);
 	  vypos.push_back(meas.position()[1]);
 	  vzpos.push_back(meas.position()[2]);
+	  if(traj[i]->node(iHits).status("fitted")) 
+	    vmomentum.push_back(1/traj[i]->node(iHits).state().vector()[5]);
+	  else 
+	    vmomentum.push_back(0);
+	  vIter.push_back(i);
 	  /*
 	  if( traj[i]->node(iHits).status("fitted") &&  _nhits[i] >10)
 	    {
@@ -1728,17 +1767,19 @@ void MINDplotter::patternStats2(fitter& Fit) {
 	//if ( traj[i]->node(iHits).status("fitted") )
 	//  _hitType[2][i]++;
       }
-      
+      /*
       cout<<"_XPos.size()="<<_XPos.size()<<endl;
       cout<<"_XPos.capacity()="<<_XPos.capacity()<<endl;
       cout<<"vxpos.size()="<<vxpos.size()<<endl;
       cout<<"vxpos.capacity()="<<vxpos.capacity()<<endl;
-
+      */
       
       ///Fill the Tree variables for hits
       _XPos.push_back(vxpos);
       _YPos.push_back(vypos);
       _ZPos.push_back(vzpos);
+      _PPos.push_back(vmomentum);
+      _trajIter.push_back(vIter);
       _XPosS.push_back(vxposs);
       _YPosS.push_back(vyposs);
       _ZPosS.push_back(vzposs);

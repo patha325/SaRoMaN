@@ -159,6 +159,8 @@ private:
   std::vector< vector<double> > _XPos;
   std::vector< vector<double> > _YPos;
   std::vector< vector<double> > _ZPos;
+  std::vector< vector<double> > _PPos;
+  std::vector< vector<double> > _trajIter;
   std::vector< vector<double> > _XPosS;
   std::vector< vector<double> > _YPosS;
   std::vector< vector<double> > _ZPosS;
@@ -171,6 +173,7 @@ private:
   std::vector<double> _ZMeas;
   std::vector<double> _EMeas;
   std::vector<double> _TMeas;
+  std::vector<double> _PMeas;
   std::vector<double> _MuProp;
 
   std::vector<double> _helix;
@@ -194,6 +197,7 @@ private:
   std::vector<double> _y0;
   std::vector<double> _xchi;
   std::vector<double> _ychi;
+  std::vector<int> _usedPlanes;
   std::vector<double> _hitsPerPlanes;
   std::vector<double> _avrHitsPerUsedPlanes;
   

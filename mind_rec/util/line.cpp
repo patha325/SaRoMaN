@@ -47,18 +47,10 @@ Line::~Line() {
 double Line::CalculateR(cluster* hit) {
 //double Line::CalculateR(Node* hit) {
 //*************************************************************
-
-  //double dx = _mx - hit->position()[0] - (_mx - hit->position()[0])*_kx*_kx;
-  //double dy = _my - hit->position()[1] - (_my - hit->position()[1])*_ky*_ky;
-  //double dz = _mz - hit->position()[2] - (_mz - hit->position()[2])*_kz*_kz;
-
-  //return sqrt(dx*dx+dy*dy+dz*dz);
-
   // line x1, x2. point x0
   // Distance abs (x2-x1) x (x1-x0) / abs (x2-x1)
-
   // rewrite as abs(a x b) / abs(a) 
-
+  
   double ax = _kx;
   double ay = _ky;
   double az = _kz;
@@ -66,9 +58,7 @@ double Line::CalculateR(cluster* hit) {
   double bx = _mx - hit->position()[0];
   double by = _my - hit->position()[1];
   double bz = _mz - hit->position()[2];
-
   // cross-product
-
   double cx = ay*bz - az*by;
   double cy = az*bx - ax*bz;
   double cz = ax*by - ay*bx;
@@ -76,40 +66,32 @@ double Line::CalculateR(cluster* hit) {
   double d = sqrt(cx*cx+cy*cy+cz*cz);
 
   d/= sqrt(ax*ax+ay*ay+az*az);
-
-  /*
-
-
-  double param;
-
-  if(_kz) param = (hit->position()[2] - _mz)/_kz;
-  else if(_ky) param = (hit->position()[1] - _my)/_ky;
-  else param = (hit->position()[0] - _mx)/_kx;
-
-  //double param = (hit->position()[2] - _mz)/_kz;
-  //double param = (hit->measurement().position()[2] - _mz)/_kz;
-
-  //std::cout<<"param="<<param<<endl;
-
-  double dx = _mx + _kx * param - hit->position()[0];
-  //double dx = _mx + _kx * param - hit->measurement().position()[0];
-
-  double dy = _my + _ky * param - hit->position()[1];
-
-  double dz = _mz + _kz * param - hit->position()[2];
-
-  //double dy = _my + _ky * param - hit->measurement()position()[1];
-
-  //std::cout<<"dx="<<dx<<endl;
-  //std::cout<<"dy="<<dy<<endl;
-
-  return sqrt(dx*dx+dy*dy+dz*dz);
-  */
-
-  return d;
   
 
+  //double d = sqrt(CalculateRX(hit)*CalculateRX(hit)+
+  //		  CalculateRY(hit)*CalculateRY(hit));
 
+  return d;
+}
+//*************************************************************
+double Line::CalculateRX(cluster* hit) {
+//double Line::CalculateR(Node* hit) {
+//*************************************************************
+  double t = ( hit->position()[2]-_mz)/_kz; 
+  double x = _kx*t+_mx;
+  double d = fabs(x-hit->position()[0]);
+
+  return d;
+}
+//*************************************************************
+double Line::CalculateRY(cluster* hit) {
+//double Line::CalculateR(Node* hit) {
+//*************************************************************
+  double t = ( hit->position()[2]-_mz)/_kz; 
+  double y = _ky*t+_my;
+  double d = fabs(y-hit->position()[1]);
+
+  return d;
 }
 //*************************************************************
 void Line::Equation() {
@@ -118,5 +100,15 @@ void Line::Equation() {
   std::cout<<" x = "<<_kx<<" * t + "<<_mx<<endl;
   std::cout<<" y = "<<_ky<<" * t + "<<_my<<endl;
   std::cout<<" z = "<<_kz<<" * t + "<<_mz<<endl;
+}
+
+//*************************************************************
+void Line::PointAtZ(double z) {
+//*************************************************************
+  double t = (z-_mz)/_kz;
+  
+  std::cout<<" x = "<<_kx*t+_mx<<endl;
+  std::cout<<" y = "<<_ky*t+_my<<endl;
+  std::cout<<" z = "<<_kz*t+_mz<<endl;
 }
 

@@ -146,6 +146,14 @@ void MindEventAction::ProcessHits(G4HCofThisEvent* HCE)
     G4int barcopynumber = (*THC)[i]->GetBarNumber();
     bhit->add_property("barNumber", barcopynumber);
 
+    G4ThreeVector pxyz = (*THC)[i]->GetMomentum();
+    // G4cout<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\n";
+    //bhit->add_property("momentumx",pxyz.x());
+    //bhit->add_property("momentumy",pxyz.y());
+    //bhit->add_property("momentumz",pxyz.z());
+    bhit->add_property("momentum",pxyz.z());
+    
+
     pstatus = MindLookupTable::Instance().find_particle( (*THC)[i]->GetTrackID() );
 
     if ( pstatus == 0 ){

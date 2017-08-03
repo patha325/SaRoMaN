@@ -78,6 +78,7 @@ G4bool MindBarSD::ProcessHits(G4Step* step, G4TouchableHistory*)
   hit->SetHitTime(time);
 
   G4ThreeVector pos = step->GetPostStepPoint()->GetPosition();
+  G4ThreeVector mom = step->GetPostStepPoint()->GetMomentum();
   G4ThreeVector copyTrans = theTouchable->GetTranslation();
   G4String volName = theTouchable->GetVolume()->GetName();
   G4String volNameMother = theTouchable->GetVolume(1)->GetName();
@@ -85,6 +86,8 @@ G4bool MindBarSD::ProcessHits(G4Step* step, G4TouchableHistory*)
     
   
   G4double barOffset = 0;
+
+  hit->SetMomentum(mom);
  
   hit->SetBarTranslation(copyTrans);
   

@@ -62,6 +62,10 @@ public:
 
   G4int GetBarNumber() { return _barNumber; } 
   void SetBarNumber(G4int i) { _barNumber = i; }
+
+  G4ThreeVector GetMomentum() { return _momentum; }
+  void SetMomentum(G4ThreeVector p) { _momentum = p; }
+
 private:
   G4int _track_id;
   G4double _energy_dep;
@@ -72,6 +76,7 @@ private:
   G4int _isYbar;
   G4int _isTASD;
   G4int _barNumber;
+  G4ThreeVector _momentum;
 };
 
 

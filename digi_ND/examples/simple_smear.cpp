@@ -307,16 +307,21 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
   double mod7ZPos = mod6ZPos + SciDepth/2 + FeDepth + 2*GapFeSci + SciDepth/2; // detectorZ-FeDepth- GapFeSci - SciDepth/2;
   double moduleList[7] = {mod1ZPos, mod2ZPos, mod3ZPos, mod4ZPos, mod5ZPos, mod6ZPos, mod7ZPos};
   */
-  double xBarZsize = 7.5 *2; //xYYx
-  double yBarZsize = 7.5;
+  double xBarZsize = 0;//7.5 *2; //xYYx
+  double yBarZsize = 0;//7.5;
   
+  //bool filled = false;
+
   for(int i=0;i<dataBaseVector.size();i+=6)
     {
       int Global_channel = myatoi(dataBaseVector[i]);
       //if(Global_channel!=channelId)
-      //cerr<<"if_check"<<Global_channel<<"\t"<<channelId<<endl;
+
+      //if(i+6>dataBaseVector.size())
+      //cout<<"broken"<<Global_channel<<"\t"<<channelId<<endl;
       if(Global_channel==channelId)
 	{
+	  //filled = true;
 	  //cerr<<"through if check"<<endl;
 	  string Bar_type = dataBaseVector[i+1];
 	  int Module = myatoi(dataBaseVector[i+2]);
@@ -324,7 +329,7 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	  string Bar_position = dataBaseVector[i+4];
 	  string Side = dataBaseVector[i+5];
 
-	  cerr<<boardId<<"\t"<<channelId<<"\t"<<Bar_type<<endl;
+	  //cerr<<boardId<<"\t"<<channelId<<"\t"<<Bar_type<<endl;
 	  
 	  double barPosZ =0.0;
 	  int YMeasuring=0;
@@ -336,7 +341,7 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	  /*
 	  cout<<"Bar_type="<<Bar_type<<"\t"
 	      <<"Bar_position="<<Bar_position<<"\t"
-	    //<<"moduleNum="<<moduleNum<<"\t"
+	      <<"moduleNum="<<moduleNum<<"\t"
 	      <<"Position_label="<<Position_label[1]<<endl;
 	  */
 
@@ -355,12 +360,12 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	      else if(Bar_type=="Horizontal" && position == moduleNum && Bar_position =="Back") barPosZ = moduleList[moduleNum-1]+yBarZsize;
 	    }
 	  //cout<<"barPosZ="<<barPosZ<<endl;
-	  
+	  /*
 	  cerr<<"Position_label="<<Position_label<<"\t"
 	      <<"position="<<position<<"\t"
 	      <<"Global_channel="<<Global_channel<<"\t"
 	      <<"barPosZ="<<barPosZ<<endl;
-	  
+	  */
 	  if(Bar_type=="Vertical")
 	    {
 	      //int temp = Global_channel % 96;
@@ -403,7 +408,7 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	      */
 	      YMeasuring=1;
 	    }
-	  //cout<<"barPosZ="<<barPosZ<<"\t"<<"barPosT="<<barPosT<<"\t"<<"moduleNum="<<Position_label[1]<<"\t"<<"YMeasuring="<<YMeasuring<<endl;
+	  //cout<<"barPosZ="<<barPosZ<<"\t"<<"barPosT="<<barPosT<<"\t"<<"moduleNum="<<position<<"\t"<<"YMeasuring="<<YMeasuring<<endl;
 
 	  //cerr<<"Adding properties barPosZ"<<endl;
 	  inHit->add_property("barPosZ",barPosZ);
@@ -416,22 +421,29 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	  // can we add ->x()[2] how is it done? bhep add?
 	  if(YMeasuring) inHit->set_point(*(new bhep::Point3D(0,barPosT,barPosZ)));
 	  else inHit->set_point(*(new bhep::Point3D(barPosT,0,barPosZ)));
+	  break;
 	}
+
+      //if(!filled && i+6>dataBaseVector.size())
+      cout<<"broken"<<Global_channel<<"\t"<<channelId<<endl;
+
       /*
       else
 	{
-	  // Only here to work around a bug.
+	  //cerr<<"else="<<Global_channel<<"\t"<<channelId<<endl;
+	   // Only here to work around a bug.
 	  inHit->add_property("barPosZ",0);
 	  inHit->add_property("IsYBar",0);
 	  inHit->add_property("barNumber",0);
 	  inHit->add_property("barPosT",0);
 	  inHit->add_property("moduleNum",0);
 	  inHit->set_point(*(new bhep::Point3D(0,0,0)));
-	  
+      
 	}
       */
       // Leaving convert to position2017
     }
+  cout<<inHit->idata("IsTASD")<<endl;
 }
 void ConvertToPosition2017BeamTest(bhep::hit* inHit, unsigned int boardId, unsigned int channelId)
 {
@@ -530,6 +542,7 @@ void ConvertToPosition2017BeamTest(bhep::hit* inHit, unsigned int boardId, unsig
 	}
       else
 	{
+	  cerr<<"else="<<Global_channel<<"\t"<<channelId<<endl;
 	  /*
 	  inHit->add_property("barPosZ",0);
 	  inHit->add_property("IsYBar",0);
@@ -576,8 +589,9 @@ vector<bhep::hit*> ConvertToHit2017BeamTest3(vector<TempHit*> hitsVector, string
  for(unsigned int cnt = 0; cnt<hitsVector.size(); cnt++)
   {
     cerr<<"boardId="<<hitsVector[cnt]->boardId<<"\t"<<"channelId="<<hitsVector[cnt]->channelId<<endl;
+    //cout<<"boardId="<<hitsVector[cnt]->boardId<<"\t"<<"channelId="<<hitsVector[cnt]->channelId<<endl;
     //if(hitsVector[cnt]->boardId == 0 || hitsVector[cnt]->boardId > 60) continue;
-    if(hitsVector[cnt]->boardId > 60) continue;
+    //if(hitsVector[cnt]->boardId > 60) continue;
 
     returnVector.push_back(new bhep::hit());
     double tempEdep = ConvertToEdep(hitsVector[cnt]->boardId,hitsVector[cnt]->channelId,hitsVector[cnt]->amplitude);
@@ -585,14 +599,14 @@ vector<bhep::hit*> ConvertToHit2017BeamTest3(vector<TempHit*> hitsVector, string
     returnVector.back()->add_property("time",(double)hitsVector[cnt]->timeing);
     
     // Right side hits, why?
-    if(hitsVector[cnt]->boardId==3 || (hitsVector[cnt]->boardId == 5 && hitsVector[cnt]->channelId % 2))
-      {
-	returnVector.back()->add_property("rHit",1);
-      }
-    else
-      {
-	returnVector.back()->add_property("rHit",0);
-      }
+    //if(hitsVector[cnt]->boardId==3 || (hitsVector[cnt]->boardId == 5 && hitsVector[cnt]->channelId % 2))
+    //{
+    //	returnVector.back()->add_property("rHit",1);
+    //}
+    //else
+    //{
+    returnVector.back()->add_property("rHit",0);
+	//}
     cerr<<"ConvertToPosition2017BeamTest2 start"<<endl;
     ConvertToPosition2017BeamTest2(returnVector.back(),hitsVector[cnt]->boardId,hitsVector[cnt]->channelId);
     cerr<<"ConvertToPosition2017BeamTest2 end"<<endl;
@@ -806,28 +820,54 @@ void convert_to_internal2017BeamTest3(vector<char*> eventBuffers,vector<vector<T
 	MDfragmentBM   spill;
 	spill.SetDataPtr(eventBuffers[eventNum]);
 	int nTr = spill.GetNumOfTriggers();
-	//cerr<<"In board="<<spill.GetBoardId()<<endl;
-	//int nTr = 4000;
+	
+	//if(spill.GetBoardId()== 3) cerr<<"before, read and 3"<<endl;
+	
+	cerr<<"In board="<<spill.GetBoardId()<<endl;
+	//int nTr = 1000;
 	//for (unsigned int triggNum=0; triggNum<TriggerNumWithHits.size(); triggNum++) {
-	  for (unsigned int triggNum=0; triggNum<nTr; triggNum++) {
+	for (unsigned int triggNum=0; triggNum<nTr; triggNum++) {
+	//for (unsigned int triggNum=2004; triggNum<2005; triggNum++) {
 	  //MDpartEventBM * event = spill.GetTriggerEventPtr(TriggerNumWithHits[triggNum]);
 	  MDpartEventBM * event = spill.GetTriggerEventPtr(triggNum);
-	  if(event->getNumDataWords() < 12) continue;
-	  for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) {
+	  //if(event->getNumDataWords() < 12) continue;
 
+	  int numberOfHits=0;
+	  for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich)
+	    {
+	      int nHits = event->GetNLeadingEdgeHits(ich);
+	      numberOfHits+=nHits;
+	    }
+	  
+	  if(numberOfHits<1) continue;
+	  
+	  /*
+	  cout<<"In board="<<spill.GetBoardId()<<"\t"
+	      <<"triggNum="<<triggNum<<"\t"
+	      <<"triggerTime="<<event->GetTriggerTime()<<"\t"
+	      <<"triggerTag="<<event->GetTriggerTag()<<"\t"
+	      <<"numberOfHits="<<numberOfHits<<endl;
+	  */
+	  //if(event->getNumDataWords() < 12) continue;
+	  for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) {
+	    
 	    //Applitude filter
 	    //if(event->GetHitAmplitude(ich, 'h')<1000) continue;
-
+	    
 	    int nHits = event->GetNLeadingEdgeHits(ich);
 	    int otherSide = false;
 	    //otherSide= event->GetNLeadingEdgeHits(ich+BM_FEB_NCHANNELS);
 	    //if(nHits && otherSide)
 	    if(nHits)
 	      {
+		//if(spill.GetBoardId()== 3) cerr<<"inside and 3"<<endl;
 		for(int ih=0; ih<nHits; ih++)
 		  {
-		    if(event->GetHitTime(ih,ich, 'l')>0)
+		    if(event->GetHitTime(ih,ich, 'l')>0 && event->GetHitAmplitude(ich, 'h') >0)
+		      //if(true)
 		      {
+			//if(spill.GetBoardId()== 3) cerr<<"inside, time and 3"<<endl;
+			
 			int GlobalChannel=ich;
 			if(spill.GetBoardId()== 0) GlobalChannel+=0;
 			else if(spill.GetBoardId()== 1) GlobalChannel+=96;
@@ -875,8 +915,19 @@ void convert_to_internal2017BeamTest3(vector<char*> eventBuffers,vector<vector<T
 			else if(spill.GetBoardId()== 60) GlobalChannel+=60*96;
 			else //(spill.GetBoardId()== 61) 
 			  GlobalChannel+=61*96;
-			//cerr<<"spill.GetBoardId()="<<spill.GetBoardId()<<"\t"
-			//<<"ich="<<ich<<"\t"<<"GlobalChannel="<<GlobalChannel<<endl;
+
+			/*
+			//if(spill.GetBoardId()== 28)
+			  //{
+			    //    cerr<<"28"<<endl;
+			    cout<<"spill.GetBoardId()="<<spill.GetBoardId()<<"\t"
+				<<"ich="<<ich<<"\t"<<"GlobalChannel="<<GlobalChannel<<endl;
+			    cout<<event->GetHitAmplitude(ich, 'h')<<"\t"
+				<<event->GetHitTime(ih,ich, 'l')<<"\t"
+				<<event->GetTriggerTime()<<endl;
+			    //}
+			    */
+			if(GlobalChannel==4991) continue;
 
 			tempVec.push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
 						      event->GetHitTime(ih,ich, 'l'),
@@ -886,17 +937,19 @@ void convert_to_internal2017BeamTest3(vector<char*> eventBuffers,vector<vector<T
 	      }
 	  }//END for channels
 	  if(tempVec.size())
-	    tempHitsPerSpill[eventNum].push_back(make_pair(event->GetTriggerTime(),tempVec));
+	    //tempHitsPerSpill[eventNum].push_back(make_pair(event->GetTriggerTime(),tempVec));
+	    tempHitsPerSpill[eventNum].push_back(make_pair(event->GetTriggerTag(),tempVec));
 	  tempVec.clear();
-	}//END of trigger
-	spill.Clean();
-      } //END of eventNum;
-  } catch (MDexception & lExc)  {
-    std::cerr <<  lExc.GetDescription() << endl
-	      << "Unpacking exception\n"
-	      << "Spill skipped!\n\n";
-    for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
-    { 
+	  }//END of trigger
+	  spill.Clean();
+	}
+	//END of eventNum;
+      } catch (MDexception & lExc)  {
+      std::cerr <<  lExc.GetDescription() << endl
+		<< "Unpacking exception\n"
+		<< "Spill skipped!\n\n";
+      for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
+	{ 
       tempHitsPerSpill[i].clear();
     }
   } catch(std::exception & lExc) {
@@ -978,7 +1031,6 @@ for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
       vector<TempHit*> tempVector;
       tempVector.assign(tempHitsPerSpill[0][i].second.begin(),tempHitsPerSpill[0][i].second.end());
       //tempVector.insert(tempVector.end(),tempHitsPerSpill[0][i].second.begin(),tempHitsPerSpill[0][i].second.end());
-
       temp1.push_back(make_pair(tempHitsPerSpill[0][i].first,tempVector));
     }
   //cerr<<"temp1.size()="<<temp1.size()<<endl;
@@ -1020,12 +1072,17 @@ for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
 	{
 	  for(unsigned int k = 0; k< tempHitsPerSpill[j].size(); k++)
 	    {
+	      //cout<<j<<"\tGtrigg time\t"<<temp1[i].first<<"\t"<<tempHitsPerSpill[j][k].first<<endl;
 	      if(temp1[i].first == tempHitsPerSpill[j][k].first)
+		//cout<<"match"<<endl;
 		//if(fabs(temp1[j].first-tempHitsPerSpill[i][k].first)<3)
 		{
 		  tempVector.insert(tempVector.end(),tempHitsPerSpill[j][k].second.begin(),tempHitsPerSpill[j][k].second.end());
 		  tempVector.insert(tempVector.end(),temp1[i].second.begin(),temp1[i].second.end());
-		  
+		  //cout<<i<<"\t"<<j<<"\t"<<k<<endl;
+		  //cout<<temp1[i].second.size()<<"\t"
+		  //   <<tempHitsPerSpill[j][k].second.size()<<"\t"
+		  //  <<tempVector.size()<<endl;
 		}
 	    }
 	}
@@ -1036,21 +1093,59 @@ for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
   //cerr<<tempVector.size()<<endl;
   for(unsigned int i = 0; i< temp2.size(); i++)
     {
-      //cerr<<"temp2 i="<<i<<endl;
+      //cout<<"temp2 i="<<i<<"\t"<<temp2[i].first<<"\t"<<temp2[i].second.size()<<endl;
       vector<TempHit*> tempVector;
       tempVector.clear();
       tempVector.assign(temp2[i].second.begin(),temp2[i].second.end());
       //tempVector.insert(tempVector.end(),temp1[i].second.begin(),temp1[i].second.end());
       
-      //cerr<<tempVector.size()<<endl;
+      // Check board 1,2,3 and 4 have hits
+      //left and right
+      bool checker = false;
       if(tempVector.size()>12)
+	{
+	  bool checker1 = false;
+	  bool checker2 = false;
+	  bool checker3 = false;
+	  bool checker4 = false;
+	  bool checker9 = false;
+	  bool checker10 = false;
+	  bool checker11 = false;
+	  bool checker12 = false;
+	  bool checker27 = false;
+	  for(unsigned int j = 0; j<tempVector.size(); j++)
+	    {
+	      if(tempVector[j]->boardId==1) checker1=true; //mod1 left
+	      else if(tempVector[j]->boardId==2) checker2=true; //mod2 left
+	      else if(tempVector[j]->boardId==3) checker3=true; //mod3 left
+	      else if(tempVector[j]->boardId==4) checker4=true; //mod4 left
+	      else if(tempVector[j]->boardId==9) checker9=true; //mod1 right
+	      else if(tempVector[j]->boardId==10) checker10=true; //mod2 right
+	      else if(tempVector[j]->boardId==11) checker11=true; //mod3 right
+	      else if(tempVector[j]->boardId==12) checker12=true; //mod4 right
+	      else if(tempVector[j]->boardId==27) checker27=true; //vertical 123
+	    }
+	  checker = checker1 && checker2
+	    && checker3 && checker4 
+	    && checker9 && checker10
+	    && checker11 && checker12 && checker27;
+	}
+
+      //cerr<<tempVector.size()<<endl;
+      if(tempVector.size()>12 && checker)
 	{
 	  //cerr<<"pushing back"<<endl;
 	  vectorFinalHits->push_back(tempVector);
 	  /*
-	  for(unsigned int j = 0; j<tempVector.size(); j++)
+	  cout<<"temp2[i].first="<<temp2[i].first<<"\t"
+	      <<"temp2[i].second.size()="<<temp2[i].second.size()<<endl;
+	  cerr<<"temp2[i].first="<<temp2[i].first<<"\t"
+	      <<"temp2[i].second.size()="<<temp2[i].second.size()<<endl; 
+	  */ 
+	  /*for(unsigned int j = 0; j<tempVector.size(); j++)
 	    {
 	      cerr<<tempVector[j]->boardId<<endl;
+	      cout<<tempVector[j]->boardId<<endl;
 	    }
 	  */
 
@@ -1079,8 +1174,8 @@ void convert_to_internal2017BeamTest2(vector<char*> eventBuffers,vector<vector<T
 	MDfragmentBM   spill;
 	spill.SetDataPtr(eventBuffers[eventNum]);
 	//MDpartEventBM *event;
-	//int nTr = spill.GetNumOfTriggers();
-	int nTr = 2000; //4000 or more -> Inf loop and memory leak.
+	int nTr = spill.GetNumOfTriggers();
+	//int nTr = 2000; //4000 or more -> Inf loop and memory leak.
 	for (unsigned int triggNum=0; triggNum<nTr; ++triggNum) {
 	  MDpartEventBM * event = spill.GetTriggerEventPtr(triggNum);
 	  if(event->getNumDataWords() < 12) continue;
@@ -1599,6 +1694,7 @@ void HandleData3(vector<string> filenames, string filepath,root2dst* cvt)
       convert_to_internal2017BeamTest3(eventBuffers,&tempVectorHits);
       //cerr<<"convert_to_internal2017BeamTest3 end"<<endl;
       //int iEvent = 0;
+      //continue;
       if(tempVectorHits.size()) counter++;
       for(unsigned int event=0;event<tempVectorHits.size();event++)
 	{
@@ -1606,7 +1702,7 @@ void HandleData3(vector<string> filenames, string filepath,root2dst* cvt)
 	  if(tempVectorHits[event].size()<12) continue;
 	  
 	  cout<<"eventNum="<<event<<endl;
-	  string filepath2="/data/neutrino05/phallsjo/SaRoMan";;
+	  string filepath2="/data/neutrino05/phallsjo/SaRoMan";
 	  dataBaseVector.clear();
 	  //cerr<<"ConvertToHit2017BeamTest3 start"<<endl;
 	  vector<bhep::hit*> unSortedhits = ConvertToHit2017BeamTest3(tempVectorHits[event],filepath+"/BabyMIND.db");

@@ -86,14 +86,16 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   /*
   for(int i=0;i<sortedHits.size();i++)
     {
-      cout<<"time\tenergy\tT\tZ\tTASD\tY\tMother"<<endl;
+      cout<<"time\tenergy\tT\tZ\tTASD\tP\tY\tMother"<<endl;
       cout<<sortedHits[i]->ddata("time")<<"\t"
 	  <<sortedHits[i]->ddata("EnergyDep")<<"\t"
 	  <<sortedHits[i]->ddata("barPosT")<<"\t"
 	  <<sortedHits[i]->ddata("barPosZ")<<"\t"
 	  <<sortedHits[i]->idata("IsTASD")<<"\t"
-	  <<sortedHits[i]->idata("IsYBar")<<endl;
-	// <<sortedHits[i]->mother_particle().name()<<endl;
+	  <<sortedHits[i]->ddata("momentum")<<"\t"
+	  <<sortedHits[i]->idata("IsYBar")<<"\t"
+	<<sortedHits[i]->mother_particle().name()<<endl;
+     
       //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
       //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
     }
@@ -343,9 +345,14 @@ std::vector<bhep::hit*> gdml_hit_constructor::FilteringBadHits(const std::vector
       //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
       //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 1.0)
       //if(hits[counter]->ddata( "time" ) > 50.0 || hits[counter]->ddata( "EnergyDep" )< _minEng)  //TESTBEAM2017
-      if(hits[counter]->ddata( "EnergyDep" )< 0.1)  //TESTBEAM2017
+      //if(hits[counter]->ddata( "EnergyDep" )< 0.1)  //TESTBEAM2017
+      //if(hits[counter]->ddata( "time" ) > 20.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
+      if(hits[counter]->ddata( "time" ) > 25.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
+      //if(hits[counter]->ddata( "time" ) > 25.0 || hits[counter]->ddata( "EnergyDep" )< 1.0)
+      //if((hits[counter]->mother_particle().name() != "mu+") &&
+      // (hits[counter]->mother_particle().name() != "mu-"))
       {
-        //cout<<"Removing hit from: "<<hits[inCounter]->mother_particle().name()<<endl;
+        //cout<<"Removing hit from: "<<hits[counter]->mother_particle().name()<<endl;
         continue;
       }
       else
@@ -369,7 +376,7 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
 
   if(_testBeam)
     {
-      tolerance = 3; // 1 ns
+      tolerance = 30; // 1 ns
       filteredHits = hits; //For the testbeam.
     }
   else
@@ -712,6 +719,7 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
 
   vhit->add_property( "voxel", vox );
 
+  double momentum = 0;
   int IsTASD = 0;
 
 
@@ -799,6 +807,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
       //	       <<(*hIt).second->ddata( "EnergyDep" )<<std::endl;
 
       IsTASD = (*hIt).second->idata( "IsTASD" );
+
+      if(momentum<(*hIt).second->ddata( "momentum" )) momentum = (*hIt).second->ddata( "momentum" );
 
     }
 
@@ -893,6 +903,8 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
       vhit->add_property( "Zpoint", Z );
       vhit->add_property( "Epoint", E );
       vhit->add_property( "HitTime", proptime);
+
+      vhit->add_property("momentum",momentum);
       
       returnPointer = vhit;
     }

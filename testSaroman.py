@@ -26,7 +26,7 @@ if __name__ == "__main__":
     #s.exec_base = os.path.join(self.home, 'SaRoMaN')
     #s.out_base  = os.path.join(self.home, 'batch')
     #s.seed = 500 * random.random()
-    s.third_party_support = '/var/lib/jenkins/workspace/third_party'
+    s.third_party_support = '/var/lib/jenkins/workspace/third_party_install/third_party'
     #'/data/neutrino05/phallsjo/third_party'
     #s.generate_field_map = False
     s.seed = 100

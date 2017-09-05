@@ -113,7 +113,8 @@ class handle_third_party:
 		# Bash 28 xerces-c-3.1.3               
 		#self.Mice_script_install_emulator('xerces-c-3.1.3','xerces-c-3.1.3.tar.gz','http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.1.3.tar.gz')
 		#http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.1.4.tar.gz
-		self.Mice_script_install_emulator('xerces-c-3.1.4','xerces-c-3.1.4.tar.gz','http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.1.4.tar.gz')
+		#self.Mice_script_install_emulator('xerces-c-3.1.4','xerces-c-3.1.4.tar.gz','http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.1.4.tar.gz')
+		self.Mice_script_install_emulator('xerces-c-3.2.0','xerces-c-3.2.0.tar.gz','http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.2.0.tar.gz')
 		# Bash 29 expat-2.1.0   
 		self.Mice_script_install_emulator('expat-2.1.0','expat-2.1.0.tar.gz','http://downloads.sourceforge.net/expat/expat-2.1.0.tar.gz')
 

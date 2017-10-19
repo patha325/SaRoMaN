@@ -519,7 +519,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
       if (_patternRec){
 	
 	/// execute event classification
-	get_classifier().Execute( _meas, _trajs, _hadmeas); // handles only MIND hits
+	get_classifier().Execute( _meas, _trajs, _hadmeas,_planesTASD); // handles only MIND hits
 
 	//cout<<"_hadmeas.size()="<<_hadmeas.size()<<endl;
 
@@ -739,7 +739,7 @@ bool fitter::Execute(bhep::particle& part,int evNo){
 
   //TASDtracker();
 
-  TASDtracker2(); //Turned off for neutrino large run.
+  //TASDtracker2(); //Turned off for neutrino large run.
 
   cout<<"Finaly, how many tracks? "<<_trajs.size()<<endl;
 
@@ -982,7 +982,7 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
   cout<<"start reading here"<<endl;
   ok0 = man().fitting_svc().fit(seedState0, _traj,false,_model);
   cout<<"pause reading here"<<endl;
-  
+  /*
   Trajectory temp;
   for(unsigned int cnt = 0; cnt<_traj.nodes().size(); cnt++)
     {
@@ -1003,13 +1003,13 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
 	  
 	}
     }
-  
-  
+  */
+  /*
   for(unsigned int cnt = 0; cnt<temp.nodes().size(); cnt++)
     {
       temp.nodes()[cnt]->clear();
     }
-  
+  */
   //temp.sort_nodes(RP::z, -1);
 
  // man().fitting_svc().retrieve_fitter<KalmanFitter>(fitter,_model)
@@ -1178,8 +1178,8 @@ bool fitter::FitTrajectory(const State& seedState0, const int trajno) {
     else if (((double)_fitCheck/(double)_traj.size() < low_fit_cut ) && _fitCheck > 0){      
       ///if traj contains all single occ planes
       // _reseed_ok = ReseedTrajectory(_traj2,trajno);      
-      //_reseed_ok = ReseedTrajectory(trajno); 
-      _reseed_ok=true;
+      _reseed_ok = ReseedTrajectory(trajno); 
+      //_reseed_ok=true;
     }
     else _pr_count++;    
   }
@@ -1628,11 +1628,21 @@ bool fitter::CreateMeasurements(const bhep::particle& p) {
   //Cluster or directly make measurements.
   if ( _doClust && hits.size() != 0 ){
     // Make clusters
-
+    /*
+    double maxTASDZ = -999999;
+    for(size_t j=0; j< hits.size(); j++){
+      cout<<"_IsTASD()="<<hits[j]->idata("IsTASD")<<endl;
+      
+      if(hits[j]->idata("IsTASD") && (hits[j]->x()[2]>maxTASDZ))
+      	maxTASDZ=hits[j]->x()[2];
+    }
+    */
+    
     for(size_t j=0; j< hits.size(); j++){
       //cout<<"_IsTASD()="<<hits[j]->idata("IsTASD")<<endl;
-
-      if(hits[j]->idata("IsTASD"))
+      
+      //if(hits[j]->idata("IsTASD") && hits[j]->x()[2] != maxTASDZ)
+	if(hits[j]->idata("IsTASD"))
 	{
 	  TASDHits.push_back(hits[j]);
 	}
@@ -1647,7 +1657,45 @@ bool fitter::CreateMeasurements(const bhep::particle& p) {
 
     if(mindHits.size()) _clusters->execute(mindHits, _meas ); 
     if(TASDHits.size()) _clusters->execute( TASDHits, _measTASD ); 
+
+    _planesTASD.clear();
+    if(_measTASD.size())
+      {
+	
+	//std::vector<plane_info*> planesTASD;
+	double meanOccTASD = CreatePlanesWithHits(_measTASD,_planesTASD);
+	/*	
+	cout<<"planesTASD.size()="<<_planesTASD.size()<<endl;
+
+	plane_info * highest=_planesTASD[0];
+	
+	for(int j=0; j< _planesTASD.size(); j++){
+	  if(_planesTASD[j]->GetZ() > highest->GetZ())
+	    highest = _planesTASD[j];
+	}
+
+	cout<<"highest->GetZ()="<<highest->GetZ()<<endl;
+	
+	cout<<_geom.getDetectorModel()->
+	  GetSubDetector((highest->GetHits()[0])->position()[2])->
+	  GetName()<<endl;
+
+	(&_geom)->getDetectorModel()->
+	  GetSubDetector((highest->GetHits()[0])->position()[2])->
+	  GetPlanes()->push_back(highest);
+
+	cout<<_geom.getDetectorModel()->
+	  GetSubDetector((highest->GetHits()[0])->position()[2])->GetPlanes()->size()<<endl;
+
+	cout<<_geom.getDetectorModel()->
+	  GetSubDetector((highest->GetHits()[0])->position()[2])->GetMaxPlane()<<endl;
+	*/
+      }
+	
+
     
+    
+
     //cout<<"_measTASD.size()="<<_measTASD.size()<<endl;
     //cout<<"x\ty\tz"<<endl;
     //for(int i=0;i<_measTASD.size();i++)

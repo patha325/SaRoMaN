@@ -98,41 +98,45 @@ int main(int argc, char* argv[]){
       
       // if (i%100==0) cout<< "Number of events read "<<evt_read<<endl;
       cout << "Event: " << i << endl;
-      bhep::event& e = inDst.read_event( i );
-      //if ( true ){      
-      if ( e.find_sproperty("IntType") ){//Protects against corrupt events 
-	//caused by G4_out being spread over more than one file.
-	// loop over particles
-	vector<bhep::particle*> parts = e.digi_particles();
-	
-	//Relevant only when building likelihood tree.
-	fit.set_int_type( e.fetch_sproperty("IntType") );
-	//
-	 cout <<"There are " << parts.size() << " digis in event "
-		     << e.event_number() <<endl;
-	
-	if (parts.size() != 0) {
-	  for (size_t part=0; part<parts.size();part++){
+      //if(i!=677 && i!=561 && i!= 295 && i!= 1183 && i!= 1513)
+      if(true)
+	{ 
+	  bhep::event& e = inDst.read_event( i );
+	  //if ( true ){      
+	  if ( e.find_sproperty("IntType") ){//Protects against corrupt events 
+	    //caused by G4_out being spread over more than one file.
+	    // loop over particles
+	    vector<bhep::particle*> parts = e.digi_particles();
 	    
-	    //if (parts[part]->name()=="void") continue;
+	    //Relevant only when building likelihood tree.
+	    fit.set_int_type( e.fetch_sproperty("IntType") );
+	    //
+	    cout <<"There are " << parts.size() << " digis in event "
+		 << e.event_number() <<endl;
 	    
-	    fitOk = fit.Execute(*parts[part],e.event_number());
+	    if (parts.size() != 0) {
+	      for (size_t part=0; part<parts.size();part++){
+		
+		//if (parts[part]->name()=="void") continue;
+		
+		fitOk = fit.Execute(*parts[part],e.event_number());
+		
+		///for single track plotter
+		// plot.execute(fit, e, fitOk);
+		
+		///for multiple track plotter
+		plot.Execute(fit, e);
+		
+	      }
+	    }
 	    
-	    ///for single track plotter
-	    // plot.execute(fit, e, fitOk);
+	    parts.clear();
+	    e.clear();
 	    
-	    ///for multiple track plotter
-	    plot.Execute(fit, e);
-	    
+	    //i++;
+	    evt_read++;
 	  }
 	}
-	
-	parts.clear();
-	e.clear();
-	
-	//i++;
-	evt_read++;
-      }
       i++;
     }
     

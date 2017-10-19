@@ -81,7 +81,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   sort( sortedHits.begin(), sortedHits.end(), forwardSortZ() );
   
   //cout<<"_testBeam"<<_testBeam<<endl;
-  
+    
   //cout<<"sortedHits.size()="<<sortedHits.size()<<endl;
   /*
   for(int i=0;i<sortedHits.size();i++)
@@ -92,9 +92,10 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
 	  <<sortedHits[i]->ddata("barPosT")<<"\t"
 	  <<sortedHits[i]->ddata("barPosZ")<<"\t"
 	  <<sortedHits[i]->idata("IsTASD")<<"\t"
-	  <<sortedHits[i]->ddata("momentum")<<"\t"
-	  <<sortedHits[i]->idata("IsYBar")<<"\t"
-	<<sortedHits[i]->mother_particle().name()<<endl;
+	//<<sortedHits[i]->ddata("momentum")<<"\t"
+	//<<sortedHits[i]->ddata("moduleNum")<<"\t"
+	  <<sortedHits[i]->idata("IsYBar")<<endl;
+	//<<sortedHits[i]->mother_particle().name()<<endl;
      
       //cout<<"barPosZ="<<sortedHits[i]->ddata("barPosZ")<<endl;
       //cout<<"isYBar?="<<sortedHits[i]->idata( "IsYBar" )<<endl;
@@ -150,9 +151,38 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   //Make rec_hits from vox.
   Construct_hits( rec_hit );
 
-  //cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
-}
 
+  // check number of hits. Need more than 2 in AiDA (filter)
+  // check modules after clustering.
+  int TASDhits = 0;
+  bool hitModule32 = false;
+  bool hitModule0 = false;
+  bool hitModule1 = false;
+  bool hitModule2 = false;
+  bool hitModule3 = false;
+  bool hitModule4 = false;
+   // For simulations
+  //cout<<"breaking in using"<<endl;
+  for(int i=0;i< rec_hit.size();i++)
+    {
+      if(rec_hit[i]->idata("IsTASD")) TASDhits++;
+
+      if(rec_hit[i]->ddata("moduleNum") == 32) hitModule32 = true;
+      else if(rec_hit[i]->ddata("moduleNum") == 0) hitModule0 = true;
+      else if(rec_hit[i]->ddata("moduleNum") == 1) hitModule1 = true;
+      else if(rec_hit[i]->ddata("moduleNum") == 2) hitModule2 = true;
+      else if(rec_hit[i]->ddata("moduleNum") == 3) hitModule3 = true;
+      else if(rec_hit[i]->ddata("moduleNum") == 4) hitModule4 = true;
+    }
+
+  if(TASDhits<2) rec_hit.clear();
+  if(!(hitModule32 && hitModule1 && hitModule2 && hitModule3 && hitModule4)) rec_hit.clear();
+  
+
+  //cout<<"GDML_HIT_CONSTRUCTOR rec_hit.size()="<<rec_hit.size()<<endl;
+  
+}
+  
 
 void gdml_hit_constructor::Clustering2(const std::vector<bhep::hit*>& zSortedHits)
 {
@@ -345,9 +375,10 @@ std::vector<bhep::hit*> gdml_hit_constructor::FilteringBadHits(const std::vector
       //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
       //if(hits[counter]->ddata( "time" ) > 30.0 || hits[counter]->ddata( "EnergyDep" )< 1.0)
       //if(hits[counter]->ddata( "time" ) > 50.0 || hits[counter]->ddata( "EnergyDep" )< _minEng)  //TESTBEAM2017
-      //if(hits[counter]->ddata( "EnergyDep" )< 0.1)  //TESTBEAM2017
+      if(hits[counter]->ddata( "EnergyDep" )< 0.1)  //TESTBEAM2017
       //if(hits[counter]->ddata( "time" ) > 20.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
-      if(hits[counter]->ddata( "time" ) > 25.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
+      //if(hits[counter]->ddata( "time" ) > 25.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
+      //if(hits[counter]->ddata( "time" ) > 55.0 || hits[counter]->ddata( "EnergyDep" )< 0.1)
       //if(hits[counter]->ddata( "time" ) > 25.0 || hits[counter]->ddata( "EnergyDep" )< 1.0)
       //if((hits[counter]->mother_particle().name() != "mu+") &&
       // (hits[counter]->mother_particle().name() != "mu-"))
@@ -381,7 +412,7 @@ void gdml_hit_constructor::ClusteringHits(const std::vector<bhep::hit*> hits, in
     }
   else
     {
-      tolerance = 10; // 1 ns //TESTBEAM2017
+      tolerance = 1; // 1 ns //TESTBEAM2017
       filteredHits = FilteringBadHits(hits);
       //filteredHits = hits; //For the testbeam.
     }
@@ -721,6 +752,7 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
 
   double momentum = 0;
   int IsTASD = 0;
+  double moduleNum =0;
 
 
   
@@ -807,11 +839,14 @@ bhep::hit* gdml_hit_constructor::Get_vhit(int vox, double z,
       //	       <<(*hIt).second->ddata( "EnergyDep" )<<std::endl;
 
       IsTASD = (*hIt).second->idata( "IsTASD" );
+      //cout<<"breaking in adding"<<endl;
+      moduleNum = (*hIt).second->ddata( "moduleNum" ); // For simulations
 
-      if(momentum<(*hIt).second->ddata( "momentum" )) momentum = (*hIt).second->ddata( "momentum" );
+      //if(momentum<(*hIt).second->ddata( "momentum" )) momentum = (*hIt).second->ddata( "momentum" );
 
     }
 
+  vhit->add_property( "moduleNum", moduleNum);
   vhit->add_property( "IsTASD", IsTASD);
 
   barX=sumBarPosX/barPosX.size();

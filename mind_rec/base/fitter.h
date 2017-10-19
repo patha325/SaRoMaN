@@ -276,6 +276,7 @@ protected:
   std::vector<cluster*> _meas;
   std::vector<cluster*> _hadmeas;
 
+  std::vector<plane_info*> _planesTASD;
  
 
   //value set to identify where a traj failed:

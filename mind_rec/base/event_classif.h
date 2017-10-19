@@ -38,7 +38,7 @@ public:
   //void initialize(const bhep::gstore& pstore, bhep::prlevel vlevel, Setup& det, double wFe);
   void Initialize(const bhep::gstore& pstore, bhep::prlevel vlevel, double wFe, MINDsetup* geom);
   bool Execute(const vector<cluster*>& hits,
-	       vector<Trajectory*>& vtrajs, vector<cluster*>& hads);
+	       vector<Trajectory*>& vtrajs, vector<cluster*>& hads, vector<plane_info*> planesTASD);
   void Finalize();
   //-------------------------------------------//
   

@@ -168,7 +168,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
   for(unsigned int i=0;i<_subDetectorVec.size();i++)
     {
 
-      //cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
+      cout<<"name="<<_subDetectorVec[i]->GetName()<<endl;
       //cout<<_subDetectorVec[i]->GetName().substr(0,6)<<endl;
       //cout<<_subDetectorVec[i]->GetName().substr(0,2)<<endl;
       // Count number of hits in the stack to see if we can use helix.
@@ -186,11 +186,14 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 	 _subDetectorVec[i]->GetName().substr(0,6) == "SFFFS1"
 	 )
 	{
-	  //cout<<"if true"<<endl;
-	  if(i+1 < _subDetectorVec.size() && i == 0)
+	  cout<<"if true="<<i<<endl;
+	  cout<<_subDetectorVec.size()<<endl;
+	  if(i+1 < _subDetectorVec.size() && leverArmFirst == 0)//&& i != 0)
 	    {
 	      leverArmFirst = i;
+	      break;
 	    }
+	  cout<<leverArmFirst<<endl;
 
 	  continue;
 	}
@@ -266,7 +269,8 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       //cout<<"Call="<<LeverArm(leverArmFirst+1)[0]<<endl;
       temp.clear();
 
-      temp = LeverArm(leverArmFirst+2);
+      cout<<"First call? "<<leverArmFirst+1<<endl;
+      temp = LeverArm(leverArmFirst+1);
 
       retVal = temp[0];
 
@@ -283,7 +287,8 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 
 
       temp.clear();
-      temp = LeverArm(leverArmFirst+1);
+      cout<<"Second call? "<<leverArmFirst<<endl;
+      temp = LeverArm(leverArmFirst);
       //cout<<"Second call"<<retVal<<endl;
       debug.push_back(temp[0]);
       debug.push_back(temp[1]);
@@ -315,12 +320,20 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
       cout<<"posCharge="<<posCharge<<endl;
       cout<<"negCharge="<<negCharge<<endl;
 
-      if(posCharge == 0 && negCharge ==0)
-	retVal = 0;
-      else if(posCharge>negCharge) 
+      if(posCharge>negCharge) 
 	retVal = fabs(retVal);
+      else if (negCharge>posCharge) 
+	retVal = -fabs(retVal);
       else 
-	retVal = -1 * fabs(retVal);
+	retVal = 0;
+
+
+      //if(posCharge == 0 && negCharge ==0)
+      //retVal = 0;
+      //else if(posCharge>negCharge) 
+      //retVal = fabs(retVal);
+      //else 
+      //retVal = -1 * fabs(retVal);
 
 
     }
@@ -333,7 +346,7 @@ double Detector::CalculateChargeMomentum(vector<double>& debug) {
 
   //if(fabs(retVal)<10 || fabs(retVal) >8000 || isnan(retVal)) retVal = -2000;
 
-  if(isnan(retVal) && fabs(retVal)>100000) retVal =0;
+  //if(isnan(retVal) && fabs(retVal)>100000) retVal =0;
 
   //if(isnan(retVal)) retVal = -2000;
   
@@ -574,15 +587,17 @@ vector<double> Detector::Quadratic(std::vector<cluster*>& hits) {
 
   double erZ = 10; //mm
   double errY = 15; //mm
-
+  /*
   for (int iMeas = 0; iMeas<nMeas ;iMeas++){
-    /*
+    
     cout<< hits[iMeas]->vector()[0]<<" "
 	<< hits[iMeas]->vector()[1]<<" "
 	<< hits[iMeas]->vector()[2]<<endl;
-    */
-  }
+    
 
+    cout<<GetSubDetector(hits[iMeas]->vector()[2])->GetName()<<endl;
+  }
+  */
 
   vector<double> retVec;
 
@@ -614,7 +629,11 @@ vector<double> Detector::Quadratic(std::vector<cluster*>& hits) {
 
     // get the b-field from the previous step
     //EVector B = detector->GetBField()->vector(pos);
-    EVector B = GetSubDetector(hits[iMeas]->vector()[2])->GetBField()->vector(pos);
+    EVector B;
+    if(GetSubDetector(hits[iMeas]->vector()[2])->GetBField())
+      B = GetSubDetector(hits[iMeas]->vector()[2])->GetBField()->vector(pos);
+    else 
+      continue;
 
     //cout<<"FIELD="<<B[0]<<" "<<B[1]<<" "<<B[2]<<endl;
 
@@ -1341,13 +1360,13 @@ vector<double> Detector::LeverArm(unsigned int i){
   vector<double> retValVec;
   
   cout<<"LeverArm called with: "<<i<<endl;
-  if(i==2) i-=1; //TESTBEAM!
+  //if(i==2) i-=1; //TESTBEAM!
 
   cout<<_subDetectorVec[i-1]->GetName()<<endl;
   cout<<_subDetectorVec[i]->GetName()<<endl;
   cout<<_subDetectorVec[i+1]->GetName()<<endl;
   
-   
+  cout<<_subDetectorVec[i-1]->GetPlanes()->size()<<endl;
   cout<<_subDetectorVec[i-1]->GetMaxPlane()<<endl;
   cout<<_subDetectorVec[i]->GetMinPlane()<<endl;
   cout<<_subDetectorVec[i]->GetMaxPlane()<<endl;

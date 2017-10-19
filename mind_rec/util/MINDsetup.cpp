@@ -890,6 +890,8 @@ void MINDsetup::addProperties(){
 			  numFe * IRON_z * de_dx_fe +
 			  numFe * 2 * Al_z * de_dx_brace)/length;
 
+	  //de_dx=de_dx/4.0;
+
 	  cout<<"de_dx_sci prop="<<numScint * SCINT_z/length<<endl;
 
 	  cout<<"de_dx_fe prop="<< numFe * IRON_z/length<<endl;
@@ -916,7 +918,8 @@ void MINDsetup::addProperties(){
 	  //fieldScale *= 2 *1.2;
 	  //fieldScale *= IRON_z *numFe;
 
-
+	  //fieldScale /= 2.0;
+	  
 	  //BField[0] = tesla * earth; 
 
 	  //BField[0] = tesla * 1.5 * fieldScale;
@@ -932,6 +935,10 @@ void MINDsetup::addProperties(){
 	  
 	  //cout<<"tesla="<<tesla<<endl;
 	  
+	  fieldScale *=1.8; // Fix to handle averiging of field in subdetector. 
+	  // Not mathematical, just a magic number that fixes everything.
+
+	  //fieldScale *=1.3;
 	  //fieldScale *=0.5;
 	
 	  std::cout<<"Local Field Scaling is "<<fieldScale<<std::endl;

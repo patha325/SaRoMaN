@@ -872,6 +872,7 @@ bool MINDplotter::extrap_to_vertex(const Trajectory& traj,
 
   bool ok;
   // Comment out extrapolation.
+  /*
   if(traj.quality("lowPt") != 1) // Get around not having a vertex.
     {
       /// Add the surfaceof vertex and prpagate to that surface
@@ -882,7 +883,8 @@ bool MINDplotter::extrap_to_vertex(const Trajectory& traj,
       //Convert to slopes representation.
       // fitObj.man().model_svc().conversion_svc().representation().convert(ste, RP::slopes_curv_z);
     }
-  
+  */  
+
   //Grab fitted vertex information.
   _fittedVert = ste.hv().vector();
   _vertMat = ste.hv().matrix();
@@ -1084,9 +1086,11 @@ bool MINDplotter::extract_true_particle2(const bhep::event& evt) {
  
 
   /// neutrino energy of the event
-  _nuEng = evt.fetch_dproperty("nuEnergy") * bhep::MeV;
+  //_nuEng = evt.fetch_dproperty("nuEnergy") * bhep::MeV;
  
-  _m.message(" Neurino Energy=",evt.fetch_dproperty("nuEnergy"), bhep::VERBOSE);
+  //_m.message(" Neurino Energy=",evt.fetch_dproperty("nuEnergy"), bhep::VERBOSE);
+
+  _nuEng =0;
 
   ///vector of true particles
   const vector<bhep::particle*> Pospart = evt.true_particles();
@@ -1189,17 +1193,17 @@ bool MINDplotter::extract_true_particle2(const bhep::event& evt) {
   }
   
   // cout<<"track no="<<trackNo<<endl;
-  
+  /*
   std::vector<double> hadInf = evt.fetch_dvproperty("had4vec");
   
   for (int itn = 0;itn < 4;itn++)
     _hadP[itn] = hadInf[itn]*bhep::GeV;
   _hadE[0][0] = hadInf[3]*bhep::GeV;
   hadInf.clear();
-  
+  */
 
   //true hadron energy which are inside nucleus
-  _hadEInNucleus = evt.fetch_dproperty("hadEInNucleus");
+  //_hadEInNucleus = evt.fetch_dproperty("hadEInNucleus");
   
   
   /*if (count == 0) {
@@ -1611,7 +1615,7 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
   cout<<"after get_trajs hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
 
   //HitBreakUp for each traj
-  /*
+  
   for(int tj=0; tj<(int)trajs.size(); tj++){
     
     cout<<"in trajs loop hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
@@ -1626,7 +1630,7 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
 	
 	///candidate hits (all hits are candidates now)
 	_hitType[0][tj]++;
-	
+	/*
 	///tru muon among cand hits
 	if ( nhits[iHits]->measurement().hv("MuonProp").vector()[0] > 0.8) {
 	  // if ( nhits[iHits]->get_mu_prop() > 0.8) {
@@ -1639,6 +1643,7 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
 	  _truHitIndex[0][tj] = iHits;
 	  
 	}
+	*/
 	///Candidate hit index
 	_truHitIndex[1][tj] = iHits;
 	
@@ -1651,7 +1656,7 @@ void MINDplotter::hitBreakUp(fitter& Fit) {
     }
     _m.message("traj No= ",tj," ;total InMu=",_hitType[0][tj],"  ;total MuInMu=",_hitType[1][tj], " fitted node=",_hitType[2][tj],bhep::VERBOSE);
   }
-  */
+  
   
   cout<<"End of hitBreakUp _XPos.size()="<<_XPos.size()<<endl;
 
@@ -1744,14 +1749,14 @@ void MINDplotter::patternStats2(fitter& Fit) {
 	  else 
 	    vmomentum.push_back(0);
 	  vIter.push_back(i);
-	  /*
+	  
 	  if( traj[i]->node(iHits).status("fitted") &&  _nhits[i] >10)
 	    {
 	  vxposs.push_back( traj[i]->node(iHits).state().hv(RP::smoothed).vector()[0]);
 	  vyposs.push_back( traj[i]->node(iHits).state().hv(RP::smoothed).vector()[1]);
 	  vzposs.push_back( traj[i]->node(iHits).state().hv(RP::smoothed).vector()[2]);
 	    }
-	  */
+	  
 
 	  vedep.push_back(Fit.get_classifier().correctEdep( meas.hv("energy").vector()[0], 
 							    meas.vector()[0], meas.vector()[1],

@@ -184,7 +184,7 @@ void ConvertToPosition(bhep::hit* inHit, unsigned int boardId, unsigned int chan
 
 double ConvertToEdep(unsigned int boardId, unsigned int channelId,unsigned int amplitude)
 {
-  return 100.0;
+  return 1.0;
 }
 
 vector<bhep::hit*>ConvertToHit(vector<TempHit*> hitsVector, string xmlName)
@@ -276,24 +276,27 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
   double GapFeSci = 8;
   double GapFeFe = 30;
 
-  double mod1ZPos = -2823; //SFFFS0
-  double mod2ZPos = -2585; //SFFFS0
-  double mod3ZPos = -2126; //SFFFS1
-  double mod4ZPos = -1895; //SFFFS1
-  double mod5ZPos = -1435; //SFModule
-  double mod6ZPos = -1322; //SFModule
-  double mod7ZPos = -1208; //SFModule
-  double mod8ZPos = -109; //SFFModule
-  double mod9ZPos = 67; // SFFModule
-  double mod10ZPos = 242; //SFFModule
-  double mod11ZPos = 423; //SFFModule
-  double mod12ZPos = 1061; //SFFFF 
-  double mod13ZPos = 1340; //SFFFFS0
-  double mod14ZPos = 1624; //SFFFFS0
-  double mod15ZPos = 2089; //SFFFFS1
-  double mod16ZPos = 2394; //SFFFFS1
-  double mod17ZPos = 2855; //SFFFFS2
-  double mod18ZPos = 3158; //SFFFFS2
+  double usingTASD = 1;
+  double addingSize = 3850;
+
+  double mod1ZPos = -2823 + addingSize*usingTASD; //SFFFS0
+  double mod2ZPos = -2585 + addingSize*usingTASD; //SFFFS0
+  double mod3ZPos = -2126 + addingSize*usingTASD; //SFFFS1
+  double mod4ZPos = -1895 + addingSize*usingTASD; //SFFFS1
+  double mod5ZPos = -1435 + addingSize*usingTASD; //SFModule
+  double mod6ZPos = -1322 + addingSize*usingTASD; //SFModule
+  double mod7ZPos = -1208 + addingSize*usingTASD; //SFModule
+  double mod8ZPos = -109 + addingSize*usingTASD; //SFFModule
+  double mod9ZPos = 67 + addingSize*usingTASD; // SFFModule
+  double mod10ZPos = 242 + addingSize*usingTASD; //SFFModule
+  double mod11ZPos = 423 + addingSize*usingTASD; //SFFModule
+  double mod12ZPos = 1061 + addingSize*usingTASD; //SFFFF 
+  double mod13ZPos = 1340 + addingSize*usingTASD; //SFFFFS0
+  double mod14ZPos = 1624 + addingSize*usingTASD; //SFFFFS0
+  double mod15ZPos = 2089 + addingSize*usingTASD; //SFFFFS1
+  double mod16ZPos = 2394 + addingSize*usingTASD; //SFFFFS1
+  double mod17ZPos = 2855 + addingSize*usingTASD; //SFFFFS2
+  double mod18ZPos = 3158 + addingSize*usingTASD; //SFFFFS2
 
   double moduleList[18] = {mod1ZPos, mod2ZPos, mod3ZPos, mod4ZPos, mod5ZPos, mod6ZPos, mod7ZPos, mod8ZPos, mod9ZPos, mod10ZPos, mod11ZPos, mod12ZPos, mod13ZPos, mod14ZPos, mod15ZPos, mod16ZPos, mod17ZPos, mod18ZPos};
 
@@ -333,6 +336,7 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	  
 	  double barPosZ =0.0;
 	  int YMeasuring=0;
+	  int TASD = 0;
 	  int barNumber=0;
 	  double barPosT=0.0;
 	  //int moduleNum=1;
@@ -351,73 +355,127 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	  else
 	    position = myatoi(Position_label[1])*10+ myatoi(Position_label[2]);
 	    
-
-	  for (int moduleNum = 1;moduleNum<=18;moduleNum++)
+	  if(position == 0 || position == 32)
 	    {
-	      if(Bar_type=="Vertical" && position == moduleNum && Bar_position =="Front") barPosZ = moduleList[moduleNum-1]-xBarZsize;
-	      else if(Bar_type=="Vertical" && position == moduleNum && Bar_position =="Back") barPosZ = moduleList[moduleNum-1]+xBarZsize;
-	      else if(Bar_type=="Horizontal" && position == moduleNum && Bar_position =="Front") barPosZ = moduleList[moduleNum-1]-yBarZsize;
-	      else if(Bar_type=="Horizontal" && position == moduleNum && Bar_position =="Back") barPosZ = moduleList[moduleNum-1]+yBarZsize;
-	    }
-	  //cout<<"barPosZ="<<barPosZ<<endl;
-	  /*
-	  cerr<<"Position_label="<<Position_label<<"\t"
-	      <<"position="<<position<<"\t"
-	      <<"Global_channel="<<Global_channel<<"\t"
-	      <<"barPosZ="<<barPosZ<<endl;
-	  */
-	  if(Bar_type=="Vertical")
-	    {
-	      //int temp = Global_channel % 96;
-
-	      if(Side =="Left")
+	      TASD = 1;
+	      if(position == 0)
 		{
-		  int temp = Global_channel % 96;
-		  barPosT = (temp % 32 )*yBarPitch +yBarStart;
-		  barNumber = temp % 32;
-		  //barPosT = (Global_channel -1568 +32 * myatoi(Position_label[1]))*yBarPitch +yBarStart;
-		  //barNumber = (Global_channel -1568 +32 - 32 * myatoi(Position_label[1]));
-		}	
-	      else
-		{
-		  int temp = (Global_channel-1) % 96;
-		  barPosT = (temp % 32 )*yBarPitch +yBarStart;
-		  barNumber = temp % 32;
-
-		  //barPosT = (Global_channel -1568-1 +32 - 32 * myatoi(Position_label[1]))*yBarPitch +yBarStart;
-		  //barNumber = (Global_channel -1568-1 +32 - 32 * myatoi(Position_label[1]));
+		  barPosZ = -2663;
+		  if(Bar_type=="Vertical")
+		    {
+		      int temp = Global_channel % 96;
+		      barPosT = -((temp-32)*10 -31*10);
+		      barNumber = temp-32;
+		      YMeasuring=0;
+		    }
+		  else
+		    {
+		      int temp = Global_channel % 96;
+		      if(temp == 32)
+			{
+			  barPosT = -5;
+			  barNumber = 63-33;
+			}
+		      else
+			{
+			  barPosT = (temp-33)*10 -30*10 +117; //117 since aida higher.
+			  barNumber = temp-33;
+			}
+		      YMeasuring=1;
+		    }
 		}
-	      YMeasuring=0;
+	      else //(position == 32)
+		{
+		  barPosZ = -2663 - 373;
+		  if(Bar_type=="Vertical")
+		    {
+		      int temp = Global_channel % 96;
+		      barPosT = -((temp-0)*10 -7*10);
+		      barNumber = temp;
+		      YMeasuring=0;
+		    }
+		  else
+		    {
+		      int temp = Global_channel % 96;
+	
+		      barPosT = (temp-8)*10 -7*10 +117; //117 since aida higher.
+		      barNumber = temp-8;
+		      YMeasuring=1;
+		    }
+		}
 	    }
 	  else
 	    {
-	      int temp = Global_channel % 96;
-	      barPosT = temp*xBarPitch +xBarStart;
-	      barNumber = temp;
+	      TASD =0;
+	      for (int moduleNum = 1;moduleNum<=18;moduleNum++)
+		{
+		  if(Bar_type=="Vertical" && position == moduleNum && Bar_position =="Front") barPosZ = moduleList[moduleNum-1]-xBarZsize;
+		  else if(Bar_type=="Vertical" && position == moduleNum && Bar_position =="Back") barPosZ = moduleList[moduleNum-1]+xBarZsize;
+		  else if(Bar_type=="Horizontal" && position == moduleNum && Bar_position =="Front") barPosZ = moduleList[moduleNum-1]-yBarZsize;
+		  else if(Bar_type=="Horizontal" && position == moduleNum && Bar_position =="Back") barPosZ = moduleList[moduleNum-1]+yBarZsize;
+		}
+	    
+	      //cout<<"barPosZ="<<barPosZ<<endl;
 	      /*
-	      if(Side =="Left")
-		{ 
-		  barPosT = (Global_channel - 96 * myatoi(Position_label[1]))*xBarPitch +xBarStart;
-		  barNumber = (Global_channel - 96 * myatoi(Position_label[1]));
+		cerr<<"Position_label="<<Position_label<<"\t"
+		<<"position="<<position<<"\t"
+		<<"Global_channel="<<Global_channel<<"\t"
+		<<"barPosZ="<<barPosZ<<endl;
+	      */
+	      if(Bar_type=="Vertical")
+		{
+		  //int temp = Global_channel % 96;
+		  
+		  if(Side =="Left")
+		    {
+		      int temp = Global_channel % 96;
+		      barPosT = (temp % 32 )*yBarPitch +yBarStart;
+		      barNumber = temp % 32;
+		      //barPosT = (Global_channel -1568 +32 * myatoi(Position_label[1]))*yBarPitch +yBarStart;
+		      //barNumber = (Global_channel -1568 +32 - 32 * myatoi(Position_label[1]));
+		    }	
+		  else
+		    {
+		      int temp = (Global_channel-1) % 96;
+		      barPosT = (temp % 32 )*yBarPitch +yBarStart;
+		      barNumber = temp % 32;
+		      
+		      //barPosT = (Global_channel -1568-1 +32 - 32 * myatoi(Position_label[1]))*yBarPitch +yBarStart;
+		      //barNumber = (Global_channel -1568-1 +32 - 32 * myatoi(Position_label[1]));
+		    }
+		  YMeasuring=0;
 		}
 	      else
 		{
-		  barPosT = (Global_channel - 96 * myatoi(Position_label[1]))*xBarPitch +xBarStart;
-		  barNumber =  (Global_channel - 96 * myatoi(Position_label[1]));
+		  int temp = Global_channel % 96;
+		  barPosT = temp*xBarPitch +xBarStart;
+		  barNumber = temp;
+		  /*
+		    if(Side =="Left")
+		    { 
+		    barPosT = (Global_channel - 96 * myatoi(Position_label[1]))*xBarPitch +xBarStart;
+		    barNumber = (Global_channel - 96 * myatoi(Position_label[1]));
+		    }
+		    else
+		    {
+		    barPosT = (Global_channel - 96 * myatoi(Position_label[1]))*xBarPitch +xBarStart;
+		    barNumber =  (Global_channel - 96 * myatoi(Position_label[1]));
+		    }
+		  */
+		  YMeasuring=1;
 		}
-	      */
-	      YMeasuring=1;
 	    }
 	  //cout<<"barPosZ="<<barPosZ<<"\t"<<"barPosT="<<barPosT<<"\t"<<"moduleNum="<<position<<"\t"<<"YMeasuring="<<YMeasuring<<endl;
-
+	  
 	  //cerr<<"Adding properties barPosZ"<<endl;
 	  inHit->add_property("barPosZ",barPosZ);
 	  //inHit->add_property("barPosZ",mod1ZPos);
 	  inHit->add_property("IsYBar",YMeasuring);
 	  inHit->add_property("barNumber",barNumber);
 	  inHit->add_property("barPosT",barPosT);
-	  inHit->add_property("IsTASD",0);
-	  inHit->add_property("moduleNum",myatoi(Position_label[1]));
+	  inHit->add_property("IsTASD",TASD);
+	  inHit->add_property("moduleNum",position);
+	  //inHit->add_property("moduleNum",myatoi(Position_label[1]));
 	  // can we add ->x()[2] how is it done? bhep add?
 	  if(YMeasuring) inHit->set_point(*(new bhep::Point3D(0,barPosT,barPosZ)));
 	  else inHit->set_point(*(new bhep::Point3D(barPosT,0,barPosZ)));
@@ -425,7 +483,7 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	}
 
       //if(!filled && i+6>dataBaseVector.size())
-      cout<<"broken"<<Global_channel<<"\t"<<channelId<<endl;
+      //cout<<"broken"<<Global_channel<<"\t"<<channelId<<endl;
 
       /*
       else
@@ -434,6 +492,7 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
 	   // Only here to work around a bug.
 	  inHit->add_property("barPosZ",0);
 	  inHit->add_property("IsYBar",0);
+	  inHit->add_property("IsTASD",1);
 	  inHit->add_property("barNumber",0);
 	  inHit->add_property("barPosT",0);
 	  inHit->add_property("moduleNum",0);
@@ -443,7 +502,21 @@ void ConvertToPosition2017BeamTest2(bhep::hit* inHit, unsigned int boardId, unsi
       */
       // Leaving convert to position2017
     }
-  cout<<inHit->idata("IsTASD")<<endl;
+  if(!inHit->find_idata_name("IsTASD"))
+    {
+      cerr<<"Broken"<<endl;
+      cerr<<"else="<<boardId<<"\t"<<channelId<<"\t"<<channelId-96*boardId<<endl;
+      inHit->add_property("barPosZ",0);
+      inHit->add_property("IsYBar",0);
+      inHit->add_property("IsTASD",1);
+      inHit->add_property("barNumber",0);
+      inHit->add_property("barPosT",0);
+      inHit->add_property("moduleNum",0);
+      inHit->set_point(*(new bhep::Point3D(0,0,0)));
+    }
+
+  //cout<<inHit->idata("IsTASD")<<endl;
+  //cout<<inHit->ddata("moduleNum")<<endl;
 }
 void ConvertToPosition2017BeamTest(bhep::hit* inHit, unsigned int boardId, unsigned int channelId)
 {
@@ -588,7 +661,7 @@ vector<bhep::hit*> ConvertToHit2017BeamTest3(vector<TempHit*> hitsVector, string
 
  for(unsigned int cnt = 0; cnt<hitsVector.size(); cnt++)
   {
-    cerr<<"boardId="<<hitsVector[cnt]->boardId<<"\t"<<"channelId="<<hitsVector[cnt]->channelId<<endl;
+    //cerr<<"boardId="<<hitsVector[cnt]->boardId<<"\t"<<"channelId="<<hitsVector[cnt]->channelId<<endl;
     //cout<<"boardId="<<hitsVector[cnt]->boardId<<"\t"<<"channelId="<<hitsVector[cnt]->channelId<<endl;
     //if(hitsVector[cnt]->boardId == 0 || hitsVector[cnt]->boardId > 60) continue;
     //if(hitsVector[cnt]->boardId > 60) continue;
@@ -607,9 +680,9 @@ vector<bhep::hit*> ConvertToHit2017BeamTest3(vector<TempHit*> hitsVector, string
     //{
     returnVector.back()->add_property("rHit",0);
 	//}
-    cerr<<"ConvertToPosition2017BeamTest2 start"<<endl;
+    //cerr<<"ConvertToPosition2017BeamTest2 start"<<endl;
     ConvertToPosition2017BeamTest2(returnVector.back(),hitsVector[cnt]->boardId,hitsVector[cnt]->channelId);
-    cerr<<"ConvertToPosition2017BeamTest2 end"<<endl;
+    //cerr<<"ConvertToPosition2017BeamTest2 end"<<endl;
   }
  hitsVector.clear();
  dataBaseVector.clear();
@@ -745,75 +818,7 @@ void convert_to_internal2017BeamTest3(vector<char*> eventBuffers,vector<vector<T
   vector<pair<double,vector<TempHit*> > > tempHitsPerSpill[48]; 
   vector<double> TriggerNumWithHits;
   try {
-    /*
-    vector<TempHit*> tempVec;
-    MDfragmentBM   spill[48];
-    
-    //Load spill vector
-    cerr<<"Loading spill vector"<<endl;
-    unsigned int expectedTriggers =0;
-    bool breaker = false;
-    
-    for(unsigned int eventNum=0;eventNum<eventBuffers.size();eventNum++)
-      {
-	cerr<<eventNum<<endl;
-	spill[eventNum].SetDataPtr(eventBuffers[eventNum]);
-
-	cerr<<spill[eventNum].GetNumOfTriggers()<<endl;
-
-	if(!expectedTriggers)
-	  expectedTriggers = spill[eventNum].GetNumOfTriggers();
-	else if(expectedTriggers != spill[eventNum].GetNumOfTriggers())
-	  {
-
-	    cerr<<"What?!?"<<endl;
-	    breaker = true;
-	    break;
-	  }
-
-	//cerr<<spill[eventNum].GetNumOfTriggers()<<endl;
-      }
-    cerr<<"Loading spill vector done"<<endl;
-
-    cerr<<"Checking to find good triggers"<<endl;
-    if(eventBuffers.size()>1 && !breaker)
-      { 
-	cerr<<"through!"<<endl;
-	//spill.SetDataPtr(eventBuffers[0]); // Find an example of triggers.
-	//unsigned int nTr = spill.GetNumOfTriggers();
-	unsigned int nTr = spill[0].GetNumOfTriggers();
-	cerr<<"stuck?"<<endl;
-	cerr<<nTr<<endl;
-	for (unsigned int triggNum=0; triggNum<nTr; ++triggNum) {
-	  cerr<<"triggNum="<<triggNum<<endl;
-	  int FEBsWithEnoughHitsInTrigger = 0;
-	  // Check that more than 10 (4+4horizontal and 2 vertical) FEBS have hits in them, for a trigger
-	  for(unsigned int eventNum=0;eventNum<eventBuffers.size();eventNum++)
-	    {
-	      // Check left right channel for each trigger. Do it here?
-	      //cerr<<"Set dataptr takes forever"<<endl;
-	      //spill.SetDataPtr(eventBuffers[eventNum]);
-	      //cerr<<"Set dataptr done"<<endl;
-	      //MDpartEventBM * event = spill.GetTriggerEventPtr(triggNum);
-	      MDpartEventBM * event = spill[eventNum].GetTriggerEventPtr(triggNum);
-	      //cerr<<"Event loaded"<<endl;
-	      //if(event->getNumDataWords() > 12) FEBsWithEnoughHitsInTrigger++;
-	      if(event->getNumDataWords() < 12) continue;
-
-	      int nHits = 0;
-	      for (int ich=0; ich<BM_FEB_NCHANNELS; ++ich) {
-		nHits += event->GetNLeadingEdgeHits(ich);
-	      }
-	      if(nHits>0) FEBsWithEnoughHitsInTrigger++;
-	      cerr<<"nHits="<<nHits<<endl;
-	    }
-	  if(FEBsWithEnoughHitsInTrigger<10) continue;
-	  else TriggerNumWithHits.push_back(triggNum);
-	}
-      }
-    
-    cerr<<"Found TriggerNumWithHits.size()="<<TriggerNumWithHits.size()<<endl;
-    */
+ 
     for(unsigned int eventNum=0;eventNum<eventBuffers.size();eventNum++)
       {
 	vector<TempHit*> tempVec;
@@ -927,7 +932,48 @@ void convert_to_internal2017BeamTest3(vector<char*> eventBuffers,vector<vector<T
 				<<event->GetTriggerTime()<<endl;
 			    //}
 			    */
-			if(GlobalChannel==4991) continue;
+			if(GlobalChannel==4991) continue; // strange bug
+			else if(GlobalChannel>783 && GlobalChannel<800) continue; // board 8
+			else if(GlobalChannel>23 && GlobalChannel<32) continue; // board 0
+
+			// Bug? Horizontal should not have channel 95
+			if((spill.GetBoardId()== 1 ||
+			    spill.GetBoardId()== 2 ||
+			    spill.GetBoardId()== 3 ||
+			    spill.GetBoardId()== 4 ||
+			    spill.GetBoardId()== 5 ||
+			    spill.GetBoardId()== 9 ||
+			    spill.GetBoardId()== 10 ||
+			    spill.GetBoardId()== 11 ||
+			    spill.GetBoardId()== 12 ||
+			    spill.GetBoardId()== 13 ||
+			    spill.GetBoardId()== 16 ||
+			    spill.GetBoardId()== 17 ||
+			    spill.GetBoardId()== 18 ||
+			    spill.GetBoardId()== 24 ||
+			    spill.GetBoardId()== 25 ||
+			    spill.GetBoardId()== 26 ||
+			    spill.GetBoardId()== 32 ||
+			    spill.GetBoardId()== 33 ||
+			    spill.GetBoardId()== 34 ||
+			    spill.GetBoardId()== 35 ||
+			    spill.GetBoardId()== 40 ||
+			    spill.GetBoardId()== 41 ||
+			    spill.GetBoardId()== 42 ||
+			    spill.GetBoardId()== 43 ||
+			    spill.GetBoardId()== 48 ||
+			    spill.GetBoardId()== 49 ||
+			    spill.GetBoardId()== 50 ||
+			    spill.GetBoardId()== 51 ||
+			    spill.GetBoardId()== 52 ||
+			    spill.GetBoardId()== 53 ||
+			    spill.GetBoardId()== 56 ||
+			    spill.GetBoardId()== 57 ||
+			    spill.GetBoardId()== 58 ||
+			    spill.GetBoardId()== 59 ||
+			    spill.GetBoardId()== 60 ||
+			    spill.GetBoardId()== 61) && (GlobalChannel % 96 == 95)) continue;
+
 
 			tempVec.push_back(new TempHit(event->GetHitAmplitude(ich, 'h'),
 						      event->GetHitTime(ih,ich, 'l'),
@@ -968,50 +1014,7 @@ void convert_to_internal2017BeamTest3(vector<char*> eventBuffers,vector<vector<T
       tempHitsPerSpill[i].clear();
     }
   }
-  /*
-  vector<TempHit*> tempVector;
-  //vector<pair<double,vector<TempHit*> > >temp1; 
 
-  for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
-    {
-      cerr<<"tempHitsPerSpill["<<i<<"].size()="<<tempHitsPerSpill[i].size()<<endl;
-      for(unsigned int j = 0; j< tempHitsPerSpill[i].size(); j++)
-	{
-	  tempVector.insert(tempVector.end(),
-	  		    tempHitsPerSpill[i][j].second.begin(),
-	  		    tempHitsPerSpill[i][j].second.end());
-	}
-      tempHitsPerSpill[i].clear();
-    }
-	  vectorFinalHits->push_back(tempVector);
-	  tempVector.clear();
-  */
-
-  /*
-  // Start combining to ensure that there are hits in all 
-  vector<pair<double,vector<TempHit*> > >temp1; 
-  vector<pair<double,vector<TempHit*> > >temp2; 
-
-  double horizontalLeft[] = [0,1,2]; //16,17,18,
-  double horizontalRight[5,6,7] =
-
-  // Check FEB 16, 24
-  int FEBlistNum = 0;
-  int FEBlistNum2 = 5;
-  for(unsigned int i = 0; i< tempHitsPerSpill[FEBlistNum].size(); i++)
-    {
-      for(unsigned int j =0; j<tempHitsPerSpill[FEBlistNum2].size(); j++)
-	{
-	  if(tempHitsPerSpill[FEBlistNum][i].first == tempHitsPerSpill[FEBlistNum2][j].first)
-	    {
-	      vector<TempHit*> tempVector;
-	      tempVector.insert(tempVector.end(),tempHitsPerSpill[FEBlistNum][i].second.begin(),tempHitsPerSpill[FEBlistNum][i].second.end());
-	      tempVector.insert(tempVector.end(),tempHitsPerSpill[FEBlistNum2][j].second.begin(),tempHitsPerSpill[FEBlistNum2][j].second.end());
-	      temp1.push_back(make_pair(tempHitsPerSpill[FEBlistNum][i].first,tempVector));
-	    }
-	}
-    }
-  */
 
   // Use old to fill per trigger. Check if trigger has more than 12 hits.(4 left, 4right and 4 vertical)
 
@@ -1034,36 +1037,6 @@ for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
       temp1.push_back(make_pair(tempHitsPerSpill[0][i].first,tempVector));
     }
   //cerr<<"temp1.size()="<<temp1.size()<<endl;
-
-  /*
-  for(unsigned int i = 1; i< 48; i++)
-    {
-      for(unsigned int j = 0; j< temp1.size(); j++)
-	{
-	  for(unsigned int k = 0; k< tempHitsPerSpill[i].size(); k++)
-	    {
-	      if(temp1[j].first == tempHitsPerSpill[i][k].first)
-	      //if(fabs(temp1[j].first-tempHitsPerSpill[i][k].first)<3)
-		{
-		  vector<TempHit*> tempVector;
-		  tempVector.assign(tempHitsPerSpill[i][k].second.begin(),tempHitsPerSpill[i][k].second.end());
-		  //tempVector.insert(tempVector.end(),tempHitsPerSpill[i][k].second.begin(),tempHitsPerSpill[i][k].second.end());
-		  //tempVector.assign(temp1[i].second.begin(),temp1[i].second.end());
-		  tempVector.insert(tempVector.end(),temp1[j].second.begin(),temp1[j].second.end());
-
-		  temp2.push_back(make_pair(tempHitsPerSpill[i][k].first,tempVector));
-		}
-	    }
-	}
-      //temp1.clear();
-      //temp1=temp2;
-      //temp1.assign(temp2.begin(),temp2.end());
-      //temp1.insert(temp1.end(),temp2.begin(),temp2.end());
-      tempHitsPerSpill[i].clear();
-      //temp2.clear();
-    }
-  temp1.clear();
-  */
 
   for(unsigned int i = 0; i< temp1.size(); i++)
     {
@@ -1104,10 +1077,12 @@ for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
       bool checker = false;
       if(tempVector.size()>12)
 	{
+	  bool checker0 = false;
 	  bool checker1 = false;
 	  bool checker2 = false;
 	  bool checker3 = false;
 	  bool checker4 = false;
+	  bool checker8 = false;
 	  bool checker9 = false;
 	  bool checker10 = false;
 	  bool checker11 = false;
@@ -1115,19 +1090,21 @@ for(unsigned int i = 0; i<48; i++)// for tempHitsPerSpill.size()
 	  bool checker27 = false;
 	  for(unsigned int j = 0; j<tempVector.size(); j++)
 	    {
-	      if(tempVector[j]->boardId==1) checker1=true; //mod1 left
+	      if(tempVector[j]->boardId==0) checker0=true; //mod0 left
+	      else if(tempVector[j]->boardId==1) checker1=true; //mod1 left
 	      else if(tempVector[j]->boardId==2) checker2=true; //mod2 left
 	      else if(tempVector[j]->boardId==3) checker3=true; //mod3 left
 	      else if(tempVector[j]->boardId==4) checker4=true; //mod4 left
+	      else if(tempVector[j]->boardId==8) checker8=true; //mod8 left
 	      else if(tempVector[j]->boardId==9) checker9=true; //mod1 right
 	      else if(tempVector[j]->boardId==10) checker10=true; //mod2 right
 	      else if(tempVector[j]->boardId==11) checker11=true; //mod3 right
 	      else if(tempVector[j]->boardId==12) checker12=true; //mod4 right
 	      else if(tempVector[j]->boardId==27) checker27=true; //vertical 123
 	    }
-	  checker = checker1 && checker2
+	  checker = checker0 && checker1 && checker2
 	    && checker3 && checker4 
-	    && checker9 && checker10
+	    && checker8 && checker9 && checker10
 	    && checker11 && checker12 && checker27;
 	}
 
@@ -1688,58 +1665,81 @@ void HandleData3(vector<string> filenames, string filepath,root2dst* cvt)
 	  eventBuffers[i] = dfiles[i]->GetNextEvent();
 	}
       
-      if(counter == 1) break; //beam test 2017
+      //if(counter == 100) break; //beam test 2017
+      //if(counter == 20) break; //beam test 2017
+	if(counter>20 && counter<30)
+	{
+	counter++;
+	continue;
+	}
+	if(counter == 100) break; //beam test 2017
+      //if(counter == 78) break; //beam test 2017
       //counter++;
       //cerr<<"convert_to_internal2017BeamTest3 start"<<endl;
       convert_to_internal2017BeamTest3(eventBuffers,&tempVectorHits);
       //cerr<<"convert_to_internal2017BeamTest3 end"<<endl;
       //int iEvent = 0;
       //continue;
-      if(tempVectorHits.size()) counter++;
-      for(unsigned int event=0;event<tempVectorHits.size();event++)
-	{
-	  //counter++;
-	  if(tempVectorHits[event].size()<12) continue;
+      if(tempVectorHits.size())
+	{ 
+	  counter++;
+	  cerr<<"counter="<<counter<<endl;
 	  
-	  cout<<"eventNum="<<event<<endl;
-	  string filepath2="/data/neutrino05/phallsjo/SaRoMan";
-	  dataBaseVector.clear();
-	  //cerr<<"ConvertToHit2017BeamTest3 start"<<endl;
-	  vector<bhep::hit*> unSortedhits = ConvertToHit2017BeamTest3(tempVectorHits[event],filepath+"/BabyMIND.db");
-	  //cerr<<"ConvertToHit2017BeamTest3 end"<<endl;	  
-	  std::vector<bhep::hit*> hits = unSortedhits;
-	  //cerr<<"sorting "<<hits.size()<<endl;
-	  sort( hits.begin(), hits.end(), forwardSortInZ() );
-	  //cerr<<"sorting done"<<endl;
-	  ptype pT = DIGI;
-	  string detect = "tracking";
-	  vector<particle*> hitsParticle;
-	  hitsParticle.push_back(new particle(pT,detect));
-	  
-	  for(unsigned int i = 0; i<hits.size();i++)
+	  for(unsigned int event=0;event<tempVectorHits.size();event++)
 	    {
-	      hitsParticle.back()->add_hit(detect,hits[i]); //new
+	      //cerr<<"counter="<<counter<<endl;
+	      //counter++;
+	      if(tempVectorHits[event].size()<12) continue;
+	      
+	      cout<<"eventNum="<<event<<endl;
+	      string filepath2="/data/neutrino05/phallsjo/SaRoMan";
+	      dataBaseVector.clear();
+	      //cerr<<"ConvertToHit2017BeamTest3 start"<<endl;
+	      vector<bhep::hit*> unSortedhits = ConvertToHit2017BeamTest3(tempVectorHits[event],filepath+"/BabyMIND.db");
+	      //cerr<<"ConvertToHit2017BeamTest3 end"<<endl;	  
+	      std::vector<bhep::hit*> hits = unSortedhits;
+	      //cerr<<"sorting "<<hits.size()<<endl;
+	      sort( hits.begin(), hits.end(), forwardSortInZ() );
+	      //cerr<<"sorting done"<<endl;
+	      ptype pT = DIGI;
+	      string detect = "tracking";
+	      
+	      if(hits.size())
+		{
+		  
+	      vector<particle*> hitsParticle;
+	      hitsParticle.push_back(new particle(pT,detect));
+	      
+	      for(unsigned int i = 0; i<hits.size();i++)
+		{
+		  hitsParticle.back()->add_hit(detect,hits[i]); //new
+		}
+	      //cerr<<"particles size="<<hitsParticle.back()->hits(detect).size()<<endl;
+	      //cout<<"particles size="<<hitsParticle.back()->hits(detect).size()<<endl;
+	      bhep::event e(evt_read);
+	      e.add_property( "IntType", "CCQE" );
+	      e.add_property("G4EventID",evt_read); 
+	      
+	      //cerr<<"gdml hit constructor"<<endl;
+	      particle* digi_part = cvt->create_digital_representation( hitsParticle );
+	      
+	      if(digi_part->hit_map().size())
+		{
+		  e.add_digi_particle( digi_part );
+		  //cerr<<"gdml hit constructor end"<<endl;
+		  
+		  
+		  //cerr<<"Writing root"<<endl;
+		  bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
+		  //cerr<<"Writing root end"<<endl;
+		  evt_read++;
+		  
+		  //cout<<e<<endl;
+		}
+	      e.clear();
+	      hitsParticle.clear(); 
+	    }	
 	    }
-	  //cerr<<"particles size="<<hitsParticle.back()->hits(detect).size()<<endl;
-	  //cout<<"particles size="<<hitsParticle.back()->hits(detect).size()<<endl;
-	  bhep::event e(evt_read);
-	  e.add_property( "IntType", "CCQE" );
-	  e.add_property("G4EventID",evt_read); 
-	  
-	  //cerr<<"gdml hit constructor"<<endl;
-	  particle* digi_part = cvt->create_digital_representation( hitsParticle );
-	  e.add_digi_particle( digi_part );
-	  //cerr<<"gdml hit constructor end"<<endl;
-
-
-	  //cerr<<"Writing root"<<endl;
-	  bhep::bhep_svc::instance()->get_writer_root().write( e, evt_read );//iEvent );
-	  //cerr<<"Writing root end"<<endl;
-	  evt_read++;
-	  
-	  //cout<<e<<endl;
-	  e.clear();
-	  hitsParticle.clear(); 
 	}
       tempVectorHits.clear();
     }while(!NullCheck(eventBuffers));
@@ -2188,61 +2188,14 @@ int main(int argc, char* argv[]) {
 
       // Do files in parallell instead of in series. Check hits in all FEBs at the same time && both channels at same time.
       //ForFile(filename,filepath,&tempHits,&tempVectorHits);
-      //cout<<"tempHits="<<tempHits.size()<<endl;
 
-      //filename2="feb3_std_10gevmuons_extscint16_nogarbage_refdata4.daq";
-      //filename2="FEB3_safe_mode_3_HG40_LG55_test1.daq";
-      //ForFile(filename,filepath,&tempHits,&tempVectorHits);
-
-      //void ForFilesV(vector<string> filenames, string filepath, vector<TempHit*>* tempHits,vector<vector<TempHit*> >* tempVectorHits)
-      /*
-      filepath="/data/neutrino05/phallsjo/SaRoMan";
-      filename="FEB1_safe_mode_3_HG40_LG55_test1.daq";
-      filename2="FEB3_safe_mode_3_HG40_LG55_test1.daq";
-      filename3="FEB4_safe_mode_3_HG40_LG55_test1.daq";
-      filename4="FEB5_safe_mode_3_HG40_LG55_test1.daq";
-
-      filepath="/data/neutrino05/phallsjo/SaRoMan/1GeV/Hadrons/1GeV_hadrons_OR96t";
-      filename="FEB1_OR96t_fpga_allch_adcen_only_holdHG65_holdLG65_hadrons_1GeV_t2.daq";
-      filename2="FEB3_OR96t_fpga_allch_adcen_only_holdHG65_holdLG65_hadrons_1GeV_t2.daq";
-      filename3="FEB4_OR96t_fpga_allch_adcen_only_holdHG65_holdLG65_hadrons_1GeV_t2.daq";
-      filename4="FEB5_OR96t_fpga_allch_adcen_only_holdHG65_holdLG65_hadrons_1GeV_t2.daq";
-      */
-
-
-      //filepath="/data/neutrino05/phallsjo/SaRoMan";
-      //filename="FEB1_AllCh_minusCh95_safe_mode_10_muons.daq";
-      //filename2="FEB3_AllCh_minusCh95_safe_mode_10_muons.daq";
-      //filename3="FEB5_AllCh_minusCh29317895_safe_mode_10_muons.daq";
-      //filename4="FEB4_AllCh_safe_mode_10_muons.daq";
-
-
-      //filename3="feb5_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
-      //filename4="feb4_std_10GeVmuons_extscint16_nogarbage_refdata4.daq";
-
-      //filepath="/data/neutrino05/phallsjo/SaRoMan/Safe_mode_10";
-
-      //filename="FEB1_AllCh_minusCh95_safe_mode_10_muons.daq";
-      //filename2="FEB3_AllCh_minusCh95_safe_mode_10_muons.daq";
-      //filename3="FEB4_AllCh_safe_mode_10_muons.daq";
-      //filename4="FEB5_AllCh_minusCh29317895_safe_mode_10_muons.daq";
-
-      filepath="/data/neutrino05/phallsjo/copy/SaRoMan/daq";
-      //filename="5GeVc_muons/ModulePosition7/FEB3/FEB3_modpos7_magnet_ON_beam_ON_muons_5GeVc_t1.daq";
-      //filename2="5GeVc_muons/ModulePosition7/FEB4/FEB4_modpos7_magnet_ON_beam_ON_muons_5GeVc_t1.daq";
-      //filename3="5GeVc_muons/ModulePosition7/FEB5/FEB5_modpos7_magnet_ON_beam_ON_muons_5GeVc_t1.daq";
-
-      //filename="2GeVc_muons/FEB3/FEB3_mod1_beam_ON_muons_2GeV_t1.daq";
-      //filename2="2GeVc_muons/FEB4/FEB4_mod1_beam_ON_muons_2GeV_t1.daq";
-      //filename3="2GeVc_muons/FEB5/FEB5_mod1_beam_ON_muons_2GeV_t1.daq";
-
-      //filename="2GeVc_hadrons/FEB3/FEB3_mod1_beam_ON_hadrons_2GeV_t1.daq";
-      //filename2="2GeVc_hadrons/FEB4/FEB4_mod1_beam_ON_hadrons_2GeV_t1.daq";
-      //filename3="2GeVc_hadrons/FEB5/FEB5_mod1_beam_ON_hadrons_2GeV_t1.daq";
+      //filepath="/data/neutrino05/phallsjo/copy/SaRoMan/daq";
+      filepath="/data/neutrino06/phallsjo/daq";
 
       vector<string> tester;
       string sFileName;
-      ifstream fList("/data/neutrino05/phallsjo/copy/SaRoMan/module.list");
+      //ifstream fList("/data/neutrino05/phallsjo/copy/SaRoMan/module.list");
+      ifstream fList("/data/neutrino06/phallsjo/daq/module.list");
       while (!fList.eof()) {
         fList >> sFileName;
         cerr << sFileName << endl;
@@ -2258,12 +2211,12 @@ int main(int argc, char* argv[]) {
       //char *dataBuff;
       //uint32_t* dataPtr;
 
-      cerr<<"start of handledata"<<endl;
-      cout<<"start of handledata"<<endl;
+      //cerr<<"start of handledata"<<endl;
+      //cout<<"start of handledata"<<endl;
       //HandleData2(tester,filepath,cvt,&h1);
       HandleData3(tester,filepath,cvt);
-      cerr<<"End of handledata"<<endl;
-      cout<<"End of handledata"<<endl;
+      //cerr<<"End of handledata"<<endl;
+      //cout<<"End of handledata"<<endl;
       
       //h1.Write();
       //h2.Write();

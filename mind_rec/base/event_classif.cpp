@@ -108,7 +108,7 @@ void event_classif::Initialize(const bhep::gstore& pstore, bhep::prlevel vlevel,
 //Execution of the class
 //***********************************************************************
 bool event_classif::Execute(const vector<cluster*>& hits,
-			    vector<Trajectory*> &vtrajs, vector<cluster*>& hads) {
+			    vector<Trajectory*> &vtrajs, vector<cluster*>& hads, vector<plane_info*> planesTASD) {
   //***********************************************************************
   
   _m.message("++++ Classifier Execute Function ++++", bhep::VERBOSE);
@@ -117,7 +117,37 @@ bool event_classif::Execute(const vector<cluster*>& hits,
   reset();
   ///copy hits
   std::vector<cluster*> hits2 = hits;
+
+  _geom.getDetectorModel()->Reset();
   
+  if(planesTASD.size())
+    {
+      plane_info * highest=planesTASD[0];
+      
+      for(int j=0; j< planesTASD.size(); j++){
+	if(planesTASD[j]->GetZ() > highest->GetZ())
+	  highest = planesTASD[j];
+      }
+      
+      cout<<"highest->GetZ()="<<highest->GetZ()<<endl;
+      
+      cout<<_geom.getDetectorModel()->
+	GetSubDetector((highest->GetHits()[0])->position()[2])->
+	GetName()<<endl;
+      
+      _geom.getDetectorModel()->
+	GetSubDetector((highest->GetHits()[0])->position()[2])->
+	GetPlanes()->push_back(highest);
+      
+      cout<<_geom.getDetectorModel()->
+	GetSubDetector((highest->GetHits()[0])->position()[2])->GetPlanes()->size()<<endl;
+      
+      cout<<_geom.getDetectorModel()->
+	GetSubDetector((highest->GetHits()[0])->position()[2])->GetMaxPlane()<<endl;
+    }
+  
+
+
   //cout<<"Num hits: "<<hits2.size()<<endl;
   /*
   cout<<"x\ty\tz\ttime"<<endl;
@@ -146,7 +176,7 @@ bool event_classif::Execute(const vector<cluster*>& hits,
     //cout<<"hits2: "<<hits2.size()<<endl;
     ///calculate the number of planes containing single hit and arrange the z-position, energy of the hits in increasing z 
     //Occupancy.
-    _geom.getDetectorModel()->Reset();
+    //_geom.getDetectorModel()->Reset();
     ok = get_plane_occupancy( hits2 );
     ///called if liklihood output has to generate
     if ( _outLike )
@@ -606,6 +636,10 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
     if( _geom.getDetectorModel()->
 	GetSubDetector((_planes[pl]->GetHits()[0])->position()[2]))
       {
+	//cout<<"ZPos for hit="<<(_planes[pl]->GetHits()[0])->position()[2]<<endl;
+	//cout<<"SubDetector="<<_geom.getDetectorModel()->
+	//GetSubDetector((_planes[pl]->GetHits()[0])->position()[2])->GetName()<<endl;
+
 	_geom.getDetectorModel()->
 	  GetSubDetector((_planes[pl]->GetHits()[0])->position()[2])->
 	  GetPlanes()->push_back(_planes[pl]);
@@ -645,8 +679,9 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
       else ok = false;
       
     } 
-	
-  else 
+  // Pion filter
+  // else if(_meanOcc < 10)
+  else if(_meanOcc < 3)
     {
      
       if ( (int)muontraj.size() < _min_seed_hits ) {
@@ -673,8 +708,7 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
 	ok = false;
 	if ( !ok ) _failType = 4;
 	
-	if(!ok)  _m.message(" invoke_cell_auto not ok", bhep::VERBOSE);
-	
+	if(!ok)  _m.message(" invoke_cell_auto not ok", bhep::VERBOSE);	
       } 
       else {
 	if ( _badplanes !=0 ) _intType = 3;
@@ -689,11 +723,9 @@ if not found then  excluded_hits = 0; _exclPlanes = 0; i.e, vertGuess =0*/
 	  //ok = false;
 	//ok= false; 
 	// Combine muon_extraction with lowmomentum to handle mult. occ.
-	
-	
-      }
-      
+      } 
     }
+  else ok = false;
    
   return ok;
 }
@@ -829,9 +861,11 @@ bool event_classif::get_patternRec_seed(State& seed, Trajectory& muontraj){
 
 
   ///x,y,z values of the 1st node
-  V[0] = muontraj.nodes()[0]->measurement().vector()[0];
-  V[1] = muontraj.nodes()[0]->measurement().vector()[1];
-  V[2] = muontraj.nodes()[0]->measurement().position()[2];
+  // Skip tasd hit.
+
+  V[0] = muontraj.nodes()[1]->measurement().vector()[0];
+  V[1] = muontraj.nodes()[1]->measurement().vector()[1];
+  V[2] = muontraj.nodes()[1]->measurement().position()[2];
 
   cout<<"z pos in event_classif_seed: "<<V[2]<<endl; 
   
@@ -1385,7 +1419,7 @@ bool event_classif::perform_muon_extraction2(const State& seed, vector<cluster*>
   if ( _endProj ) check_forwards( seed, hits, muontraj );
   _m.message("At the end of muon_extraction size in traj =",muontraj.size(), bhep::VERBOSE);
   
-  _geom.getDetectorModel()->Reset();
+  //_geom.getDetectorModel()->Reset();
   
   const dict::Key candHit = "inMu";
 

@@ -59,7 +59,6 @@ class gdml_hit_constructor
   //clusteres the hits in xy to get the better resolution expected by the overlaying bars
   void ClusteringAida(const std::vector<bhep::hit*>& sortedHits);
   void Clustering(const std::vector<bhep::hit*>& sortedHits);
-  void Clustering2(const std::vector<bhep::hit*>& sortedHits);
   void ClusteringXY(const std::vector<bhep::hit*> hits, int key);
 
   void ClusteringHits(const std::vector<bhep::hit*> hits, int key);

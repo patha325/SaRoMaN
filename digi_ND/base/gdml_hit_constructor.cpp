@@ -127,24 +127,8 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   //cout<<"mindHits.size()="<<mindHits.size()<<endl;
 
   if(TASDHits.size()) ClusteringAida(TASDHits);
-  if(mindHits.size()) Clustering2(mindHits);
+  if(mindHits.size()) Clustering(mindHits);
 
-
-  /*
-  if(_testBeam)
-    {
-      ClusteringAida(sortedHits);
-    }
-  else
-    {
-      
-      Clustering2(sortedHits);
-    }
-  */
-
-  //ClusteringAida(sortedHits);
-
-  //cout<<"ending ClusteringAida"<<endl;
 
   //cout<<"GDML_HIT_CONSTRUCTOR _voxels.size()="<<_voxels.size()<<endl;
 
@@ -163,6 +147,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
   bool hitModule4 = false;
    // For simulations
   //cout<<"breaking in using"<<endl;
+  
   for(int i=0;i< rec_hit.size();i++)
     {
       if(rec_hit[i]->idata("IsTASD")) TASDhits++;
@@ -184,7 +169,7 @@ void gdml_hit_constructor::execute(const std::vector<bhep::hit*>& hits,
 }
   
 
-void gdml_hit_constructor::Clustering2(const std::vector<bhep::hit*>& zSortedHits)
+void gdml_hit_constructor::Clustering(const std::vector<bhep::hit*>& zSortedHits)
 {
   /*
     Cluster the real hits (bar positions from hits) to produce hit positions.
@@ -297,63 +282,6 @@ void gdml_hit_constructor::ClusteringAida(const std::vector<bhep::hit*>& zSorted
   */
 
   //cout<<"to ClusteringHits"<<endl;
-  // Do the actually clustering
-  for(int counter = 0; counter < moduleHitsVector.size(); counter++)
-    {
-      ClusteringHits(moduleHitsVector[counter], counter);
-    }
-}
-
-
-
-
-void gdml_hit_constructor::Clustering(const std::vector<bhep::hit*>& zSortedHits)
-{
-  /*
-    Cluster the real hits (bar positions from hits) to produce hit positions.
-    Also utilize the bar overlap to be able to give an even better position.
-    Main jobs is done by calling clusteringXY.
-  */  
-  std::vector<bhep::hit*>::const_iterator hitIt;
-  std::vector<bhep::hit*> moduleHits;
-  std::vector<std::vector<bhep::hit*> > moduleHitsVector;
-  //std::vector<std::vector<double> > clustered_hits;
-
-  // Fill vectors with hits in the same module (xyxy),sorted by barPosZ.
-  for (hitIt = zSortedHits.begin();hitIt != zSortedHits.end();hitIt++)
-    {
-      double currZ = (*hitIt)->ddata( "barPosZ" );
-      double nextZ;
-      //rawHitsTH1F->Fill((*hitIt)->x()[2]);
-      
-      if(hitIt + 1 != zSortedHits.end()){ nextZ = (*(hitIt + 1))->ddata( "barPosZ" );}
-      else {nextZ = currZ + 3./4. * _activeLength;}
-
-      if(fabs(currZ-nextZ) < 3./4. * _activeLength)
-	{
-	  moduleHits.push_back((*hitIt));
-	}
-      else//Next is to far away
-	{
-	  moduleHits.push_back((*hitIt));
-
-	  moduleHitsVector.push_back(moduleHits);
-	  moduleHits.clear();	  
-	}    
-    }
-
-  //moduleHitsVector per z
-  /*
-  cout<<"Cluster"<<endl;
-  for(int counter = 0; counter < moduleHitsVector.size(); counter++)
-    {
-      cout<<"Cluster "<<counter<<endl;
-      for(int cnt = 0;cnt<moduleHitsVector[counter].size();cnt++)
-	cout<<"barPosZ="<<moduleHitsVector[counter][cnt]->ddata("barPosZ")<<endl;
-    }
-  */
-
-
   // Do the actually clustering
   for(int counter = 0; counter < moduleHitsVector.size(); counter++)
     {

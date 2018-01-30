@@ -67,8 +67,9 @@ void MDfragmentBM::Init() {
           unsigned int pe_size = xPe->GetSize();
           _size += pe_size;
           ptr += pe_size/4;
-          if (xPe->getNumDataWords() > 3) {
+          if (xPe->getNumDataWords() > 2) {
             _trigEvents.push_back( xPe );
+            //cout<< dw.GetSpillTag()<< " " <<GetBoardId()<<endl;
           } else {
             delete xPe;
           }
@@ -117,7 +118,7 @@ MDpartEventBM* MDfragmentBM::GetTriggerEventPtr(unsigned int evId) {
   if ( evId >= _trigEvents.size() ) {
     stringstream ss;
     ss << "ERROR in MDfragmentBM::GetTriggerEventPtr() : ";
-    ss << "Wrong Ebent Id: " << evId << ". Exceeds the total number of triggers." ;
+    ss << "Wrong Event Id: " << evId << ". Exceeds the total number of triggers." ;
     throw MDexception( ss.str() );
   }
 

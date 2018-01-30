@@ -18,6 +18,9 @@
  */
 
 #include "MDpartEventBM.h"
+//#include <vector>
+#include <math.h> 
+#include <cmath>
 
 using namespace std;
 
@@ -60,7 +63,7 @@ void MDpartEventBM::Init() {
     } else {
       _triggerTag = dw.GetTriggerTag();
       _triggerTagId = dw.GetTriggerTagShort();
-
+      
       bool done(false);
       while (!done) {
         dw.SetDataPtr(++ptr);
@@ -74,6 +77,7 @@ void MDpartEventBM::Init() {
               ++_nDataWords;
             } else {
               if (_trigEvents) {
+                  
                 int nTr = _trigEvents->size(), lastPending;
                 lastPending = (nTr > 3) ? nTr-4 : 0;
                 for (int i = nTr-1; i >= lastPending; --i) {
@@ -201,7 +205,7 @@ unsigned int  MDpartEventBM::GetHitTime(unsigned int ih, unsigned int ich, char 
     }
     case 't':
     {
-      if (ih<_nTrailingEdgeHits[ich]) rv = _trailingEdgeHitTime[ich][ih];
+      if (ih<_nTrailingEdgeHits[ich]) { rv = _trailingEdgeHitTime[ich][ih]; }
       else {
         stringstream ss;
         ss << "ERROR in MDpartEventBM::GetHitTime() case t : ";
@@ -244,7 +248,7 @@ unsigned int  MDpartEventBM::GetHitTimeId(unsigned int ih, unsigned int ich, cha
     }
     case 't':
     {
-      if (ih<_nTrailingEdgeHits[ich]) rv = _trailingEdgeHitId[ich][ih];
+      if (ih<_nTrailingEdgeHits[ich]) {rv = _trailingEdgeHitId[ich][ih];}
       else {
         stringstream ss;
         ss << "ERROR in MDpartEventBM::GetHitId() case t : ";

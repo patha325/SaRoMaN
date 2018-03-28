@@ -74,7 +74,7 @@ class handle_third_party:
 		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
 		command = ['git','checkout','-b','v5-34-34','v5-34-34']
 		subprocess.call(command, cwd = self.third_party_support + '/root',stdout=self.FNULL)
-		command = self.third_party_support+'/root/configure linuxx8664gcc --enable-pythia6 --with-pythia6-libdir='+self.third_party_support+'/pythia/v6_428/lib --enable-python --enable-gdml'
+		command = self.third_party_support+'/root/configure linuxx8664gcc --enable-tmva --enable-pythia6 --with-pythia6-libdir='+self.third_party_support+'/pythia/v6_428/lib --enable-python --enable-gdml'
 		subprocess.call('bash %s'%command, shell=True, cwd = self.third_party_support+'/root',stdout=self.FNULL)
 		subprocess.call('make', shell=True, cwd = self.third_party_support+'/root',stdout=self.FNULL)
 		
@@ -114,7 +114,8 @@ class handle_third_party:
 		#self.Mice_script_install_emulator('xerces-c-3.1.3','xerces-c-3.1.3.tar.gz','http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.1.3.tar.gz')
 		#http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.1.4.tar.gz
 		#self.Mice_script_install_emulator('xerces-c-3.1.4','xerces-c-3.1.4.tar.gz','http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.1.4.tar.gz')
-		self.Mice_script_install_emulator('xerces-c-3.2.0','xerces-c-3.2.0.tar.gz','http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.2.0.tar.gz')
+		#self.Mice_script_install_emulator('xerces-c-3.2.0','xerces-c-3.2.0.tar.gz','http://apache.mirror.anlx.net//xerces/c/3/sources/xerces-c-3.2.0.tar.gz')
+		self.Mice_script_install_emulator('xerces-c-3.2.0','xerces-c-3.2.0.tar.gz','http://www.ppe.gla.ac.uk/~phallsjo/files/babyMIND/xerces-c-3.2.0.tar.gz')
 		# Bash 29 expat-2.1.0   
 		self.Mice_script_install_emulator('expat-2.1.0','expat-2.1.0.tar.gz','http://downloads.sourceforge.net/expat/expat-2.1.0.tar.gz')
 

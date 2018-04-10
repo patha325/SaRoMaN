@@ -151,7 +151,7 @@ class handle_third_party:
 		filename = directory + '.tar.gz'
 		#url = 'http://www.geant4.org/geant4/support/source/' + filename
 		#change url 9/4-18 http://cern.ch/geant4-data/releases/patch_geant4.10.00.p01.tar.gz
-		url = 'http://cern.ch/geant4-data/releases/patch_geant'+filename
+		url = 'http://cern.ch/geant4-data/releases/patch_'+filename
 		
 		self.Check_make_dir(self.third_party_support + '/source/'+directory)
 		self.Check_make_dir(self.third_party_support + '/build/'+directory)

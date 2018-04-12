@@ -158,6 +158,7 @@ class handle_third_party:
 
 		command = ['wget','--directory-prefix='+self.third_party_support+'/source',url]
 		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL) 
+		command = ['mv','--directory-prefix='+self.third_party_support+'/source','patch_'+filename,filename]
 
 		command = ['tar','xzvf',self.third_party_support+'/source/'+filename,'-C',self.third_party_support+'/source']
 		subprocess.call(command, cwd = self.third_party_support +'/source',stdout=self.FNULL) 

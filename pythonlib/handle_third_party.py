@@ -166,6 +166,10 @@ class handle_third_party:
 
 		command = ['tar','xzvf',self.third_party_support+'/source/'+filename]
 		subprocess.call(command, cwd = self.third_party_support +'/build/'+directory,stdout=self.FNULL) 
+
+                #change url 9/4-18 http://cern.ch/geant4-data/releases/patch_geant4.10.00.p01.tar.gz
+		command = ['mv','geant4.10.00',directory]
+		subprocess.call(command, cwd = self.third_party_support +'/source',stdout=self.FNULL) 
 		
 		command = ['cmake','-DCMAKE_INSTALL_PREFIX='+self.third_party_support+'/install','-DGEANT4_INSTALL_DATA=ON','-DGEANT4_INSTALL_DATADIR'
 		'-DGEANT4_USE_GDML=ON',

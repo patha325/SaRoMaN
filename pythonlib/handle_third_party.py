@@ -151,15 +151,16 @@ class handle_third_party:
 		filename = directory + '.tar.gz'
 		#url = 'http://www.geant4.org/geant4/support/source/' + filename
 		#change url 9/4-18 http://cern.ch/geant4-data/releases/patch_geant4.10.00.p01.tar.gz
-		url = 'http://cern.ch/geant4-data/releases/patch_'+filename
+		#url = 'http://cern.ch/geant4-data/releases/patch_'+filename
+		url = 'http://www.ppe.gla.ac.uk/~phallsjo/files/babyMIND/geant4.10.00.p01.tar.gz'
 		
 		self.Check_make_dir(self.third_party_support + '/source/'+directory)
 		self.Check_make_dir(self.third_party_support + '/build/'+directory)
 
 		command = ['wget','--directory-prefix='+self.third_party_support+'/source',url]
 		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL) 
-		command = ['mv','patch_'+filename,filename]
-		subprocess.call(command, cwd = self.third_party_support +'/source',stdout=self.FNULL) 
+		#command = ['mv','patch_'+filename,filename]
+		#subprocess.call(command, cwd = self.third_party_support +'/source',stdout=self.FNULL) 
 
 		command = ['tar','xzvf',self.third_party_support+'/source/'+filename,'-C',self.third_party_support+'/source']
 		subprocess.call(command, cwd = self.third_party_support +'/source',stdout=self.FNULL) 
@@ -168,8 +169,8 @@ class handle_third_party:
 		subprocess.call(command, cwd = self.third_party_support +'/build/'+directory,stdout=self.FNULL) 
 
                 #change url 9/4-18 http://cern.ch/geant4-data/releases/patch_geant4.10.00.p01.tar.gz
-		command = ['mv','geant4.10.00','geant4.10.00.p01']
-		subprocess.call(command, cwd = self.third_party_support +'/source',stdout=self.FNULL) 
+		#command = ['mv','geant4.10.00',directory]
+		#subprocess.call(command, cwd = self.third_party_support +'/source',stdout=self.FNULL) 
 		
 		command = ['cmake','-DCMAKE_INSTALL_PREFIX='+self.third_party_support+'/install','-DGEANT4_INSTALL_DATA=ON','-DGEANT4_INSTALL_DATADIR'
 		'-DGEANT4_USE_GDML=ON',

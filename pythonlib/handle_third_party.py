@@ -206,8 +206,12 @@ class handle_third_party:
 	def Download_and_install_depencencies_rec(self):
 		#RECPACK-v1r2p0
 		print 'Installing RECPACK...'
-	
-		command = ['svn','export','svn://next.ific.uv.es/svn/recpack/alpha/trunk/recpack','recpack-source']
+ 	        command = ['wget','http://www.ppe.gla.ac.uk/~phallsjo/files/babyMIND/recpack-source.tar.gz']
+                subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
+                command = ['tar','xzvf','recpack-source.tar.gz']
+
+		#command = ['svn','export','svn://next.ific.uv.es/svn/recpack/alpha/trunk/recpack','recpack-source']
+			
 		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
 
 		command = self.third_party_support+'/recpack-source/autogen.sh'

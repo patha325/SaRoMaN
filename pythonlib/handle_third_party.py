@@ -121,7 +121,10 @@ class handle_third_party:
 
 		#Bhep v3r0p0
 		print 'Installing bhep...'
-		command = ['svn','export','svn://next.ific.uv.es/svn/bhep/tags/v3r0p0','bhep']
+		#command = ['svn','export','svn://next.ific.uv.es/svn/bhep/tags/v3r0p0','bhep']
+		command = ['wget','http://www.ppe.gla.ac.uk/~phallsjo/files/babyMIND/bhep.tar.gz']
+		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
+		command = ['tar','xzvf','bhep.tar.gz']
 		subprocess.call(command, cwd = self.third_party_support,stdout=self.FNULL)
 
 		#self.Shell_source(self.third_party_support + '/root/bin'+'/thisroot.sh',self.third_party_support + '/root') #Make sure rootdir is pointing in the right place
